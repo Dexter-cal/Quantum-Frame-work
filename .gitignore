@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+quantum framework.zip
+.pytest_cache/

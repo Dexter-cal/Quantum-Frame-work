@@ -1,0 +1,11 @@
+# Core numerical and data tooling
+numpy
+pandas
+scikit-learn
+
+# Framework features exercised by the test suite
+matplotlib
+Flask
+
+# Read the bundled design specification PDF
+pypdf
