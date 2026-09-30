@@ -22,3 +22,8 @@ This document logs critical discoveries, architectural insights, edge cases, and
 ### 4. Consolidated Framework Single-Import Pattern
 - **Discovery**: Users building workflows expect a complete end-to-end framework without requiring secondary third-party package imports.
 - **Resolution**: Standardized top-level exports in `qai/__init__.py` to expose all core models, techniques, evaluation tools, pipelines, datasets, logic decorators, and serving handlers.
+
+### 5. Dict-Row Input & Output Schema Validation Ergonomics
+- **Discovery**: Real-world REST and pipeline payloads often deliver named JSON/dict records rather than raw NumPy 2D matrices.
+- **Impact**: Requiring users to manually unpack dictionaries into positional matrices reduced usability.
+- **Resolution**: Enhanced `Schema` with `validate_row()` and `dict_to_array()`. Updated `Model.train()` and `Model.predict()` to automatically accept dictionary payloads, validate fields/types, and map keys to column order.

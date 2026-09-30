@@ -700,3 +700,13 @@ whole build, every one logged honestly, nothing hidden or glossed over.
 - Done: AI Framework Utilities (`qai.preprocessing`, `qai.governance`, `qai.tracking`)
   providing single-import access to `StandardScaler`, `LabelEncoder`, `SimpleImputer`,
   `detect_drift`, and `ExperimentTracker`. Tested in `tests/test_new_framework_features.py`.
+
+## Section 91: Output & Dict-Row Schema Validation Complete
+- Done: Output schema validation -- validates model.predict() results against output_schema
+- Done: Named-field (dict-row) validation -- dict inputs/outputs validated and automatically
+  converted to ordered numeric arrays based on schema fields
+- Real tests in `tests/test_output_and_dict_schema.py`:
+  (a) Happy path for dict row predictions and output schema validation
+  (b) Edge cases: list of dict rows validation
+  (c) Error case: model prediction violating output schema types raising SchemaError
+  (d) Security/misuse: invalid garbage types passed into schema validation
