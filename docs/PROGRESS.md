@@ -710,3 +710,11 @@ whole build, every one logged honestly, nothing hidden or glossed over.
   (b) Edge cases: list of dict rows validation
   (c) Error case: model prediction violating output schema types raising SchemaError
   (d) Security/misuse: invalid garbage types passed into schema validation
+
+## Section 12/56: PyTorch Deep Learning Multi-Layer Perceptron (Neural Network)
+- Done: PyTorch-backed `NeuralNetwork` technique (`qai/techniques/neural_network.py`) supporting both classification and regression tasks with loss history tracking and parameter inspection.
+- Real tests in `tests/test_neural_network.py`:
+  (a) Happy path for multi-class classification and continuous regression.
+  (b) Edge cases for small sample training.
+  (c) Error cases for predict before train.
+  (d) Security/misuse scenarios for invalid non-numeric inputs.

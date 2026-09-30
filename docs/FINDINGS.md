@@ -27,3 +27,7 @@ This document logs critical discoveries, architectural insights, edge cases, and
 - **Discovery**: Real-world REST and pipeline payloads often deliver named JSON/dict records rather than raw NumPy 2D matrices.
 - **Impact**: Requiring users to manually unpack dictionaries into positional matrices reduced usability.
 - **Resolution**: Enhanced `Schema` with `validate_row()` and `dict_to_array()`. Updated `Model.train()` and `Model.predict()` to automatically accept dictionary payloads, validate fields/types, and map keys to column order.
+
+### 6. Deep Learning Integration via PyTorch
+- **Discovery**: Real-world deep learning workflows require standard dynamic computation graphs and tensor backpropagation rather than manually coded gradient matrices.
+- **Impact**: PyTorch integration (`torch`) allows `qai` to seamlessly offer deep neural network capabilities while keeping the clean `qai.build(type="neural_network")` interface.

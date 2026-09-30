@@ -9,3 +9,5 @@ Flask
 
 # Read the bundled design specification PDF
 pypdf
+torch
+torchvision
