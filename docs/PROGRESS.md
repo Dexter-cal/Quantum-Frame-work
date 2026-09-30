@@ -718,3 +718,11 @@ whole build, every one logged honestly, nothing hidden or glossed over.
   (b) Edge cases for small sample training.
   (c) Error cases for predict before train.
   (d) Security/misuse scenarios for invalid non-numeric inputs.
+
+## Section 56 Mechanics Decomposition Complete (Objective & TrainingLoop Wiring)
+- Done: Objective (`MSE`, `MAE`) and TrainingLoop (`FixedEpochs`, `RetrainUntil`) wired directly into `qai.build(type="regression", objective=..., training_loop=...)`.
+- Real tests in `tests/test_mechanics_decomposition.py`:
+  (a) Happy path for custom Objective and RetrainUntil condition stopping loop upon reaching loss threshold.
+  (b) Edge cases for loss computation and zero gradients on exact prediction matches.
+  (c) Error case for non-converging RetrainUntil loops respecting max_epochs caps.
+  (d) Security/misuse case for invalid non-objective parameters.

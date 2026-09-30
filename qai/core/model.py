@@ -20,7 +20,8 @@ class CompatibilityError(ValueError):
 
 class Model:
     def __init__(self, technique_name: str, learning_technique: str = None,
-                 input_schema=None, output_schema=None, **params):
+                 input_schema=None, output_schema=None,
+                 optimizer=None, objective=None, training_loop=None, **params):
         cls = get_technique(technique_name)
 
         if learning_technique is not None:
@@ -34,6 +35,18 @@ class Model:
                 )
         else:
             learning_technique = cls.compatible_learning_techniques[0]  # sensible default, Section 66
+
+        # Section 56 mechanics decomposition wiring
+        if optimizer is not None or objective is not None or training_loop is not None:
+            if technique_name == "regression":
+                if optimizer is None:
+                    from ..mechanics import GradientDescent
+                    optimizer = GradientDescent(objective=objective, training_loop=training_loop)
+                elif hasattr(optimizer, "objective") and objective is not None:
+                    optimizer.objective = objective
+                if hasattr(optimizer, "training_loop") and training_loop is not None:
+                    optimizer.training_loop = training_loop
+                params["optimizer"] = optimizer
 
         self.technique = cls(**params)
         self.technique_name = technique_name
@@ -198,7 +211,9 @@ class Model:
         return f"<qai.Model technique={self.technique_name} trained={self.technique.is_trained()}>"
 
 
-def build(type: str, learning_technique: str = None, input_schema=None, output_schema=None, **params) -> Model:
+def build(type: str, learning_technique: str = None, input_schema=None, output_schema=None,
+          optimizer=None, objective=None, training_loop=None, **params) -> Model:
     """qai.build(type='regression', learning_technique='supervised') -- the entry point,
-    matching the doc exactly, now with real compatibility checking (Section 66)."""
-    return Model(type, learning_technique=learning_technique, input_schema=input_schema, output_schema=output_schema, **params)
+    matching the doc exactly, now with real compatibility checking (Section 66) and Section 56 mechanics."""
+    return Model(type, learning_technique=learning_technique, input_schema=input_schema, output_schema=output_schema,
+                 optimizer=optimizer, objective=objective, training_loop=training_loop, **params)

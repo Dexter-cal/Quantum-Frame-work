@@ -31,3 +31,7 @@ This document logs critical discoveries, architectural insights, edge cases, and
 ### 6. Deep Learning Integration via PyTorch
 - **Discovery**: Real-world deep learning workflows require standard dynamic computation graphs and tensor backpropagation rather than manually coded gradient matrices.
 - **Impact**: PyTorch integration (`torch`) allows `qai` to seamlessly offer deep neural network capabilities while keeping the clean `qai.build(type="neural_network")` interface.
+
+### 7. Section 56 Complete Mechanics Decomposition Wiring
+- **Discovery**: In the initial design, `Objective` and `TrainingLoop` objects existed as standalone classes in `qai.mechanics` but were not directly wired into `Model.build()`.
+- **Impact**: Explicitly wiring `objective` and `training_loop` into `qai.build()` fulfills Section 56's core design goal: structure (what the model IS) is completely decoupled from optimization, loss measurement, and termination criteria.
