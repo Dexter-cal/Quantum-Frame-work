@@ -55,3 +55,7 @@ This document logs critical discoveries, architectural insights, edge cases, and
 ### 12. Isolation Forest Anomaly Detection Semantics
 - **Discovery**: Anomaly detection techniques output boolean flags and continuous isolation scores rather than discrete multi-class labels or continuous regression values.
 - **Impact**: `IsolationForest` provides `is_anomaly()` returning boolean flags and `anomaly_score()` for direct threat/outlier risk ranking.
+
+### 13. Multi-Stage Pipeline Sequential Fitting Mechanics
+- **Discovery**: Unsupervised feature transformers (e.g. PCA) in a pipeline must transform training features `X` before passing them to downstream estimators during `pipeline.train()`.
+- **Impact**: Updating `Pipeline.train()` to automatically propagate intermediate predictions enables multi-stage feature extraction and classification in a single call.

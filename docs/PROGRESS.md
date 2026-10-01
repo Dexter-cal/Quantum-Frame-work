@@ -766,3 +766,11 @@ whole build, every one logged honestly, nothing hidden or glossed over.
   (b) Edge cases for small sample anomaly datasets.
   (c) Error cases for predict and anomaly_score before fit.
   (d) Security/misuse scenarios for invalid matrix inputs.
+
+## Multi-Stage Pipeline Training & Sequential Chaining Complete
+- Done: Multi-stage sequential training (`train()`) and chaining (`pipe_to()`) in `qai/core/pipeline.py`.
+- Real tests in `tests/test_pipeline_multistage.py`:
+  (a) Happy path for PCA -> Classifier multi-stage pipeline training and prediction.
+  (b) Edge cases for multi-stage PCA -> PCA -> K-Means pipeline chaining.
+  (c) Error cases for empty pipeline lists and invalid non-Model pipe_to arguments.
+  (d) Security/misuse scenarios for malformed string input predictions.

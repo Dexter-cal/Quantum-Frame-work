@@ -270,3 +270,7 @@ qai.serve(model, port=5000)
 - **`isolation_forest`**: Unsupervised Isolation Forest for anomaly and outlier detection.
   - *Parameters*: `n_estimators=100`, `contamination=0.1`
   - *Methods*: `anomaly_score(x)`, `is_anomaly(x)`
+
+### Multi-Stage Pipeline Updates
+- **`Pipeline`**: Sequential multi-model processing.
+  - *Methods*: `train(X, y=None, verbose=True)`, `predict(x)`, `pipe_to(other_model)`
