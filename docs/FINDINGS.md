@@ -43,3 +43,15 @@ This document logs critical discoveries, architectural insights, edge cases, and
 ### 9. Gaussian Mixture Models Unsupervised Architecture
 - **Discovery**: Unlike hard assignment clustering (e.g. K-Means), soft probabilistic clustering requires component posterior probabilities and log-likelihood metrics (`score_samples`).
 - **Impact**: Exposing `predict_proba()` and `score_samples()` on GMM models gives `qai` users density estimation and soft cluster membership capabilities.
+
+### 10. Hierarchical Agglomerative Clustering Interface
+- **Discovery**: Agglomerative clustering does not naturally have an Out-Of-Sample `.predict()` method in sklearn.
+- **Impact**: In `qai`, `forward()` maps new samples to nearest cluster centroids, maintaining uniform prediction semantics across all unsupervised techniques.
+
+### 11. Autoregressive Time Series Forecasting Architecture
+- **Discovery**: Sequential time-series forecasting requires automated rolling lag window generation for multi-step forecasting.
+- **Impact**: `TimeSeriesForecaster` provides `forecast(steps)` which iteratively feeds predictions back into the lag feature window to project arbitrary future horizons.
+
+### 12. Isolation Forest Anomaly Detection Semantics
+- **Discovery**: Anomaly detection techniques output boolean flags and continuous isolation scores rather than discrete multi-class labels or continuous regression values.
+- **Impact**: `IsolationForest` provides `is_anomaly()` returning boolean flags and `anomaly_score()` for direct threat/outlier risk ranking.
