@@ -18,6 +18,7 @@ from .tabular_policy import TabularPolicy
 from .dbscan import DBSCAN
 from .neural_network import NeuralNetwork
 from .gmm import GaussianMixtureModel
+from .hierarchical import HierarchicalClustering
 
 # Technique collections grouped by learning paradigm
 SUPERVISED = [
@@ -37,6 +38,7 @@ UNSUPERVISED = [
     "pca",
     "dbscan",
     "gmm",
+    "hierarchical",
 ]
 
 REINFORCEMENT = [
@@ -59,6 +61,7 @@ _REGISTRY: Dict[str, Type[Technique]] = {
     "dbscan": DBSCAN,
     "neural_network": NeuralNetwork,
     "gmm": GaussianMixtureModel,
+    "hierarchical": HierarchicalClustering,
 }
 
 def get_technique(name: str) -> Type[Technique]:
@@ -92,6 +95,7 @@ __all__ = [
     "DBSCAN",
     "NeuralNetwork",
     "GaussianMixtureModel",
+    "HierarchicalClustering",
     "SUPERVISED",
     "UNSUPERVISED",
     "REINFORCEMENT",

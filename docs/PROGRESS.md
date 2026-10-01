@@ -742,3 +742,11 @@ whole build, every one logged honestly, nothing hidden or glossed over.
   (b) Edge cases for single-component GMM.
   (c) Error cases for predict and predict_proba before fit.
   (d) Security/misuse cases for invalid string matrix inputs.
+
+## Hierarchical Clustering Unsupervised Technique Complete
+- Done: `HierarchicalClustering` (`qai/techniques/hierarchical.py`) providing agglomerative clustering with `n_leaves()` and `cluster_counts()` tools.
+- Real tests in `tests/test_hierarchical.py`:
+  (a) Happy path for multi-cluster assignment and count tracking.
+  (b) Edge cases for small sample datasets.
+  (c) Error cases for predict before train.
+  (d) Security/misuse scenarios for invalid non-numeric matrix inputs.
