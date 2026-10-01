@@ -39,3 +39,7 @@ This document logs critical discoveries, architectural insights, edge cases, and
 ### 8. Automated Hyperparameter Tuning Ergonomics
 - **Discovery**: Model selection and parameter optimization frequently require repetitive cross-validation loops.
 - **Impact**: Providing `qai.AutoTuner` directly integrated with `cross_validate()` gives users automated model optimization in a single call.
+
+### 9. Gaussian Mixture Models Unsupervised Architecture
+- **Discovery**: Unlike hard assignment clustering (e.g. K-Means), soft probabilistic clustering requires component posterior probabilities and log-likelihood metrics (`score_samples`).
+- **Impact**: Exposing `predict_proba()` and `score_samples()` on GMM models gives `qai` users density estimation and soft cluster membership capabilities.

@@ -734,3 +734,11 @@ whole build, every one logged honestly, nothing hidden or glossed over.
   (b) Edge cases for minimal 1-sample parameter grids.
   (c) Error cases for empty parameter grids and calling best_model before fit.
   (d) Security/misuse cases for malformed parameter names.
+
+## Gaussian Mixture Models (GMM) Unsupervised Technique Complete
+- Done: `GaussianMixtureModel` (`qai/techniques/gmm.py`) providing probabilistic clustering with `predict_proba()`, `score_samples()`, `means()`, and `covariances()`.
+- Real tests in `tests/test_gmm.py`:
+  (a) Happy path for multi-component clustering and probability prediction.
+  (b) Edge cases for single-component GMM.
+  (c) Error cases for predict and predict_proba before fit.
+  (d) Security/misuse cases for invalid string matrix inputs.
