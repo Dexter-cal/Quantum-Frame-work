@@ -726,3 +726,11 @@ whole build, every one logged honestly, nothing hidden or glossed over.
   (b) Edge cases for loss computation and zero gradients on exact prediction matches.
   (c) Error case for non-converging RetrainUntil loops respecting max_epochs caps.
   (d) Security/misuse case for invalid non-objective parameters.
+
+## AutoML & Automated Hyperparameter Tuning (`qai.AutoTuner`) Complete
+- Done: `AutoTuner` and `autotune()` function (`qai/core/autotune.py`) providing automated grid search using k-fold cross validation.
+- Real tests in `tests/test_autotune.py`:
+  (a) Happy path for hyperparameter tuning across real KNN parameters on Iris data.
+  (b) Edge cases for minimal 1-sample parameter grids.
+  (c) Error cases for empty parameter grids and calling best_model before fit.
+  (d) Security/misuse cases for malformed parameter names.

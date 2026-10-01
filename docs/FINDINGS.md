@@ -35,3 +35,7 @@ This document logs critical discoveries, architectural insights, edge cases, and
 ### 7. Section 56 Complete Mechanics Decomposition Wiring
 - **Discovery**: In the initial design, `Objective` and `TrainingLoop` objects existed as standalone classes in `qai.mechanics` but were not directly wired into `Model.build()`.
 - **Impact**: Explicitly wiring `objective` and `training_loop` into `qai.build()` fulfills Section 56's core design goal: structure (what the model IS) is completely decoupled from optimization, loss measurement, and termination criteria.
+
+### 8. Automated Hyperparameter Tuning Ergonomics
+- **Discovery**: Model selection and parameter optimization frequently require repetitive cross-validation loops.
+- **Impact**: Providing `qai.AutoTuner` directly integrated with `cross_validate()` gives users automated model optimization in a single call.
