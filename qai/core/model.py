@@ -20,7 +20,8 @@ class CompatibilityError(ValueError):
 
 class Model:
     def __init__(self, technique_name: str, learning_technique: str = None,
-                 input_schema=None, output_schema=None, **params):
+                 input_schema=None, output_schema=None,
+                 optimizer=None, objective=None, training_loop=None, **params):
         cls = get_technique(technique_name)
 
         if learning_technique is not None:
@@ -35,11 +36,23 @@ class Model:
         else:
             learning_technique = cls.compatible_learning_techniques[0]  # sensible default, Section 66
 
+        # Section 56 mechanics decomposition wiring
+        if optimizer is not None or objective is not None or training_loop is not None:
+            if technique_name == "regression":
+                if optimizer is None:
+                    from ..mechanics import GradientDescent
+                    optimizer = GradientDescent(objective=objective, training_loop=training_loop)
+                elif hasattr(optimizer, "objective") and objective is not None:
+                    optimizer.objective = objective
+                if hasattr(optimizer, "training_loop") and training_loop is not None:
+                    optimizer.training_loop = training_loop
+                params["optimizer"] = optimizer
+
         self.technique = cls(**params)
         self.technique_name = technique_name
         self.learning_technique = learning_technique
-        self.input_schema = Schema(input_schema) if input_schema else None
-        self.output_schema = Schema(output_schema) if output_schema else None
+        self.input_schema = Schema(input_schema) if input_schema and not isinstance(input_schema, Schema) else input_schema
+        self.output_schema = Schema(output_schema) if output_schema and not isinstance(output_schema, Schema) else output_schema
         self._history = []
         self._last_input = None
         self._last_output = None
@@ -59,9 +72,19 @@ class Model:
                 print(f"[qai] Training complete (via Environment). technique={self.technique_name} time={elapsed:.3f}s")
             return self
 
+        # Handle dict-rows training input
+        if isinstance(X, dict):
+            if self.input_schema is not None:
+                X = self.input_schema.dict_to_array(X)
+            else:
+                X = np.array(list(X.values()), dtype=float)
+            if X.ndim == 1:
+                X = X.reshape(1, -1)
+
         X = np.asarray(X)
         if self.input_schema is not None:
-            self.input_schema.validate_array(X, context="training input")
+            self.input_schema.validate(X, context="training input")
+
         start = time.time()
         self.technique.fit(X, y, **kwargs)
         elapsed = time.time() - start
@@ -74,32 +97,34 @@ class Model:
     def predict(self, x, **kwargs):
         if not self.technique.is_trained():
             raise RuntimeError("predict() called before train() -- model has no learned weights yet")
+
+        if isinstance(x, dict):
+            if self.input_schema is not None:
+                x_arr = self.input_schema.dict_to_array(x)
+            else:
+                x_arr = np.array(list(x.values()), dtype=float)
+            x_val = x_arr
+        else:
+            x_val = x
+
         if self.input_schema is not None:
-            x = np.asarray(x)
-            self.input_schema.validate_array(x, context="prediction input")
-        # NOTE: not every technique's input is a numeric array -- TabularPolicy's
-        # `state` can be a plain int/tuple, plus it needs an extra `actions` kwarg.
-        # Forcing np.asarray() unconditionally here was a real interface bug,
-        # found by actually testing RL through the Model interface, not before.
+            self.input_schema.validate(x_val, context="prediction input")
+
         self._last_input = self._snapshot(x)
-        result = self.technique.forward(x, **kwargs)
+        result = self.technique.forward(x_val, **kwargs)
+
+        if self.output_schema is not None:
+            self.output_schema.validate(result, context="prediction output")
+
         self._last_output = self._snapshot(result)
         return result
 
     def input(self):
-        """Return the most recent value supplied to predict().
-
-        This is runtime inspection state, distinct from ``input_schema``.
-        A copy is returned for NumPy arrays so callers cannot mutate it.
-        """
+        """Return the most recent value supplied to predict()."""
         return self._snapshot(self._last_input)
 
     def output(self):
-        """Return the most recent value produced by predict().
-
-        This is runtime inspection state, distinct from ``output_schema``.
-        A copy is returned for NumPy arrays so callers cannot mutate it.
-        """
+        """Return the most recent value produced by predict()."""
         return self._snapshot(self._last_output)
 
     @staticmethod
@@ -180,16 +205,15 @@ class Model:
 
     # --- pass-through to technique-specific unique tools --------------------
     def __getattr__(self, item):
-        # if the Model itself doesn't have it, fall through to the technique
-        # (this is how e.g. model.formula() or model.confusion_matrix() work
-        # without Model needing to know about every technique's extras)
         return getattr(self.technique, item)
 
     def __repr__(self):
         return f"<qai.Model technique={self.technique_name} trained={self.technique.is_trained()}>"
 
 
-def build(type: str, learning_technique: str = None, input_schema=None, output_schema=None, **params) -> Model:
+def build(type: str, learning_technique: str = None, input_schema=None, output_schema=None,
+          optimizer=None, objective=None, training_loop=None, **params) -> Model:
     """qai.build(type='regression', learning_technique='supervised') -- the entry point,
-    matching the doc exactly, now with real compatibility checking (Section 66)."""
-    return Model(type, learning_technique=learning_technique, input_schema=input_schema, output_schema=output_schema, **params)
+    matching the doc exactly, now with real compatibility checking (Section 66) and Section 56 mechanics."""
+    return Model(type, learning_technique=learning_technique, input_schema=input_schema, output_schema=output_schema,
+                 optimizer=optimizer, objective=objective, training_loop=training_loop, **params)

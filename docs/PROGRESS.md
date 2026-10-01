@@ -700,3 +700,45 @@ whole build, every one logged honestly, nothing hidden or glossed over.
 - Done: AI Framework Utilities (`qai.preprocessing`, `qai.governance`, `qai.tracking`)
   providing single-import access to `StandardScaler`, `LabelEncoder`, `SimpleImputer`,
   `detect_drift`, and `ExperimentTracker`. Tested in `tests/test_new_framework_features.py`.
+
+## Section 91: Output & Dict-Row Schema Validation Complete
+- Done: Output schema validation -- validates model.predict() results against output_schema
+- Done: Named-field (dict-row) validation -- dict inputs/outputs validated and automatically
+  converted to ordered numeric arrays based on schema fields
+- Real tests in `tests/test_output_and_dict_schema.py`:
+  (a) Happy path for dict row predictions and output schema validation
+  (b) Edge cases: list of dict rows validation
+  (c) Error case: model prediction violating output schema types raising SchemaError
+  (d) Security/misuse: invalid garbage types passed into schema validation
+
+## Section 12/56: PyTorch Deep Learning Multi-Layer Perceptron (Neural Network)
+- Done: PyTorch-backed `NeuralNetwork` technique (`qai/techniques/neural_network.py`) supporting both classification and regression tasks with loss history tracking and parameter inspection.
+- Real tests in `tests/test_neural_network.py`:
+  (a) Happy path for multi-class classification and continuous regression.
+  (b) Edge cases for small sample training.
+  (c) Error cases for predict before train.
+  (d) Security/misuse scenarios for invalid non-numeric inputs.
+
+## Section 56 Mechanics Decomposition Complete (Objective & TrainingLoop Wiring)
+- Done: Objective (`MSE`, `MAE`) and TrainingLoop (`FixedEpochs`, `RetrainUntil`) wired directly into `qai.build(type="regression", objective=..., training_loop=...)`.
+- Real tests in `tests/test_mechanics_decomposition.py`:
+  (a) Happy path for custom Objective and RetrainUntil condition stopping loop upon reaching loss threshold.
+  (b) Edge cases for loss computation and zero gradients on exact prediction matches.
+  (c) Error case for non-converging RetrainUntil loops respecting max_epochs caps.
+  (d) Security/misuse case for invalid non-objective parameters.
+
+## AutoML & Automated Hyperparameter Tuning (`qai.AutoTuner`) Complete
+- Done: `AutoTuner` and `autotune()` function (`qai/core/autotune.py`) providing automated grid search using k-fold cross validation.
+- Real tests in `tests/test_autotune.py`:
+  (a) Happy path for hyperparameter tuning across real KNN parameters on Iris data.
+  (b) Edge cases for minimal 1-sample parameter grids.
+  (c) Error cases for empty parameter grids and calling best_model before fit.
+  (d) Security/misuse cases for malformed parameter names.
+
+## Gaussian Mixture Models (GMM) Unsupervised Technique Complete
+- Done: `GaussianMixtureModel` (`qai/techniques/gmm.py`) providing probabilistic clustering with `predict_proba()`, `score_samples()`, `means()`, and `covariances()`.
+- Real tests in `tests/test_gmm.py`:
+  (a) Happy path for multi-component clustering and probability prediction.
+  (b) Edge cases for single-component GMM.
+  (c) Error cases for predict and predict_proba before fit.
+  (d) Security/misuse cases for invalid string matrix inputs.

@@ -16,6 +16,8 @@ from .perceptron import Perceptron
 from .random_forest import RandomForest
 from .tabular_policy import TabularPolicy
 from .dbscan import DBSCAN
+from .neural_network import NeuralNetwork
+from .gmm import GaussianMixtureModel
 
 # Technique collections grouped by learning paradigm
 SUPERVISED = [
@@ -27,12 +29,14 @@ SUPERVISED = [
     "perceptron",
     "random_forest",
     "regression",
+    "neural_network",
 ]
 
 UNSUPERVISED = [
     "kmeans",
     "pca",
     "dbscan",
+    "gmm",
 ]
 
 REINFORCEMENT = [
@@ -53,6 +57,8 @@ _REGISTRY: Dict[str, Type[Technique]] = {
     "random_forest": RandomForest,
     "tabular_policy": TabularPolicy,
     "dbscan": DBSCAN,
+    "neural_network": NeuralNetwork,
+    "gmm": GaussianMixtureModel,
 }
 
 def get_technique(name: str) -> Type[Technique]:
@@ -84,6 +90,8 @@ __all__ = [
     "RandomForest",
     "TabularPolicy",
     "DBSCAN",
+    "NeuralNetwork",
+    "GaussianMixtureModel",
     "SUPERVISED",
     "UNSUPERVISED",
     "REINFORCEMENT",
