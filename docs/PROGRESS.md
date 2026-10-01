@@ -750,3 +750,11 @@ whole build, every one logged honestly, nothing hidden or glossed over.
   (b) Edge cases for small sample datasets.
   (c) Error cases for predict before train.
   (d) Security/misuse scenarios for invalid non-numeric matrix inputs.
+
+## Time Series Forecasting Technique Complete
+- Done: `TimeSeriesForecaster` (`qai/techniques/time_series.py`) providing autoregressive forecasting with lag features, `forecast(steps)`, and `residuals()`.
+- Real tests in `tests/test_time_series.py`:
+  (a) Happy path for single-step and multi-step forecasting on a linear time sequence.
+  (b) Edge cases for short sequence training.
+  (c) Error cases for sequences shorter than lag length and predict before fit.
+  (d) Security/misuse scenarios for insufficient lag window inputs.

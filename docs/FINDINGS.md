@@ -47,3 +47,7 @@ This document logs critical discoveries, architectural insights, edge cases, and
 ### 10. Hierarchical Agglomerative Clustering Interface
 - **Discovery**: Agglomerative clustering does not naturally have an Out-Of-Sample `.predict()` method in sklearn.
 - **Impact**: In `qai`, `forward()` maps new samples to nearest cluster centroids, maintaining uniform prediction semantics across all unsupervised techniques.
+
+### 11. Autoregressive Time Series Forecasting Architecture
+- **Discovery**: Sequential time-series forecasting requires automated rolling lag window generation for multi-step forecasting.
+- **Impact**: `TimeSeriesForecaster` provides `forecast(steps)` which iteratively feeds predictions back into the lag feature window to project arbitrary future horizons.

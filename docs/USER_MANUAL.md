@@ -260,3 +260,8 @@ qai.serve(model, port=5000)
 ### Unsupervised Technique Addition
 - **`hierarchical`**: Agglomerative Hierarchical Clustering.
   - *Methods*: `cluster_counts()`, `n_leaves()`
+
+### Time Series Forecasting Addition
+- **`time_series`**: Autoregressive Time Series Forecaster.
+  - *Parameters*: `lags=3`, `horizon=1`
+  - *Methods*: `forecast(steps=5)`, `residuals()`
