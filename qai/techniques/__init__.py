@@ -20,6 +20,7 @@ from .neural_network import NeuralNetwork
 from .gmm import GaussianMixtureModel
 from .hierarchical import HierarchicalClustering
 from .time_series import TimeSeriesForecaster
+from .isolation_forest import IsolationForest
 
 # Technique collections grouped by learning paradigm
 SUPERVISED = [
@@ -41,6 +42,7 @@ UNSUPERVISED = [
     "dbscan",
     "gmm",
     "hierarchical",
+    "isolation_forest",
 ]
 
 REINFORCEMENT = [
@@ -65,6 +67,7 @@ _REGISTRY: Dict[str, Type[Technique]] = {
     "gmm": GaussianMixtureModel,
     "hierarchical": HierarchicalClustering,
     "time_series": TimeSeriesForecaster,
+    "isolation_forest": IsolationForest,
 }
 
 def get_technique(name: str) -> Type[Technique]:
@@ -100,6 +103,7 @@ __all__ = [
     "GaussianMixtureModel",
     "HierarchicalClustering",
     "TimeSeriesForecaster",
+    "IsolationForest",
     "SUPERVISED",
     "UNSUPERVISED",
     "REINFORCEMENT",

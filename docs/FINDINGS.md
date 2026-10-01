@@ -51,3 +51,7 @@ This document logs critical discoveries, architectural insights, edge cases, and
 ### 11. Autoregressive Time Series Forecasting Architecture
 - **Discovery**: Sequential time-series forecasting requires automated rolling lag window generation for multi-step forecasting.
 - **Impact**: `TimeSeriesForecaster` provides `forecast(steps)` which iteratively feeds predictions back into the lag feature window to project arbitrary future horizons.
+
+### 12. Isolation Forest Anomaly Detection Semantics
+- **Discovery**: Anomaly detection techniques output boolean flags and continuous isolation scores rather than discrete multi-class labels or continuous regression values.
+- **Impact**: `IsolationForest` provides `is_anomaly()` returning boolean flags and `anomaly_score()` for direct threat/outlier risk ranking.

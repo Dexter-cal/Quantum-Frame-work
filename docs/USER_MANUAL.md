@@ -265,3 +265,8 @@ qai.serve(model, port=5000)
 - **`time_series`**: Autoregressive Time Series Forecaster.
   - *Parameters*: `lags=3`, `horizon=1`
   - *Methods*: `forecast(steps=5)`, `residuals()`
+
+### Anomaly Detection Addition
+- **`isolation_forest`**: Unsupervised Isolation Forest for anomaly and outlier detection.
+  - *Parameters*: `n_estimators=100`, `contamination=0.1`
+  - *Methods*: `anomaly_score(x)`, `is_anomaly(x)`

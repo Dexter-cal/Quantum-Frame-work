@@ -758,3 +758,11 @@ whole build, every one logged honestly, nothing hidden or glossed over.
   (b) Edge cases for short sequence training.
   (c) Error cases for sequences shorter than lag length and predict before fit.
   (d) Security/misuse scenarios for insufficient lag window inputs.
+
+## Anomaly Detection Technique (Isolation Forest) Complete
+- Done: `IsolationForest` (`qai/techniques/isolation_forest.py`) providing anomaly and outlier classification (+1 inlier, -1 outlier) with `anomaly_score()` and `is_anomaly()`.
+- Real tests in `tests/test_isolation_forest.py`:
+  (a) Happy path on synthetic normal vs extreme outlier samples.
+  (b) Edge cases for small sample anomaly datasets.
+  (c) Error cases for predict and anomaly_score before fit.
+  (d) Security/misuse scenarios for invalid matrix inputs.
