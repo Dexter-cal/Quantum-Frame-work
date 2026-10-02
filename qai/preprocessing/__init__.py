@@ -114,3 +114,20 @@ def clean_dataset(X, y=None, impute_strategy="mean", scale=True):
             y_arr = np.asarray(y)
 
     return (X_arr, y_arr) if y is not None else X_arr
+
+
+class PolynomialFeatures:
+    """Generates polynomial and interaction feature combinations."""
+    def __init__(self, degree=2, include_bias=False):
+        from sklearn.preprocessing import PolynomialFeatures as SKPoly
+        self.degree = degree
+        self.include_bias = include_bias
+        self.model = SKPoly(degree=degree, include_bias=include_bias)
+
+    def fit_transform(self, X):
+        X_arr = np.asarray(X, dtype=float)
+        return self.model.fit_transform(X_arr)
+
+    def transform(self, X):
+        X_arr = np.asarray(X, dtype=float)
+        return self.model.transform(X_arr)

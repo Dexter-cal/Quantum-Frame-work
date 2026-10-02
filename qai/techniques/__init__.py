@@ -22,6 +22,7 @@ from .hierarchical import HierarchicalClustering
 from .time_series import TimeSeriesForecaster
 from .isolation_forest import IsolationForest
 from .tsne import TSNE
+from .multinomial_naive_bayes import MultinomialNaiveBayes
 
 # Technique collections grouped by learning paradigm
 SUPERVISED = [
@@ -35,6 +36,7 @@ SUPERVISED = [
     "regression",
     "neural_network",
     "time_series",
+    "multinomial_naive_bayes",
 ]
 
 UNSUPERVISED = [
@@ -71,6 +73,7 @@ _REGISTRY: Dict[str, Type[Technique]] = {
     "time_series": TimeSeriesForecaster,
     "isolation_forest": IsolationForest,
     "tsne": TSNE,
+    "multinomial_naive_bayes": MultinomialNaiveBayes,
 }
 
 def get_technique(name: str) -> Type[Technique]:
@@ -108,6 +111,7 @@ __all__ = [
     "TimeSeriesForecaster",
     "IsolationForest",
     "TSNE",
+    "MultinomialNaiveBayes",
     "SUPERVISED",
     "UNSUPERVISED",
     "REINFORCEMENT",

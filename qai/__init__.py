@@ -7,8 +7,8 @@ qai -- unified machine learning and artificial intelligence framework.
     model.predict(x)
 
 Provides unified single-import access to modeling, pipelines, datasets,
-cross-validation, autotuning, benchmark, persistence, serving, preprocessing,
-governance, and tracking.
+cross-validation, autotuning, benchmark, persistence, quantization, evaluation metrics,
+synthetic generators, serving, preprocessing, governance, and tracking.
 """
 from .core import build, Model, logic, LogicError, CompatibilityError
 from .core.logic import save_logic_source, load_logic_source
@@ -21,11 +21,14 @@ from .core.ensemble import VotingEnsemble
 from .core.autotune import AutoTuner, autotune
 from .core.benchmark import benchmark
 from .core.persistence import save_model, load_model
+from .core.quantize import compress_model
+from .core.metrics import classification_report, confusion_matrix
+from .core.generators import make_classification
 from .techniques import register_technique, Technique
 from .learning import get_learning_technique, LearningTechnique
 
 # Advanced features and extensions
-from .preprocessing import StandardScaler, LabelEncoder, SimpleImputer, clean_dataset
+from .preprocessing import StandardScaler, LabelEncoder, SimpleImputer, PolynomialFeatures, clean_dataset
 from .governance import detect_drift
 from .tracking import ExperimentTracker
 
@@ -34,7 +37,8 @@ __all__ = [
     "GridWorld", "get_learning_technique", "LearningTechnique", "CompatibilityError",
     "Dataset", "serve", "build_flask_app", "Pipeline", "cross_validate", "k_fold_split",
     "VotingEnsemble", "AutoTuner", "autotune", "benchmark", "save_model", "load_model",
+    "compress_model", "classification_report", "confusion_matrix", "make_classification",
     "save_logic_source", "load_logic_source", "StandardScaler", "LabelEncoder", "SimpleImputer",
-    "clean_dataset", "detect_drift", "ExperimentTracker"
+    "PolynomialFeatures", "clean_dataset", "detect_drift", "ExperimentTracker"
 ]
 __version__ = "0.1.0-prototype"

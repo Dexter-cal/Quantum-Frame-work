@@ -63,3 +63,7 @@ This document logs critical discoveries, architectural insights, edge cases, and
 ### 14. Integrated Model Lifecycle Operations
 - **Discovery**: Users require unified workflow tools (explainability, benchmarking, manifold reduction, binary serialization, automated cleaning) directly off the primary import.
 - **Impact**: Exposing `benchmark()`, `save_model()`, `load_model()`, `tsne`, and `clean_dataset()` under `qai` fulfills the complete single-import AI development goal.
+
+### 15. Discrete Count Modeling & Model Quantization
+- **Discovery**: Count and text-based frequency vectors require non-negative Multinomial Naive Bayes modeling and post-training precision scaling.
+- **Impact**: `MultinomialNaiveBayes` enforces $X \ge 0$ validation, while `compress_model` supports float16 and int8 parameter quantization.
