@@ -790,3 +790,26 @@ whole build, every one logged honestly, nothing hidden or glossed over.
 - Done 4: Model Quantization & Precision Compression (`qai.compress_model`).
 - Done 5: Synthetic Classification Dataset Generator (`qai.make_classification`).
 - Real tests in `tests/test_next_five_features.py`.
+
+## Suite of 20 Additional ML/AI Features Complete
+- Done 1: Linear Discriminant Analysis (`lda`).
+- Done 2: Quadratic Discriminant Analysis (`qda`).
+- Done 3: AdaBoost Classifier (`adaboost`).
+- Done 4: Gradient Boosting Classifier (`gradient_boosting`).
+- Done 5: Extra Trees Classifier (`extra_trees`).
+- Done 6: Ridge Regression (`ridge`).
+- Done 7: Lasso Regression (`lasso`).
+- Done 8: ElasticNet Regression (`elastic_net`).
+- Done 9: Kernel Ridge Regression (`kernel_ridge`).
+- Done 10: Truncated SVD (`truncated_svd`).
+- Done 11: Min-Max Scaler (`qai.MinMaxScaler`).
+- Done 12: Robust Scaler (`qai.RobustScaler`).
+- Done 13: Normalizer (`qai.Normalizer`).
+- Done 14: One-Hot Encoder (`qai.OneHotEncoder`).
+- Done 15: Binarizer (`qai.Binarizer`).
+- Done 16: Regression Metrics (`qai.mean_absolute_error`, `qai.r2_score`).
+- Done 17: Multi-Class ROC AUC & Log Loss Metrics (`qai.log_loss`, `qai.roc_auc_score`).
+- Done 18: Synthetic Regression Data Generator (`qai.make_regression`).
+- Done 19: Model Weight Vector Distance Metric (`qai.weight_distance`).
+- Done 20: Prediction Calibration Curve Utility (`qai.calibration_curve`).
+- Real tests in `tests/test_twenty_features_suite.py`.

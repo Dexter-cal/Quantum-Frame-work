@@ -23,6 +23,8 @@ from .time_series import TimeSeriesForecaster
 from .isolation_forest import IsolationForest
 from .tsne import TSNE
 from .multinomial_naive_bayes import MultinomialNaiveBayes
+from .supervised_extensions import LDA, QDA, AdaBoost, GradientBoosting, ExtraTrees, RidgeRegression, LassoRegression, ElasticNet, KernelRidge
+from .truncated_svd import TruncatedSVD
 
 # Technique collections grouped by learning paradigm
 SUPERVISED = [
@@ -37,6 +39,15 @@ SUPERVISED = [
     "neural_network",
     "time_series",
     "multinomial_naive_bayes",
+    "lda",
+    "qda",
+    "adaboost",
+    "gradient_boosting",
+    "extra_trees",
+    "ridge",
+    "lasso",
+    "elastic_net",
+    "kernel_ridge",
 ]
 
 UNSUPERVISED = [
@@ -47,6 +58,7 @@ UNSUPERVISED = [
     "hierarchical",
     "isolation_forest",
     "tsne",
+    "truncated_svd",
 ]
 
 REINFORCEMENT = [
@@ -74,6 +86,16 @@ _REGISTRY: Dict[str, Type[Technique]] = {
     "isolation_forest": IsolationForest,
     "tsne": TSNE,
     "multinomial_naive_bayes": MultinomialNaiveBayes,
+    "lda": LDA,
+    "qda": QDA,
+    "adaboost": AdaBoost,
+    "gradient_boosting": GradientBoosting,
+    "extra_trees": ExtraTrees,
+    "ridge": RidgeRegression,
+    "lasso": LassoRegression,
+    "elastic_net": ElasticNet,
+    "kernel_ridge": KernelRidge,
+    "truncated_svd": TruncatedSVD,
 }
 
 def get_technique(name: str) -> Type[Technique]:
@@ -112,6 +134,16 @@ __all__ = [
     "IsolationForest",
     "TSNE",
     "MultinomialNaiveBayes",
+    "LDA",
+    "QDA",
+    "AdaBoost",
+    "GradientBoosting",
+    "ExtraTrees",
+    "RidgeRegression",
+    "LassoRegression",
+    "ElasticNet",
+    "KernelRidge",
+    "TruncatedSVD",
     "SUPERVISED",
     "UNSUPERVISED",
     "REINFORCEMENT",

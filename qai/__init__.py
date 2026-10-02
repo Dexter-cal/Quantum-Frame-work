@@ -22,14 +22,14 @@ from .core.autotune import AutoTuner, autotune
 from .core.benchmark import benchmark
 from .core.persistence import save_model, load_model
 from .core.quantize import compress_model
-from .core.metrics import classification_report, confusion_matrix
-from .core.generators import make_classification
+from .core.metrics import classification_report, confusion_matrix, mean_absolute_error, r2_score, log_loss, roc_auc_score
+from .core.generators import make_classification, make_regression
 from .techniques import register_technique, Technique
 from .learning import get_learning_technique, LearningTechnique
 
 # Advanced features and extensions
-from .preprocessing import StandardScaler, LabelEncoder, SimpleImputer, PolynomialFeatures, clean_dataset
-from .governance import detect_drift
+from .preprocessing import StandardScaler, LabelEncoder, SimpleImputer, PolynomialFeatures, MinMaxScaler, RobustScaler, Normalizer, OneHotEncoder, Binarizer, clean_dataset
+from .governance import detect_drift, weight_distance, calibration_curve
 from .tracking import ExperimentTracker
 
 __all__ = [
@@ -37,8 +37,10 @@ __all__ = [
     "GridWorld", "get_learning_technique", "LearningTechnique", "CompatibilityError",
     "Dataset", "serve", "build_flask_app", "Pipeline", "cross_validate", "k_fold_split",
     "VotingEnsemble", "AutoTuner", "autotune", "benchmark", "save_model", "load_model",
-    "compress_model", "classification_report", "confusion_matrix", "make_classification",
+    "compress_model", "classification_report", "confusion_matrix", "mean_absolute_error", "r2_score",
+    "log_loss", "roc_auc_score", "make_classification", "make_regression",
     "save_logic_source", "load_logic_source", "StandardScaler", "LabelEncoder", "SimpleImputer",
-    "PolynomialFeatures", "clean_dataset", "detect_drift", "ExperimentTracker"
+    "PolynomialFeatures", "MinMaxScaler", "RobustScaler", "Normalizer", "OneHotEncoder", "Binarizer",
+    "clean_dataset", "detect_drift", "weight_distance", "calibration_curve", "ExperimentTracker"
 ]
 __version__ = "0.1.0-prototype"

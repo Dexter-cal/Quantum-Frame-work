@@ -19,3 +19,15 @@ def make_classification(n_samples: int = 100, n_features: int = 4, n_classes: in
         random_state=random_state
     )
     return X, y
+
+
+def make_regression(n_samples: int = 100, n_features: int = 4, noise: float = 0.1, random_state: int = 42) -> Tuple[np.ndarray, np.ndarray]:
+    """Generates a synthetic regression dataset."""
+    from sklearn.datasets import make_regression as sk_make_reg
+    X, y = sk_make_reg(
+        n_samples=n_samples,
+        n_features=n_features,
+        noise=noise,
+        random_state=random_state
+    )
+    return X, y

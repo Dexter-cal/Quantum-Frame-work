@@ -287,3 +287,12 @@ qai.serve(model, port=5000)
 - **`qai.classification_report(y_true, y_pred)`**: Precision, recall, and F1-score dict.
 - **`qai.compress_model(model, precision)`**: Quantizes weights to `'float16'` or `'int8'`.
 - **`qai.make_classification(n_samples, n_features)`**: Generates synthetic classification datasets.
+
+### 20 Additional ML/AI Features Directory
+- **Classifiers**: `lda`, `qda`, `adaboost`, `gradient_boosting`, `extra_trees`
+- **Regressors**: `ridge`, `lasso`, `elastic_net`, `kernel_ridge`
+- **Unsupervised**: `truncated_svd`
+- **Scalers & Encoders**: `MinMaxScaler`, `RobustScaler`, `Normalizer`, `OneHotEncoder`, `Binarizer`
+- **Metrics**: `mean_absolute_error`, `r2_score`, `log_loss`, `roc_auc_score`
+- **Generators**: `make_regression`
+- **Governance**: `weight_distance(m1, m2)`, `calibration_curve(y_true, y_prob)`
