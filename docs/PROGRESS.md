@@ -813,3 +813,8 @@ whole build, every one logged honestly, nothing hidden or glossed over.
 - Done 19: Model Weight Vector Distance Metric (`qai.weight_distance`).
 - Done 20: Prediction Calibration Curve Utility (`qai.calibration_curve`).
 - Real tests in `tests/test_twenty_features_suite.py`.
+
+## Massive Model Directory Expansion (50+ Total Models & Extensions) Complete
+- Done: Added 20 additional classifiers and regressors (`bernoulli_naive_bayes`, `complement_naive_bayes`, `sgd_classifier`, `passive_aggressive_classifier`, `linear_svc`, `nu_svc`, `radius_neighbors_classifier`, `nearest_centroid`, `bagging_classifier`, `hist_gradient_boosting`, `bayesian_ridge`, `ard_regression`, `huber`, `ransac`, `theil_sen`, `quantile_regression`, `decision_tree_regressor`, `random_forest_regressor`, `adaboost_regressor`, `gradient_boosting_regressor`).
+- Done: Documented `@qai.logic`, `save_logic_source()`, and `load_logic_source()` in `docs/USER_MANUAL.md`.
+- Real tests in `tests/test_hundred_features_suite.py`.
