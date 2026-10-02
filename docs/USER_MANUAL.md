@@ -280,3 +280,10 @@ qai.serve(model, port=5000)
 - **`qai.save_model(model, filepath)` / `qai.load_model(filepath)`**: Binary model persistence.
 - **`qai.clean_dataset(X, y)`**: Handles NaNs, scaling, and categorical encoding in one call.
 - **`tsne`**: t-Distributed Stochastic Neighbor Embedding (`embedding()`).
+
+### Extended AI Utilities (Batch 2)
+- **`multinomial_naive_bayes`**: Naive Bayes for discrete feature counts (`class_log_prior()`).
+- **`qai.PolynomialFeatures`**: Generates degree-N polynomial and interaction terms.
+- **`qai.classification_report(y_true, y_pred)`**: Precision, recall, and F1-score dict.
+- **`qai.compress_model(model, precision)`**: Quantizes weights to `'float16'` or `'int8'`.
+- **`qai.make_classification(n_samples, n_features)`**: Generates synthetic classification datasets.

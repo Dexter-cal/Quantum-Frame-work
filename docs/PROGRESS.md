@@ -782,3 +782,11 @@ whole build, every one logged honestly, nothing hidden or glossed over.
 - Done 4: Binary Model Persistence (`qai.save_model` / `qai.load_model`).
 - Done 5: Automated Dataset Preprocessing & Cleaning (`qai.preprocessing.clean_dataset`).
 - Real tests in `tests/test_five_new_features.py`.
+
+## Five Concurrent AI Framework Extensions (Batch 2) Complete
+- Done 1: Multinomial Naive Bayes (`qai/techniques/multinomial_naive_bayes.py`) for discrete count features.
+- Done 2: Polynomial Feature Expansion (`qai.PolynomialFeatures`).
+- Done 3: Classification Metrics & Evaluation Helpers (`qai.classification_report`, `qai.confusion_matrix`).
+- Done 4: Model Quantization & Precision Compression (`qai.compress_model`).
+- Done 5: Synthetic Classification Dataset Generator (`qai.make_classification`).
+- Real tests in `tests/test_next_five_features.py`.
