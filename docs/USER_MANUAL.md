@@ -270,3 +270,13 @@ qai.serve(model, port=5000)
 - **`isolation_forest`**: Unsupervised Isolation Forest for anomaly and outlier detection.
   - *Parameters*: `n_estimators=100`, `contamination=0.1`
   - *Methods*: `anomaly_score(x)`, `is_anomaly(x)`
+
+### Multi-Stage Pipeline Updates
+- **`Pipeline`**: Sequential multi-model processing.
+  - *Methods*: `train(X, y=None, verbose=True)`, `predict(x)`, `pipe_to(other_model)`
+
+### Framework Utilities & Extensions Directory
+- **`qai.benchmark(techniques, X, y)`**: Evaluates accuracy and latency across multiple model types.
+- **`qai.save_model(model, filepath)` / `qai.load_model(filepath)`**: Binary model persistence.
+- **`qai.clean_dataset(X, y)`**: Handles NaNs, scaling, and categorical encoding in one call.
+- **`tsne`**: t-Distributed Stochastic Neighbor Embedding (`embedding()`).

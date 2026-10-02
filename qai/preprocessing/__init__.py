@@ -1,7 +1,8 @@
 """
-Data preprocessing, scaling, encoding, and missing-value handling utilities for qai.
+Data preprocessing, scaling, encoding, missing-value handling, and automated cleaning utilities for qai.
 """
 import numpy as np
+from typing import Tuple, Optional, Any
 
 class StandardScaler:
     """Scales features by removing the mean and scaling to unit variance."""
@@ -88,3 +89,28 @@ class SimpleImputer:
 
     def fit_transform(self, X):
         return self.fit(X).transform(X)
+
+
+def clean_dataset(X, y=None, impute_strategy="mean", scale=True):
+    """Automated dataset cleaning: handles missing values, encodes labels, and scales features in one call."""
+    if not isinstance(X, (list, np.ndarray)):
+        raise TypeError("X must be a list or numpy array")
+
+    X_arr = np.asarray(X, dtype=float)
+    if np.isnan(X_arr).any():
+        imputer = SimpleImputer(strategy=impute_strategy)
+        X_arr = imputer.fit_transform(X_arr)
+
+    if scale:
+        scaler = StandardScaler()
+        X_arr = scaler.fit_transform(X_arr)
+
+    y_arr = None
+    if y is not None:
+        if isinstance(y[0], str):
+            encoder = LabelEncoder()
+            y_arr = encoder.fit_transform(y)
+        else:
+            y_arr = np.asarray(y)
+
+    return (X_arr, y_arr) if y is not None else X_arr

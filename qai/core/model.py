@@ -205,7 +205,11 @@ class Model:
 
     # --- pass-through to technique-specific unique tools --------------------
     def __getattr__(self, item):
-        return getattr(self.technique, item)
+        if item in ("technique", "technique_name", "learning_technique", "input_schema", "output_schema", "_history", "_last_input", "_last_output"):
+            raise AttributeError(f"Model has no attribute '{item}'")
+        if hasattr(self, "technique") and self.technique is not None:
+            return getattr(self.technique, item)
+        raise AttributeError(f"Model has no attribute '{item}'")
 
     def __repr__(self):
         return f"<qai.Model technique={self.technique_name} trained={self.technique.is_trained()}>"
