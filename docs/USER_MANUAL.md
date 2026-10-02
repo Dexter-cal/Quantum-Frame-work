@@ -274,3 +274,9 @@ qai.serve(model, port=5000)
 ### Multi-Stage Pipeline Updates
 - **`Pipeline`**: Sequential multi-model processing.
   - *Methods*: `train(X, y=None, verbose=True)`, `predict(x)`, `pipe_to(other_model)`
+
+### Framework Utilities & Extensions Directory
+- **`qai.benchmark(techniques, X, y)`**: Evaluates accuracy and latency across multiple model types.
+- **`qai.save_model(model, filepath)` / `qai.load_model(filepath)`**: Binary model persistence.
+- **`qai.clean_dataset(X, y)`**: Handles NaNs, scaling, and categorical encoding in one call.
+- **`tsne`**: t-Distributed Stochastic Neighbor Embedding (`embedding()`).
