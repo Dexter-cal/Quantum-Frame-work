@@ -67,3 +67,7 @@ This document logs critical discoveries, architectural insights, edge cases, and
 ### 15. Discrete Count Modeling & Model Quantization
 - **Discovery**: Count and text-based frequency vectors require non-negative Multinomial Naive Bayes modeling and post-training precision scaling.
 - **Impact**: `MultinomialNaiveBayes` enforces $X \ge 0$ validation, while `compress_model` supports float16 and int8 parameter quantization.
+
+### 16. Comprehensive Classifier & Regressor Ecosystem Expansion
+- **Discovery**: Broad model choice (discriminant analysis, boosting ensembles, regularized linear models, SVD manifold reduction, scalers, and calibration curves) provides complete single-import AI development.
+- **Impact**: All 20 newly added techniques and utilities integrate seamlessly into `qai.build()`, `qai.preprocessing`, `qai.metrics`, and `qai.governance`.

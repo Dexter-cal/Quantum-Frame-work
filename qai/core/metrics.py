@@ -23,3 +23,27 @@ def confusion_matrix(y_true, y_pred) -> np.ndarray:
     y_t = np.asarray(y_true)
     y_p = np.asarray(y_pred)
     return sk_cm(y_t, y_p)
+
+
+def mean_absolute_error(y_true, y_pred) -> float:
+    """Computes mean absolute error for regression targets."""
+    from sklearn.metrics import mean_absolute_error as sk_mae
+    return float(sk_mae(y_true, y_pred))
+
+
+def r2_score(y_true, y_pred) -> float:
+    """Computes R2 coefficient of determination score for regression targets."""
+    from sklearn.metrics import r2_score as sk_r2
+    return float(sk_r2(y_true, y_pred))
+
+
+def log_loss(y_true, y_pred_proba) -> float:
+    """Computes cross-entropy / log loss for classification probabilities."""
+    from sklearn.metrics import log_loss as sk_log_loss
+    return float(sk_log_loss(y_true, y_pred_proba))
+
+
+def roc_auc_score(y_true, y_score, multi_class="ovr") -> float:
+    """Computes Area Under the Receiver Operating Characteristic Curve (ROC AUC)."""
+    from sklearn.metrics import roc_auc_score as sk_auc
+    return float(sk_auc(y_true, y_score, multi_class=multi_class))

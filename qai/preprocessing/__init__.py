@@ -131,3 +131,68 @@ class PolynomialFeatures:
     def transform(self, X):
         X_arr = np.asarray(X, dtype=float)
         return self.model.transform(X_arr)
+
+
+class MinMaxScaler:
+    """Transforms features by scaling each feature to a given range [0, 1]."""
+    def __init__(self, feature_range=(0, 1)):
+        from sklearn.preprocessing import MinMaxScaler as SKMinMax
+        self.model = SKMinMax(feature_range=feature_range)
+
+    def fit_transform(self, X):
+        return self.model.fit_transform(np.asarray(X, dtype=float))
+
+    def transform(self, X):
+        return self.model.transform(np.asarray(X, dtype=float))
+
+
+class RobustScaler:
+    """Scales features using statistics that are robust to outliers."""
+    def __init__(self):
+        from sklearn.preprocessing import RobustScaler as SKRobust
+        self.model = SKRobust()
+
+    def fit_transform(self, X):
+        return self.model.fit_transform(np.asarray(X, dtype=float))
+
+    def transform(self, X):
+        return self.model.transform(np.asarray(X, dtype=float))
+
+
+class Normalizer:
+    """Normalizes samples individually to unit norm (L2 by default)."""
+    def __init__(self, norm="l2"):
+        from sklearn.preprocessing import Normalizer as SKNorm
+        self.model = SKNorm(norm=norm)
+
+    def fit_transform(self, X):
+        return self.model.fit_transform(np.asarray(X, dtype=float))
+
+    def transform(self, X):
+        return self.model.transform(np.asarray(X, dtype=float))
+
+
+class OneHotEncoder:
+    """Encodes categorical integer features as a one-hot numeric array."""
+    def __init__(self, sparse_output=False):
+        from sklearn.preprocessing import OneHotEncoder as SKOHE
+        self.model = SKOHE(sparse_output=sparse_output)
+
+    def fit_transform(self, X):
+        return self.model.fit_transform(np.asarray(X))
+
+    def transform(self, X):
+        return self.model.transform(np.asarray(X))
+
+
+class Binarizer:
+    """Binarizes data (set feature values to 0 or 1) according to a threshold."""
+    def __init__(self, threshold=0.0):
+        from sklearn.preprocessing import Binarizer as SKBin
+        self.model = SKBin(threshold=threshold)
+
+    def fit_transform(self, X):
+        return self.model.fit_transform(np.asarray(X, dtype=float))
+
+    def transform(self, X):
+        return self.model.transform(np.asarray(X, dtype=float))

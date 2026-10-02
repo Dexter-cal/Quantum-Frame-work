@@ -54,3 +54,22 @@ def detect_drift(reference_data, current_data, threshold=0.1):
         "features": feature_results,
         "threshold": threshold
     }
+
+
+def weight_distance(model1, model2) -> float:
+    """Computes Euclidean distance between model weight parameter vectors."""
+    t1, t2 = model1.technique, model2.technique
+    if hasattr(t1, "w") and hasattr(t2, "w") and t1.w is not None and t2.w is not None:
+        w1, w2 = np.ravel(t1.w), np.ravel(t2.w)
+        if len(w1) != len(w2):
+            raise ValueError(f"Weight vector length mismatch: {len(w1)} vs {len(w2)}")
+        return float(np.linalg.norm(w1 - w2))
+    raise AttributeError("Both models must have numeric weight vectors ('w') to compute distance")
+
+
+def calibration_curve(y_true, y_prob, n_bins: int = 5):
+    """Computes probability calibration curve (fraction of positives vs mean predicted probability)."""
+    from sklearn.calibration import calibration_curve as sk_cal
+    y_t, y_p = np.asarray(y_true), np.asarray(y_prob)
+    prob_true, prob_pred = sk_cal(y_t, y_p, n_bins=n_bins)
+    return {"prob_true": prob_true.tolist(), "prob_pred": prob_pred.tolist()}
