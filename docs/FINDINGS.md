@@ -75,3 +75,7 @@ This document logs critical discoveries, architectural insights, edge cases, and
 ### 17. 50+ Unified Model Catalogue Architecture
 - **Discovery**: Providing explicit technique strings for every major ML paradigm variant allows developers to instantiate tailored classifiers and regressors with standard `qai.build(type=...)` semantics.
 - **Impact**: Expanded `qai.techniques` registry to 50+ total model types covering linear, tree, distance-based, probabilistic, ensemble, deep learning, time-series, and anomaly algorithms.
+
+### 18. Hardware Acceleration & Manifold Learning Integration
+- **Discovery**: Detecting CUDA GPU devices (`qai.get_optimal_device()`) and RAM capacity (`qai.get_hardware_info()`) enables automatic device dispatching for deep learning training.
+- **Impact**: Expanding `qai.techniques` with non-linear manifold learning (`isomap`, `lle`, `fast_ica`, `spectral_clustering`) brings state-of-the-art dimensionality reduction to the single-import interface.

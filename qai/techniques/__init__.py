@@ -33,6 +33,7 @@ from .more_regressors import (
     BayesianRidge, ARDRegression, HuberRegressor, RANSACRegressor, TheilSenRegressor,
     QuantileRegressor, DecisionTreeRegressor, RandomForestRegressor, AdaBoostRegressor, GradientBoostingRegressor
 )
+from .manifold import SpectralClustering, FastICA, Isomap, LocallyLinearEmbedding
 
 # Technique collections grouped by learning paradigm
 SUPERVISED = [
@@ -87,6 +88,10 @@ UNSUPERVISED = [
     "isolation_forest",
     "tsne",
     "truncated_svd",
+    "spectral_clustering",
+    "fast_ica",
+    "isomap",
+    "lle",
 ]
 
 REINFORCEMENT = [
@@ -144,6 +149,10 @@ _REGISTRY: Dict[str, Type[Technique]] = {
     "random_forest_regressor": RandomForestRegressor,
     "adaboost_regressor": AdaBoostRegressor,
     "gradient_boosting_regressor": GradientBoostingRegressor,
+    "spectral_clustering": SpectralClustering,
+    "fast_ica": FastICA,
+    "isomap": Isomap,
+    "lle": LocallyLinearEmbedding,
 }
 
 def get_technique(name: str) -> Type[Technique]:
@@ -212,6 +221,10 @@ __all__ = [
     "RandomForestRegressor",
     "AdaBoostRegressor",
     "GradientBoostingRegressor",
+    "SpectralClustering",
+    "FastICA",
+    "Isomap",
+    "LocallyLinearEmbedding",
     "SUPERVISED",
     "UNSUPERVISED",
     "REINFORCEMENT",
