@@ -296,3 +296,34 @@ qai.serve(model, port=5000)
 - **Metrics**: `mean_absolute_error`, `r2_score`, `log_loss`, `roc_auc_score`
 - **Generators**: `make_regression`
 - **Governance**: `weight_distance(m1, m2)`, `calibration_curve(y_true, y_prob)`
+
+---
+
+## 11. Logic Block & Persistence (`@qai.logic`)
+
+`qai` provides native Python control flow decoration and source persistence via `@qai.logic`.
+
+```python
+import qai
+
+# 1. Decorate control flow logic
+@qai.logic
+def evaluate_decision(x):
+    model = qai.build(type="regression")
+    model.train([[1.0], [2.0]], [2.0, 4.0])
+    pred = model.predict([x])
+    return pred * 2
+
+# 2. Execute decorated logic
+result = evaluate_decision(5.0)
+
+# 3. Save logic source code to disk
+qai.save_logic_source(evaluate_decision, "decision_logic.py")
+
+# 4. Reload logic in a separate process
+reloaded_fn = qai.load_logic_source("decision_logic.py")
+```
+
+### Additional Model Classifiers & Regressors
+- **Classifiers**: `bernoulli_naive_bayes`, `complement_naive_bayes`, `sgd_classifier`, `passive_aggressive_classifier`, `linear_svc`, `nu_svc`, `radius_neighbors_classifier`, `nearest_centroid`, `bagging_classifier`, `hist_gradient_boosting`
+- **Regressors**: `bayesian_ridge`, `ard_regression`, `huber`, `ransac`, `theil_sen`, `quantile_regression`, `decision_tree_regressor`, `random_forest_regressor`, `adaboost_regressor`, `gradient_boosting_regressor`

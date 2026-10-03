@@ -71,3 +71,7 @@ This document logs critical discoveries, architectural insights, edge cases, and
 ### 16. Comprehensive Classifier & Regressor Ecosystem Expansion
 - **Discovery**: Broad model choice (discriminant analysis, boosting ensembles, regularized linear models, SVD manifold reduction, scalers, and calibration curves) provides complete single-import AI development.
 - **Impact**: All 20 newly added techniques and utilities integrate seamlessly into `qai.build()`, `qai.preprocessing`, `qai.metrics`, and `qai.governance`.
+
+### 17. 50+ Unified Model Catalogue Architecture
+- **Discovery**: Providing explicit technique strings for every major ML paradigm variant allows developers to instantiate tailored classifiers and regressors with standard `qai.build(type=...)` semantics.
+- **Impact**: Expanded `qai.techniques` registry to 50+ total model types covering linear, tree, distance-based, probabilistic, ensemble, deep learning, time-series, and anomaly algorithms.

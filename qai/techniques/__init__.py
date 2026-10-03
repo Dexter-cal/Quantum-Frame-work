@@ -25,6 +25,14 @@ from .tsne import TSNE
 from .multinomial_naive_bayes import MultinomialNaiveBayes
 from .supervised_extensions import LDA, QDA, AdaBoost, GradientBoosting, ExtraTrees, RidgeRegression, LassoRegression, ElasticNet, KernelRidge
 from .truncated_svd import TruncatedSVD
+from .more_classifiers import (
+    BernoulliNaiveBayes, ComplementNaiveBayes, SGDClassifier, PassiveAggressiveClassifier,
+    LinearSVC, NuSVC, RadiusNeighborsClassifier, NearestCentroid, BaggingClassifier, HistGradientBoostingClassifier
+)
+from .more_regressors import (
+    BayesianRidge, ARDRegression, HuberRegressor, RANSACRegressor, TheilSenRegressor,
+    QuantileRegressor, DecisionTreeRegressor, RandomForestRegressor, AdaBoostRegressor, GradientBoostingRegressor
+)
 
 # Technique collections grouped by learning paradigm
 SUPERVISED = [
@@ -48,6 +56,26 @@ SUPERVISED = [
     "lasso",
     "elastic_net",
     "kernel_ridge",
+    "bernoulli_naive_bayes",
+    "complement_naive_bayes",
+    "sgd_classifier",
+    "passive_aggressive_classifier",
+    "linear_svc",
+    "nu_svc",
+    "radius_neighbors_classifier",
+    "nearest_centroid",
+    "bagging_classifier",
+    "hist_gradient_boosting",
+    "bayesian_ridge",
+    "ard_regression",
+    "huber",
+    "ransac",
+    "theil_sen",
+    "quantile_regression",
+    "decision_tree_regressor",
+    "random_forest_regressor",
+    "adaboost_regressor",
+    "gradient_boosting_regressor",
 ]
 
 UNSUPERVISED = [
@@ -96,6 +124,26 @@ _REGISTRY: Dict[str, Type[Technique]] = {
     "elastic_net": ElasticNet,
     "kernel_ridge": KernelRidge,
     "truncated_svd": TruncatedSVD,
+    "bernoulli_naive_bayes": BernoulliNaiveBayes,
+    "complement_naive_bayes": ComplementNaiveBayes,
+    "sgd_classifier": SGDClassifier,
+    "passive_aggressive_classifier": PassiveAggressiveClassifier,
+    "linear_svc": LinearSVC,
+    "nu_svc": NuSVC,
+    "radius_neighbors_classifier": RadiusNeighborsClassifier,
+    "nearest_centroid": NearestCentroid,
+    "bagging_classifier": BaggingClassifier,
+    "hist_gradient_boosting": HistGradientBoostingClassifier,
+    "bayesian_ridge": BayesianRidge,
+    "ard_regression": ARDRegression,
+    "huber": HuberRegressor,
+    "ransac": RANSACRegressor,
+    "theil_sen": TheilSenRegressor,
+    "quantile_regression": QuantileRegressor,
+    "decision_tree_regressor": DecisionTreeRegressor,
+    "random_forest_regressor": RandomForestRegressor,
+    "adaboost_regressor": AdaBoostRegressor,
+    "gradient_boosting_regressor": GradientBoostingRegressor,
 }
 
 def get_technique(name: str) -> Type[Technique]:
@@ -144,6 +192,26 @@ __all__ = [
     "ElasticNet",
     "KernelRidge",
     "TruncatedSVD",
+    "BernoulliNaiveBayes",
+    "ComplementNaiveBayes",
+    "SGDClassifier",
+    "PassiveAggressiveClassifier",
+    "LinearSVC",
+    "NuSVC",
+    "RadiusNeighborsClassifier",
+    "NearestCentroid",
+    "BaggingClassifier",
+    "HistGradientBoostingClassifier",
+    "BayesianRidge",
+    "ARDRegression",
+    "HuberRegressor",
+    "RANSACRegressor",
+    "TheilSenRegressor",
+    "QuantileRegressor",
+    "DecisionTreeRegressor",
+    "RandomForestRegressor",
+    "AdaBoostRegressor",
+    "GradientBoostingRegressor",
     "SUPERVISED",
     "UNSUPERVISED",
     "REINFORCEMENT",
