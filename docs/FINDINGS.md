@@ -79,3 +79,7 @@ This document logs critical discoveries, architectural insights, edge cases, and
 ### 18. Hardware Acceleration & Manifold Learning Integration
 - **Discovery**: Detecting CUDA GPU devices (`qai.get_optimal_device()`) and RAM capacity (`qai.get_hardware_info()`) enables automatic device dispatching for deep learning training.
 - **Impact**: Expanding `qai.techniques` with non-linear manifold learning (`isomap`, `lle`, `fast_ica`, `spectral_clustering`) brings state-of-the-art dimensionality reduction to the single-import interface.
+
+### 19. Dedicated Math & System Sub-Packages
+- **Discovery**: AI workloads require low-level distance, activation, linear algebra matrix routines, and system VRAM/CPU monitoring tools alongside model wrappers.
+- **Impact**: Adding `qai.math` and `qai.system` sub-packages guarantees that developers never need secondary imports for matrix math or resource profiling.
