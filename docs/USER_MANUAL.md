@@ -327,3 +327,13 @@ reloaded_fn = qai.load_logic_source("decision_logic.py")
 ### Additional Model Classifiers & Regressors
 - **Classifiers**: `bernoulli_naive_bayes`, `complement_naive_bayes`, `sgd_classifier`, `passive_aggressive_classifier`, `linear_svc`, `nu_svc`, `radius_neighbors_classifier`, `nearest_centroid`, `bagging_classifier`, `hist_gradient_boosting`
 - **Regressors**: `bayesian_ridge`, `ard_regression`, `huber`, `ransac`, `theil_sen`, `quantile_regression`, `decision_tree_regressor`, `random_forest_regressor`, `adaboost_regressor`, `gradient_boosting_regressor`
+
+### Hardware & Environment Profiling
+- **`qai.get_hardware_info()`**: Returns dict with OS, CPU logical cores, RAM capacities, and NVIDIA CUDA GPU device details.
+- **`qai.get_optimal_device()`**: Returns `'cuda'` if an NVIDIA GPU is available, else `'cpu'`.
+
+### Advanced Manifold & Clustering Techniques
+- **`spectral_clustering`**: Spectral Clustering for non-convex structures.
+- **`fast_ica`**: Fast Independent Component Analysis for source separation.
+- **`isomap`**: Isometric Feature Mapping.
+- **`lle`**: Locally Linear Embedding.
