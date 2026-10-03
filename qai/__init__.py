@@ -38,8 +38,9 @@ from .tracking import ExperimentTracker
 from . import system
 from . import math
 
-# Top-level math convenience exports
+# Top-level math and system convenience exports
 from .math import sigmoid, relu, softmax, gelu, swish, tanh, euclidean_distance, cosine_similarity, manhattan_distance, minkowski_distance
+from .system import ResourceGuard, auto_clean_memory, check_ram_threshold
 
 __all__ = [
     "build", "Model", "register_technique", "Technique", "logic", "LogicError",
@@ -52,6 +53,7 @@ __all__ = [
     "PolynomialFeatures", "MinMaxScaler", "RobustScaler", "Normalizer", "OneHotEncoder", "Binarizer",
     "clean_dataset", "detect_drift", "weight_distance", "calibration_curve", "ExperimentTracker",
     "system", "math", "sigmoid", "relu", "softmax", "gelu", "swish", "tanh",
-    "euclidean_distance", "cosine_similarity", "manhattan_distance", "minkowski_distance"
+    "euclidean_distance", "cosine_similarity", "manhattan_distance", "minkowski_distance",
+    "ResourceGuard", "auto_clean_memory", "check_ram_threshold"
 ]
 __version__ = "0.1.0-prototype"

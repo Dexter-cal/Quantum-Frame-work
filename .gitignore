@@ -1,6 +1,12 @@
 __pycache__/
+**/__pycache__/
 *.pyc
+*.pyo
+*.pyd
 .pytest_cache/
-*.zip
-*.pkl
-.env
+*.egg-info/
+dist/
+build/
+*.log
+.DS_Store
+quantum framework.zip
