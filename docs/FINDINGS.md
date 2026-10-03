@@ -83,3 +83,7 @@ This document logs critical discoveries, architectural insights, edge cases, and
 ### 19. Dedicated Math & System Sub-Packages
 - **Discovery**: AI workloads require low-level distance, activation, linear algebra matrix routines, and system VRAM/CPU monitoring tools alongside model wrappers.
 - **Impact**: Adding `qai.math` and `qai.system` sub-packages guarantees that developers never need secondary imports for matrix math or resource profiling.
+
+### 21. Model Explainability & Permutation Importance
+- **Discovery**: Black-box ML models benefit from feature importance attribution.
+- **Impact**: `feature_importance()` extracts model coefficients/trees feature importances, while `permutation_importance()` evaluates performance drops across feature shuffles.

@@ -374,3 +374,17 @@ cos_sim = qai.cosine_similarity([1, 0], [0, 1])  # 0.0
 # Linear Algebra SVD
 u, s, vt = qai.math.singular_value_decomposition([[1.0, 2.0], [3.0, 4.0]])
 ```
+
+### Model Explainability
+```python
+import qai
+
+model = qai.build(type="random_forest")
+model.train(X, y)
+
+# Tree/Coefficient feature importances
+imps = qai.feature_importance(model)
+
+# Model-agnostic permutation importances
+perm_imps = qai.permutation_importance(model, X, y)
+```
