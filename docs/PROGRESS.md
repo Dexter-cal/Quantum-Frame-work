@@ -828,3 +828,7 @@ whole build, every one logged honestly, nothing hidden or glossed over.
 - Done 1: System Monitoring Package (`qai/system/__init__.py`) providing `get_gpu_memory()`, `get_process_memory()`, `get_disk_usage()`, `set_num_threads()`, and `get_env_summary()`.
 - Done 2: Comprehensive AI Math Package (`qai/math/__init__.py`) providing activations (`sigmoid`, `relu`, `softmax`, `gelu`, `swish`, `tanh`), distance metrics (`euclidean_distance`, `cosine_similarity`, `manhattan_distance`, `minkowski_distance`), linear algebra matrix routines (`dot`, `matrix_inverse`, `eigenvalues`, `singular_value_decomposition`), and loss functions (`mean_squared_error`, `cross_entropy_loss`).
 - Real tests in `tests/test_system_and_math_packages.py`.
+
+## Feature Explainability Module Complete
+- Done: Added `qai.feature_importance()` and `qai.permutation_importance()` in `qai/core/explainability.py`.
+- Real tests in `tests/test_explainability.py`.
