@@ -337,3 +337,40 @@ reloaded_fn = qai.load_logic_source("decision_logic.py")
 - **`fast_ica`**: Fast Independent Component Analysis for source separation.
 - **`isomap`**: Isometric Feature Mapping.
 - **`lle`**: Locally Linear Embedding.
+
+---
+
+## 12. System Tools Package (`qai.system`)
+
+```python
+import qai
+
+# Process RAM & Disk
+print("Process Memory (MB):", qai.system.get_process_memory())
+print("Disk Usage (GB):", qai.system.get_disk_usage())
+
+# GPU Memory VRAM
+print("GPU Memory:", qai.system.get_gpu_memory())
+
+# Limit thread parallelism
+qai.system.set_num_threads(4)
+```
+
+---
+
+## 13. Comprehensive Mathematics Package (`qai.math`)
+
+```python
+import qai
+
+# Activations
+prob = qai.sigmoid(0.0)             # 0.5
+softmax_probs = qai.softmax([1, 2]) # [0.2689, 0.7310]
+
+# Distance Metrics
+euc_dist = qai.euclidean_distance([1, 0], [0, 1]) # 1.4142
+cos_sim = qai.cosine_similarity([1, 0], [0, 1])  # 0.0
+
+# Linear Algebra SVD
+u, s, vt = qai.math.singular_value_decomposition([[1.0, 2.0], [3.0, 4.0]])
+```

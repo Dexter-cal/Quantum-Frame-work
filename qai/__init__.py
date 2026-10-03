@@ -8,7 +8,8 @@ qai -- unified machine learning and artificial intelligence framework.
 
 Provides unified single-import access to modeling, pipelines, datasets,
 cross-validation, autotuning, benchmark, persistence, quantization, evaluation metrics,
-synthetic generators, hardware profiling, serving, preprocessing, governance, and tracking.
+synthetic generators, hardware profiling, system utilities, math & activation functions,
+serving, preprocessing, governance, and tracking.
 """
 from .core import build, Model, logic, LogicError, CompatibilityError
 from .core.logic import save_logic_source, load_logic_source
@@ -28,10 +29,18 @@ from .core.hardware import get_hardware_info, get_optimal_device
 from .techniques import register_technique, Technique
 from .learning import get_learning_technique, LearningTechnique
 
-# Advanced features and extensions
+# Advanced sub-packages & utilities
 from .preprocessing import StandardScaler, LabelEncoder, SimpleImputer, PolynomialFeatures, MinMaxScaler, RobustScaler, Normalizer, OneHotEncoder, Binarizer, clean_dataset
 from .governance import detect_drift, weight_distance, calibration_curve
 from .tracking import ExperimentTracker
+
+# System and Math modules
+from . import system
+from . import math
+
+# Top-level math and system convenience exports
+from .math import sigmoid, relu, softmax, gelu, swish, tanh, euclidean_distance, cosine_similarity, manhattan_distance, minkowski_distance
+from .system import ResourceGuard, auto_clean_memory, check_ram_threshold
 
 __all__ = [
     "build", "Model", "register_technique", "Technique", "logic", "LogicError",
@@ -42,6 +51,9 @@ __all__ = [
     "log_loss", "roc_auc_score", "make_classification", "make_regression", "get_hardware_info", "get_optimal_device",
     "save_logic_source", "load_logic_source", "StandardScaler", "LabelEncoder", "SimpleImputer",
     "PolynomialFeatures", "MinMaxScaler", "RobustScaler", "Normalizer", "OneHotEncoder", "Binarizer",
-    "clean_dataset", "detect_drift", "weight_distance", "calibration_curve", "ExperimentTracker"
+    "clean_dataset", "detect_drift", "weight_distance", "calibration_curve", "ExperimentTracker",
+    "system", "math", "sigmoid", "relu", "softmax", "gelu", "swish", "tanh",
+    "euclidean_distance", "cosine_similarity", "manhattan_distance", "minkowski_distance",
+    "ResourceGuard", "auto_clean_memory", "check_ram_threshold"
 ]
 __version__ = "0.1.0-prototype"
