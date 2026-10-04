@@ -388,3 +388,30 @@ imps = qai.feature_importance(model)
 # Model-agnostic permutation importances
 perm_imps = qai.permutation_importance(model, X, y)
 ```
+
+### Feature Selection
+```python
+import qai
+
+# Remove low-variance features
+selector = qai.VarianceThreshold(threshold=0.1)
+X_filtered = selector.fit_transform(X)
+
+# Select top-K features
+k_selector = qai.SelectKBest(k=5)
+X_top = k_selector.fit_transform(X, y)
+```
+
+### Learning Schedulers & Early Stopping
+```python
+from qai.mechanics import LearningRateScheduler, EarlyStopping
+
+scheduler = LearningRateScheduler(initial_lr=0.01, decay_factor=0.5, step_size=10)
+stopper = EarlyStopping(patience=5)
+
+for epoch in range(100):
+    lr = scheduler.step()
+    if stopper.update(val_loss):
+        print(f"Early stopping triggered at epoch {epoch}")
+        break
+```

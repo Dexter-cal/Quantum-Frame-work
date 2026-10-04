@@ -31,7 +31,7 @@ from .techniques import register_technique, Technique
 from .learning import get_learning_technique, LearningTechnique
 
 # Advanced sub-packages & utilities
-from .preprocessing import StandardScaler, LabelEncoder, SimpleImputer, PolynomialFeatures, MinMaxScaler, RobustScaler, Normalizer, OneHotEncoder, Binarizer, clean_dataset
+from .preprocessing import StandardScaler, LabelEncoder, SimpleImputer, PolynomialFeatures, MinMaxScaler, RobustScaler, Normalizer, OneHotEncoder, Binarizer, VarianceThreshold, SelectKBest, clean_dataset
 from .governance import detect_drift, weight_distance, calibration_curve
 from .tracking import ExperimentTracker
 
@@ -53,9 +53,9 @@ __all__ = [
     "make_classification", "make_regression", "get_hardware_info", "get_optimal_device",
     "save_logic_source", "load_logic_source", "StandardScaler", "LabelEncoder", "SimpleImputer",
     "PolynomialFeatures", "MinMaxScaler", "RobustScaler", "Normalizer", "OneHotEncoder", "Binarizer",
-    "clean_dataset", "detect_drift", "weight_distance", "calibration_curve", "ExperimentTracker",
-    "system", "math", "sigmoid", "relu", "softmax", "gelu", "swish", "tanh",
-    "euclidean_distance", "cosine_similarity", "manhattan_distance", "minkowski_distance",
-    "ResourceGuard", "auto_clean_memory", "check_ram_threshold"
+    "VarianceThreshold", "SelectKBest", "clean_dataset", "detect_drift", "weight_distance",
+    "calibration_curve", "ExperimentTracker", "system", "math", "sigmoid", "relu", "softmax",
+    "gelu", "swish", "tanh", "euclidean_distance", "cosine_similarity", "manhattan_distance",
+    "minkowski_distance", "ResourceGuard", "auto_clean_memory", "check_ram_threshold"
 ]
 __version__ = "0.1.0-prototype"

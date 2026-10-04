@@ -196,3 +196,58 @@ class Binarizer:
 
     def transform(self, X):
         return self.model.transform(np.asarray(X, dtype=float))
+
+
+class VarianceThreshold:
+    """Feature selector that removes all low-variance features."""
+    def __init__(self, threshold: float = 0.0):
+        self.threshold = threshold
+        self.variances_ = None
+        self.selected_indices_ = None
+
+    def fit(self, X: Any, y: Any = None) -> "VarianceThreshold":
+        X_arr = np.array(X)
+        self.variances_ = np.var(X_arr, axis=0)
+        self.selected_indices_ = np.where(self.variances_ > self.threshold)[0]
+        return self
+
+    def transform(self, X: Any) -> np.ndarray:
+        X_arr = np.array(X)
+        if self.selected_indices_ is None:
+            raise RuntimeError("VarianceThreshold is not fitted yet.")
+        if len(self.selected_indices_) == 0:
+            return np.empty((X_arr.shape[0], 0))
+        return X_arr[:, self.selected_indices_]
+
+    def fit_transform(self, X: Any, y: Any = None) -> np.ndarray:
+        return self.fit(X, y).transform(X)
+
+
+class SelectKBest:
+    """Select features according to the k highest scores."""
+    def __init__(self, k: int = 10):
+        self.k = k
+        self.scores_ = None
+        self.selected_indices_ = None
+
+    def fit(self, X: Any, y: Any) -> "SelectKBest":
+        X_arr = np.array(X)
+        y_arr = np.array(y)
+        n_features = X_arr.shape[1]
+        scores = []
+        for col in range(n_features):
+            corr = np.corrcoef(X_arr[:, col], y_arr)[0, 1] if X_arr.shape[0] > 1 else 0.0
+            scores.append(abs(corr) if not np.isnan(corr) else 0.0)
+        self.scores_ = np.array(scores)
+        top_k = min(self.k, n_features)
+        self.selected_indices_ = np.argsort(self.scores_)[-top_k:]
+        return self
+
+    def transform(self, X: Any) -> np.ndarray:
+        X_arr = np.array(X)
+        if self.selected_indices_ is None:
+            raise RuntimeError("SelectKBest is not fitted yet.")
+        return X_arr[:, self.selected_indices_]
+
+    def fit_transform(self, X: Any, y: Any) -> np.ndarray:
+        return self.fit(X, y).transform(X)
