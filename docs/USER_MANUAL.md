@@ -474,3 +474,30 @@ pooled = qmath.pooling([[1, 2], [3, 4]], pool_size=(2, 2), mode="max")
 print(qmath.help())
 print(qmath.help("gini_impurity"))
 ```
+
+### Governance Fairness Auditing
+```python
+import qai
+
+# Comprehensive algorithmic bias & fairness audit
+audit = qai.fairness_audit(y_true, y_pred, sensitive_features)
+print(audit["demographic_parity_difference"])
+print(audit["equalized_odds_difference"])
+print(audit["disparate_impact_ratio"])
+```
+
+### Advanced Preprocessing & Encoders
+```python
+import qai
+
+# Target Encoding
+t_enc = qai.TargetEncoder()
+X_encoded = t_enc.fit_transform(X_categorical, y)
+
+# Ordinal & Discretizers
+ord_enc = qai.OrdinalEncoder()
+X_ord = ord_enc.fit_transform(X_categorical)
+
+kbins = qai.KBinsDiscretizer(n_bins=5)
+X_binned = kbins.fit_transform(X_continuous)
+```
