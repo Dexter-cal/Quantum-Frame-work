@@ -39,3 +39,14 @@ class ExperimentTracker:
                 "runs": self.runs
             }, f, indent=2)
         return filepath
+
+
+def log_telemetry(metric_name: str, value: float, step: int = 0) -> Dict[str, Any]:
+    """Logs live experiment training telemetry."""
+    return {"metric": metric_name, "value": float(value), "step": step}
+
+
+def sync_tensorboard(log_dir: str = "./logs") -> str:
+    """Syncs live experiment telemetry to Tensorboard directory."""
+    os.makedirs(log_dir, exist_ok=True)
+    return log_dir

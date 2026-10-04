@@ -20,3 +20,18 @@ def compress_model(model, precision: str = "float16"):
             technique.w = np.round((technique.w / scale) * 127).astype(np.int8)
 
     return model
+
+
+def prune_structured_sparsity(model: Any, amount: float = 0.2) -> Dict[str, Any]:
+    """Prunes model weights by setting smallest magnitude weights to zero."""
+    inner = getattr(model, "model", model)
+    pruned_count = 0
+
+    if hasattr(inner, "coef_"):
+        weights = inner.coef_
+        threshold = np.percentile(np.abs(weights), amount * 100)
+        mask = np.abs(weights) >= threshold
+        inner.coef_ = weights * mask
+        pruned_count = int(np.sum(~mask))
+
+    return {"pruned_count": pruned_count, "sparsity_percentage": amount * 100}

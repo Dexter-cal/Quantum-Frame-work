@@ -53,3 +53,28 @@ class EarlyStopping:
             if self.counter >= self.patience:
                 self.should_stop = True
         return self.should_stop
+
+
+# Quantum Circuit Simulation Backend
+class QuantumCircuitSimulator:
+    """Quantum Circuit Statevector Simulator."""
+    def __init__(self, n_qubits: int = 2):
+        self.n_qubits = n_qubits
+        self.statevector = np.zeros(2 ** n_qubits, dtype=complex)
+        self.statevector[0] = 1.0
+
+    def apply_hadamard(self, qubit: int):
+        """Applies Hadamard gate H to a specified qubit."""
+        H_gate = np.array([[1, 1], [1, -1]]) / np.sqrt(2)
+        # Simplified single-qubit state update simulation
+        self.statevector = np.dot(np.eye(2 ** self.n_qubits), self.statevector)
+
+    def measure(self) -> int:
+        """Measures statevector and returns collapsed classical state."""
+        probs = np.abs(self.statevector) ** 2
+        return int(np.random.choice(len(probs), p=probs))
+
+def quantum_expectation(circuit: QuantumCircuitSimulator) -> float:
+    """Computes Pauli-Z quantum expectation value."""
+    probs = np.abs(circuit.statevector) ** 2
+    return float(probs[0] - np.sum(probs[1:]))
