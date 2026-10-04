@@ -111,3 +111,11 @@ This document logs critical discoveries, architectural insights, edge cases, and
 ### 27. Complete Production Framework Parity
 - **Discovery**: Completing distributed multi-node DDP, ONNX export, NAS, federated averaging, quantum circuit simulation, model watermarking, and bayesian optimization brings the `qai` framework to 100% feature completion.
 - **Impact**: All roadmap features previously listed in `UNBUILT_FEATURES.md` have been built and verified with passing unit tests.
+
+### 28. Comprehensive Data Manipulation & Ingestion Engine (`qai.data`)
+- **Discovery**: Model training requires a robust data preparation engine supporting universal multi-format ingestion, cell-level manipulation, Excel-style dynamic formulas, version snapshotting/rollbacks, PII detection, and multi-format exports.
+- **Impact**: Added complete `qai.data` sub-package with `DataDataset`, format auto-detection (`detect_format`), document text chunking (`from_document`), data quality auditing across six dimensions (`quality_report`), and Parquet/Excel exports.
+
+### 29. Time-Series & Active Learning Data Gaps Closed
+- **Discovery**: Real-world dataset engineering requires near-duplicate fuzzy matching (`fuzzy_deduplicate`), model uncertainty queueing (`active_learning_queue`), and time-series feature engineering (`rolling_window`, `lag_feature`).
+- **Impact**: Added fuzzy deduplication, synthetic generation, active learning queue selection, rolling window means, lag features, text stemming, weighted sampling, and incremental file syncing.
