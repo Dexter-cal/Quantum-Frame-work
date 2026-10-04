@@ -415,3 +415,27 @@ for epoch in range(100):
         print(f"Early stopping triggered at epoch {epoch}")
         break
 ```
+
+### Advanced Loss & Divergence Functions
+```python
+import qai
+
+# Loss functions
+hl = qai.huber_loss(y_true, y_pred, delta=1.0)
+fl = qai.focal_loss(y_true, y_pred_probs, gamma=2.0)
+tl = qai.triplet_loss(anchor, positive, negative)
+
+# Divergences
+kl = qai.kl_divergence(p, q)
+js = qai.js_divergence(p, q)
+```
+
+### Clustering Validation Metrics
+```python
+import qai
+
+sil = qai.silhouette_score(X, labels)
+db = qai.davies_bouldin_score(X, labels)
+ari = qai.adjusted_rand_score(labels_true, labels_pred)
+nmi = qai.normalized_mutual_info_score(labels_true, labels_pred)
+```

@@ -91,3 +91,7 @@ This document logs critical discoveries, architectural insights, edge cases, and
 ### 22. Feature Selection & Learning Mechanics Schedulers
 - **Discovery**: Preprocessing workflows benefit from explicit low-variance filtering (`VarianceThreshold`) and correlation-based feature filtering (`SelectKBest`).
 - **Impact**: Training mechanics now support decay schedulers (`LearningRateScheduler`) and early stopping convergence checks (`EarlyStopping`).
+
+### 23. Divergence Metrics & Clustering Validation
+- **Discovery**: Unsupervised clustering models require specialized evaluation metrics (`silhouette_score`, `davies_bouldin_score`, `adjusted_rand_score`, `normalized_mutual_info_score`).
+- **Impact**: Added divergence functions (`kl_divergence`, `js_divergence`), specialized losses (`huber_loss`, `focal_loss`, `triplet_loss`), and distance metrics (`chebyshev_distance`, `canberra_distance`, `braycurtis_distance`).

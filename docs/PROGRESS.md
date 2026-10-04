@@ -837,3 +837,8 @@ whole build, every one logged honestly, nothing hidden or glossed over.
 - Done: `VarianceThreshold` and `SelectKBest` in `qai.preprocessing`.
 - Done: `LearningRateScheduler` and `EarlyStopping` in `qai.mechanics`.
 - Real tests in `tests/test_feature_selection.py` and `tests/test_mechanics_extensions.py`.
+
+## Advanced Loss Functions & Cluster Evaluation Suite Complete
+- Done: `huber_loss`, `focal_loss`, `triplet_loss`, `kl_divergence`, `js_divergence`, `chebyshev_distance`, `canberra_distance`, `braycurtis_distance` in `qai.math`.
+- Done: `cohen_kappa_score`, `matthews_corrcoef`, `balanced_accuracy_score`, `silhouette_score`, `davies_bouldin_score`, `adjusted_rand_score`, `normalized_mutual_info_score` in `qai.core.metrics`.
+- Real tests in `tests/test_hundred_features_suite.py`.

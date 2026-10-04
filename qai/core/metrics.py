@@ -47,3 +47,45 @@ def roc_auc_score(y_true, y_score, multi_class="ovr") -> float:
     """Computes Area Under the Receiver Operating Characteristic Curve (ROC AUC)."""
     from sklearn.metrics import roc_auc_score as sk_auc
     return float(sk_auc(y_true, y_score, multi_class=multi_class))
+
+
+def cohen_kappa_score(y_true: Any, y_pred: Any) -> float:
+    """Computes Cohen's Kappa score for inter-annotator agreement."""
+    from sklearn.metrics import cohen_kappa_score as sk_kappa
+    return float(sk_kappa(y_true, y_pred))
+
+
+def matthews_corrcoef(y_true: Any, y_pred: Any) -> float:
+    """Computes Matthews Correlation Coefficient (MCC)."""
+    from sklearn.metrics import matthews_corrcoef as sk_mcc
+    return float(sk_mcc(y_true, y_pred))
+
+
+def balanced_accuracy_score(y_true: Any, y_pred: Any) -> float:
+    """Computes Balanced Accuracy score."""
+    from sklearn.metrics import balanced_accuracy_score as sk_bal_acc
+    return float(sk_bal_acc(y_true, y_pred))
+
+
+def silhouette_score(X: Any, labels: Any) -> float:
+    """Computes Silhouette Coefficient for clustering validation."""
+    from sklearn.metrics import silhouette_score as sk_sil
+    return float(sk_sil(X, labels))
+
+
+def davies_bouldin_score(X: Any, labels: Any) -> float:
+    """Computes Davies-Bouldin score for clustering validation."""
+    from sklearn.metrics import davies_bouldin_score as sk_db
+    return float(sk_db(X, labels))
+
+
+def adjusted_rand_score(labels_true: Any, labels_pred: Any) -> float:
+    """Computes Adjusted Rand Index (ARI) for clustering similarity."""
+    from sklearn.metrics import adjusted_rand_score as sk_ari
+    return float(sk_ari(labels_true, labels_pred))
+
+
+def normalized_mutual_info_score(labels_true: Any, labels_pred: Any) -> float:
+    """Computes Normalized Mutual Information (NMI) for clustering."""
+    from sklearn.metrics import normalized_mutual_info_score as sk_nmi
+    return float(sk_nmi(labels_true, labels_pred))

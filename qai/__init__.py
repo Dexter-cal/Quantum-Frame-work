@@ -23,7 +23,11 @@ from .core.autotune import AutoTuner, autotune
 from .core.benchmark import benchmark
 from .core.persistence import save_model, load_model
 from .core.quantize import compress_model
-from .core.metrics import classification_report, confusion_matrix, mean_absolute_error, r2_score, log_loss, roc_auc_score
+from .core.metrics import (
+    classification_report, confusion_matrix, mean_absolute_error, r2_score, log_loss, roc_auc_score,
+    cohen_kappa_score, matthews_corrcoef, balanced_accuracy_score, silhouette_score, davies_bouldin_score,
+    adjusted_rand_score, normalized_mutual_info_score
+)
 from .core.explainability import feature_importance, permutation_importance
 from .core.generators import make_classification, make_regression
 from .core.hardware import get_hardware_info, get_optimal_device
@@ -31,7 +35,10 @@ from .techniques import register_technique, Technique
 from .learning import get_learning_technique, LearningTechnique
 
 # Advanced sub-packages & utilities
-from .preprocessing import StandardScaler, LabelEncoder, SimpleImputer, PolynomialFeatures, MinMaxScaler, RobustScaler, Normalizer, OneHotEncoder, Binarizer, VarianceThreshold, SelectKBest, clean_dataset
+from .preprocessing import (
+    StandardScaler, LabelEncoder, SimpleImputer, PolynomialFeatures, MinMaxScaler, RobustScaler,
+    Normalizer, OneHotEncoder, Binarizer, VarianceThreshold, SelectKBest, clean_dataset
+)
 from .governance import detect_drift, weight_distance, calibration_curve
 from .tracking import ExperimentTracker
 
@@ -39,8 +46,12 @@ from .tracking import ExperimentTracker
 from . import system
 from . import math
 
-# Top-level math and system convenience exports
-from .math import sigmoid, relu, softmax, gelu, swish, tanh, euclidean_distance, cosine_similarity, manhattan_distance, minkowski_distance
+# Top-level math convenience exports
+from .math import (
+    sigmoid, relu, softmax, gelu, swish, tanh, euclidean_distance, cosine_similarity,
+    manhattan_distance, minkowski_distance, huber_loss, focal_loss, triplet_loss,
+    kl_divergence, js_divergence, chebyshev_distance, canberra_distance, braycurtis_distance
+)
 from .system import ResourceGuard, auto_clean_memory, check_ram_threshold
 
 __all__ = [
@@ -49,13 +60,17 @@ __all__ = [
     "Dataset", "serve", "build_flask_app", "Pipeline", "cross_validate", "k_fold_split",
     "VotingEnsemble", "AutoTuner", "autotune", "benchmark", "save_model", "load_model",
     "compress_model", "classification_report", "confusion_matrix", "mean_absolute_error", "r2_score",
-    "log_loss", "roc_auc_score", "feature_importance", "permutation_importance",
-    "make_classification", "make_regression", "get_hardware_info", "get_optimal_device",
-    "save_logic_source", "load_logic_source", "StandardScaler", "LabelEncoder", "SimpleImputer",
-    "PolynomialFeatures", "MinMaxScaler", "RobustScaler", "Normalizer", "OneHotEncoder", "Binarizer",
-    "VarianceThreshold", "SelectKBest", "clean_dataset", "detect_drift", "weight_distance",
-    "calibration_curve", "ExperimentTracker", "system", "math", "sigmoid", "relu", "softmax",
-    "gelu", "swish", "tanh", "euclidean_distance", "cosine_similarity", "manhattan_distance",
-    "minkowski_distance", "ResourceGuard", "auto_clean_memory", "check_ram_threshold"
+    "log_loss", "roc_auc_score", "cohen_kappa_score", "matthews_corrcoef", "balanced_accuracy_score",
+    "silhouette_score", "davies_bouldin_score", "adjusted_rand_score", "normalized_mutual_info_score",
+    "feature_importance", "permutation_importance", "make_classification", "make_regression",
+    "get_hardware_info", "get_optimal_device", "save_logic_source", "load_logic_source",
+    "StandardScaler", "LabelEncoder", "SimpleImputer", "PolynomialFeatures", "MinMaxScaler",
+    "RobustScaler", "Normalizer", "OneHotEncoder", "Binarizer", "VarianceThreshold", "SelectKBest",
+    "clean_dataset", "detect_drift", "weight_distance", "calibration_curve", "ExperimentTracker",
+    "system", "math", "sigmoid", "relu", "softmax", "gelu", "swish", "tanh",
+    "euclidean_distance", "cosine_similarity", "manhattan_distance", "minkowski_distance",
+    "huber_loss", "focal_loss", "triplet_loss", "kl_divergence", "js_divergence",
+    "chebyshev_distance", "canberra_distance", "braycurtis_distance",
+    "ResourceGuard", "auto_clean_memory", "check_ram_threshold"
 ]
 __version__ = "0.1.0-prototype"
