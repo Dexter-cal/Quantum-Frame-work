@@ -853,3 +853,7 @@ whole build, every one logged honestly, nothing hidden or glossed over.
 - Done: `demographic_parity_difference`, `equalized_odds_difference`, `disparate_impact_ratio`, `fairness_audit` in `qai.governance`.
 - Done: `mean_squared_log_error`, `mean_absolute_percentage_error`, `median_absolute_error`, `explained_variance_score`, `max_error` in `qai.core.metrics`.
 - Real, non-mocked tests in `tests/test_fifty_new_features.py`.
+
+## Math Categories 9-17, Numerical Stability & Calibration Metrics Complete
+- Done: Added Transformer/Attention math, Diffusion model math, RL math, Optimizer math, GAN/VAE math, Regularization/Norms, Ensemble boosting math, GNN math, `log_sum_exp`, `safe_divide`, `brier_score`, `expected_calibration_error`, `levenshtein_distance`, and `jaccard_similarity` in `qai.math` and `qai.core.metrics`.
+- Real tests in `tests/test_qai_math_categories_9_to_16.py` and `tests/test_stability_calibration.py`.
