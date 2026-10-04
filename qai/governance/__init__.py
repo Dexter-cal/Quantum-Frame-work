@@ -73,3 +73,60 @@ def calibration_curve(y_true, y_prob, n_bins: int = 5):
     y_t, y_p = np.asarray(y_true), np.asarray(y_prob)
     prob_true, prob_pred = sk_cal(y_t, y_p, n_bins=n_bins)
     return {"prob_true": prob_true.tolist(), "prob_pred": prob_pred.tolist()}
+
+
+# Fairness & Algorithmic Parity Utilities
+def demographic_parity_difference(y_pred: Any, sensitive_features: Any) -> float:
+    """Computes difference in positive prediction rates between sensitive groups."""
+    pred = np.array(y_pred)
+    sf = np.array(sensitive_features)
+    uniques = np.unique(sf)
+    if len(uniques) < 2:
+        return 0.0
+    rates = [np.mean(pred[sf == group]) for group in uniques]
+    return float(np.max(rates) - np.min(rates))
+
+
+def equalized_odds_difference(y_true: Any, y_pred: Any, sensitive_features: Any) -> float:
+    """Computes maximum difference in TPR and FPR across sensitive groups."""
+    yt = np.array(y_true)
+    yp = np.array(y_pred)
+    sf = np.array(sensitive_features)
+    uniques = np.unique(sf)
+
+    tprs = []
+    fprs = []
+    for g in uniques:
+        mask = (sf == g)
+        pos = (yt[mask] == 1)
+        neg = (yt[mask] == 0)
+        tpr = np.mean(yp[mask][pos] == 1) if np.sum(pos) > 0 else 0.0
+        fpr = np.mean(yp[mask][neg] == 1) if np.sum(neg) > 0 else 0.0
+        tprs.append(tpr)
+        fprs.append(fpr)
+
+    tpr_diff = np.max(tprs) - np.min(tprs)
+    fpr_diff = np.max(fprs) - np.min(fprs)
+    return float(max(tpr_diff, fpr_diff))
+
+
+def disparate_impact_ratio(y_pred: Any, sensitive_features: Any) -> float:
+    """Computes ratio of minimum to maximum positive selection rate."""
+    pred = np.array(y_pred)
+    sf = np.array(sensitive_features)
+    uniques = np.unique(sf)
+    if len(uniques) < 2:
+        return 1.0
+    rates = [np.mean(pred[sf == group]) for group in uniques]
+    min_rate = np.min(rates)
+    max_rate = np.max(rates) + 1e-12
+    return float(min_rate / max_rate)
+
+
+def fairness_audit(y_true: Any, y_pred: Any, sensitive_features: Any) -> Dict[str, float]:
+    """Runs a complete algorithmic fairness audit."""
+    return {
+        "demographic_parity_difference": demographic_parity_difference(y_pred, sensitive_features),
+        "equalized_odds_difference": equalized_odds_difference(y_true, y_pred, sensitive_features),
+        "disparate_impact_ratio": disparate_impact_ratio(y_pred, sensitive_features)
+    }

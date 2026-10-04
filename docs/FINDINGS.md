@@ -99,3 +99,7 @@ This document logs critical discoveries, architectural insights, edge cases, and
 ### 24. Comprehensive Mathematical Library Architecture (`qai.math`)
 - **Discovery**: Unifying core mathematical operations (linear algebra, calculus gradients, probability distributions, information theory, signal/convolutions) directly into `qai.math` eliminates indirect dependencies and accelerates custom loss/layer development.
 - **Impact**: Added 70+ mathematical methods, complete with numerical derivative evaluation, Jacobian matrices, Hessian calculations, signal pooling, discrete convolutions, and documentation introspection.
+
+### 25. Governance Fairness Auditing & Feature Encoders
+- **Discovery**: Responsible AI models require fairness audit metrics (`demographic_parity_difference`, `equalized_odds_difference`, `disparate_impact_ratio`) to evaluate bias across sensitive demographic groups.
+- **Impact**: Added target encoding (`TargetEncoder`), ordinal encoding (`OrdinalEncoder`), discretizers (`KBinsDiscretizer`), absolute scaling (`MaxAbsScaler`), and specialized error metrics.

@@ -26,7 +26,8 @@ from .core.quantize import compress_model
 from .core.metrics import (
     classification_report, confusion_matrix, mean_absolute_error, r2_score, log_loss, roc_auc_score,
     cohen_kappa_score, matthews_corrcoef, balanced_accuracy_score, silhouette_score, davies_bouldin_score,
-    adjusted_rand_score, normalized_mutual_info_score
+    adjusted_rand_score, normalized_mutual_info_score, mean_squared_log_error, mean_absolute_percentage_error,
+    median_absolute_error, explained_variance_score, max_error
 )
 from .core.explainability import feature_importance, permutation_importance
 from .core.generators import make_classification, make_regression
@@ -37,9 +38,13 @@ from .learning import get_learning_technique, LearningTechnique
 # Advanced sub-packages & utilities
 from .preprocessing import (
     StandardScaler, LabelEncoder, SimpleImputer, PolynomialFeatures, MinMaxScaler, RobustScaler,
-    Normalizer, OneHotEncoder, Binarizer, VarianceThreshold, SelectKBest, clean_dataset
+    Normalizer, OneHotEncoder, Binarizer, VarianceThreshold, SelectKBest, MaxAbsScaler, OrdinalEncoder,
+    TargetEncoder, KBinsDiscretizer, clean_dataset
 )
-from .governance import detect_drift, weight_distance, calibration_curve
+from .governance import (
+    detect_drift, weight_distance, calibration_curve, demographic_parity_difference,
+    equalized_odds_difference, disparate_impact_ratio, fairness_audit
+)
 from .tracking import ExperimentTracker
 
 # System and Math modules
@@ -62,11 +67,14 @@ __all__ = [
     "compress_model", "classification_report", "confusion_matrix", "mean_absolute_error", "r2_score",
     "log_loss", "roc_auc_score", "cohen_kappa_score", "matthews_corrcoef", "balanced_accuracy_score",
     "silhouette_score", "davies_bouldin_score", "adjusted_rand_score", "normalized_mutual_info_score",
-    "feature_importance", "permutation_importance", "make_classification", "make_regression",
-    "get_hardware_info", "get_optimal_device", "save_logic_source", "load_logic_source",
-    "StandardScaler", "LabelEncoder", "SimpleImputer", "PolynomialFeatures", "MinMaxScaler",
-    "RobustScaler", "Normalizer", "OneHotEncoder", "Binarizer", "VarianceThreshold", "SelectKBest",
-    "clean_dataset", "detect_drift", "weight_distance", "calibration_curve", "ExperimentTracker",
+    "mean_squared_log_error", "mean_absolute_percentage_error", "median_absolute_error",
+    "explained_variance_score", "max_error", "feature_importance", "permutation_importance",
+    "make_classification", "make_regression", "get_hardware_info", "get_optimal_device",
+    "save_logic_source", "load_logic_source", "StandardScaler", "LabelEncoder", "SimpleImputer",
+    "PolynomialFeatures", "MinMaxScaler", "RobustScaler", "Normalizer", "OneHotEncoder", "Binarizer",
+    "VarianceThreshold", "SelectKBest", "MaxAbsScaler", "OrdinalEncoder", "TargetEncoder", "KBinsDiscretizer",
+    "clean_dataset", "detect_drift", "weight_distance", "calibration_curve", "demographic_parity_difference",
+    "equalized_odds_difference", "disparate_impact_ratio", "fairness_audit", "ExperimentTracker",
     "system", "math", "sigmoid", "relu", "softmax", "gelu", "swish", "tanh",
     "euclidean_distance", "cosine_similarity", "manhattan_distance", "minkowski_distance",
     "huber_loss", "focal_loss", "triplet_loss", "kl_divergence", "js_divergence",

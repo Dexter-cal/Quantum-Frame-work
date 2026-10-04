@@ -251,3 +251,109 @@ class SelectKBest:
 
     def fit_transform(self, X: Any, y: Any) -> np.ndarray:
         return self.fit(X, y).transform(X)
+
+
+class MaxAbsScaler:
+    """Scale each feature by its maximum absolute value."""
+    def __init__(self):
+        self.max_abs_ = None
+
+    def fit(self, X: Any, y: Any = None) -> "MaxAbsScaler":
+        X_arr = np.array(X, dtype=float)
+        self.max_abs_ = np.max(np.abs(X_arr), axis=0)
+        self.max_abs_[self.max_abs_ == 0] = 1.0
+        return self
+
+    def transform(self, X: Any) -> np.ndarray:
+        if self.max_abs_ is None:
+            raise RuntimeError("MaxAbsScaler is not fitted.")
+        return np.array(X, dtype=float) / self.max_abs_
+
+    def fit_transform(self, X: Any, y: Any = None) -> np.ndarray:
+        return self.fit(X, y).transform(X)
+
+
+class OrdinalEncoder:
+    """Encode categorical features as integer arrays."""
+    def __init__(self):
+        self.categories_ = []
+
+    def fit(self, X: Any, y: Any = None) -> "OrdinalEncoder":
+        X_arr = np.array(X, dtype=object)
+        self.categories_ = [np.unique(X_arr[:, col]) for col in range(X_arr.shape[1])]
+        return self
+
+    def transform(self, X: Any) -> np.ndarray:
+        X_arr = np.array(X, dtype=object)
+        if not self.categories_:
+            raise RuntimeError("OrdinalEncoder is not fitted.")
+        out = np.zeros(X_arr.shape, dtype=int)
+        for col in range(X_arr.shape[1]):
+            mapping = {val: idx for idx, val in enumerate(self.categories_[col])}
+            out[:, col] = [mapping.get(val, 0) for val in X_arr[:, col]]
+        return out
+
+    def fit_transform(self, X: Any, y: Any = None) -> np.ndarray:
+        return self.fit(X, y).transform(X)
+
+
+class TargetEncoder:
+    """Target encoding for categorical features based on mean target value."""
+    def __init__(self, smooth: float = 1.0):
+        self.smooth = smooth
+        self.mappings_ = []
+
+    def fit(self, X: Any, y: Any) -> "TargetEncoder":
+        X_arr = np.array(X, dtype=object)
+        y_arr = np.array(y, dtype=float)
+        global_mean = np.mean(y_arr)
+        self.mappings_ = []
+
+        for col in range(X_arr.shape[1]):
+            mapping = {}
+            uniques, counts = np.unique(X_arr[:, col], return_counts=True)
+            for val, count in zip(uniques, counts):
+                cat_mean = np.mean(y_arr[X_arr[:, col] == val])
+                smoothed = (count * cat_mean + self.smooth * global_mean) / (count + self.smooth)
+                mapping[val] = smoothed
+            self.mappings_.append(mapping)
+        return self
+
+    def transform(self, X: Any) -> np.ndarray:
+        X_arr = np.array(X, dtype=object)
+        if not self.mappings_:
+            raise RuntimeError("TargetEncoder is not fitted.")
+        out = np.zeros(X_arr.shape, dtype=float)
+        for col in range(X_arr.shape[1]):
+            out[:, col] = [self.mappings_[col].get(val, 0.0) for val in X_arr[:, col]]
+        return out
+
+    def fit_transform(self, X: Any, y: Any) -> np.ndarray:
+        return self.fit(X, y).transform(X)
+
+
+class KBinsDiscretizer:
+    """Bin continuous data into k discrete intervals."""
+    def __init__(self, n_bins: int = 5):
+        self.n_bins = n_bins
+        self.bin_edges_ = []
+
+    def fit(self, X: Any, y: Any = None) -> "KBinsDiscretizer":
+        X_arr = np.array(X, dtype=float)
+        self.bin_edges_ = []
+        for col in range(X_arr.shape[1]):
+            edges = np.linspace(np.min(X_arr[:, col]), np.max(X_arr[:, col]), self.n_bins + 1)
+            self.bin_edges_.append(edges)
+        return self
+
+    def transform(self, X: Any) -> np.ndarray:
+        X_arr = np.array(X, dtype=float)
+        if not self.bin_edges_:
+            raise RuntimeError("KBinsDiscretizer is not fitted.")
+        out = np.zeros(X_arr.shape, dtype=int)
+        for col in range(X_arr.shape[1]):
+            out[:, col] = np.digitize(X_arr[:, col], self.bin_edges_[col][1:-1])
+        return out
+
+    def fit_transform(self, X: Any, y: Any = None) -> np.ndarray:
+        return self.fit(X, y).transform(X)

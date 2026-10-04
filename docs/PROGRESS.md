@@ -847,3 +847,9 @@ whole build, every one logged honestly, nothing hidden or glossed over.
 - Done: Implemented all 8 mathematical categories in `qai/math/__init__.py`: Linear Algebra, Calculus/Gradients, Activations & Derivatives, Loss Functions & Gradients, Probability & Statistics, Information Theory, Distance & Similarity Metrics, Signal & Convolution Math.
 - Done: Reference system `qai.math.help()` and `qai.math.list_by_category()`.
 - Real, non-mocked tests in `tests/test_qai_math_complete.py`.
+
+## Preprocessing, Fairness Audit & Regression Metrics Suite Complete
+- Done: `MaxAbsScaler`, `OrdinalEncoder`, `TargetEncoder`, `KBinsDiscretizer` in `qai.preprocessing`.
+- Done: `demographic_parity_difference`, `equalized_odds_difference`, `disparate_impact_ratio`, `fairness_audit` in `qai.governance`.
+- Done: `mean_squared_log_error`, `mean_absolute_percentage_error`, `median_absolute_error`, `explained_variance_score`, `max_error` in `qai.core.metrics`.
+- Real, non-mocked tests in `tests/test_fifty_new_features.py`.

@@ -89,3 +89,44 @@ def normalized_mutual_info_score(labels_true: Any, labels_pred: Any) -> float:
     """Computes Normalized Mutual Information (NMI) for clustering."""
     from sklearn.metrics import normalized_mutual_info_score as sk_nmi
     return float(sk_nmi(labels_true, labels_pred))
+
+
+def mean_squared_log_error(y_true: Any, y_pred: Any) -> float:
+    """Computes Mean Squared Logarithmic Error (MSLE)."""
+    yt = np.array(y_true, dtype=float)
+    yp = np.array(y_pred, dtype=float)
+    if np.any(yt < 0) or np.any(yp < 0):
+        raise ValueError("Mean Squared Logarithmic Error cannot be used when targets/predictions are negative.")
+    return float(np.mean((np.log1p(yt) - np.log1p(yp)) ** 2))
+
+
+def mean_absolute_percentage_error(y_true: Any, y_pred: Any) -> float:
+    """Computes Mean Absolute Percentage Error (MAPE)."""
+    yt = np.array(y_true, dtype=float)
+    yp = np.array(y_pred, dtype=float)
+    denom = np.abs(yt)
+    denom[denom == 0] = 1e-12
+    return float(np.mean(np.abs((yt - yp) / denom)))
+
+
+def median_absolute_error(y_true: Any, y_pred: Any) -> float:
+    """Computes Median Absolute Error (MedAE)."""
+    yt = np.array(y_true, dtype=float)
+    yp = np.array(y_pred, dtype=float)
+    return float(np.median(np.abs(yt - yp)))
+
+
+def explained_variance_score(y_true: Any, y_pred: Any) -> float:
+    """Computes Explained Variance Score."""
+    yt = np.array(y_true, dtype=float)
+    yp = np.array(y_pred, dtype=float)
+    var_diff = np.var(yt - yp)
+    var_true = np.var(yt)
+    return float(1.0 - (var_diff / (var_true + 1e-12)))
+
+
+def max_error(y_true: Any, y_pred: Any) -> float:
+    """Computes Maximum Error across all sample pairs."""
+    yt = np.array(y_true, dtype=float)
+    yp = np.array(y_pred, dtype=float)
+    return float(np.max(np.abs(yt - yp)))
