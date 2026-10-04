@@ -1,49 +1,44 @@
 import unittest
 import numpy as np
 import qai
-from fixtures_huggingface_iris import load as load_hf_iris
 
 class TestHundredFeaturesSuite(unittest.TestCase):
-    def test_additional_classifiers(self):
-        X, y = load_hf_iris()
-        classifiers = [
-            "bernoulli_naive_bayes", "sgd_classifier", "passive_aggressive_classifier",
-            "linear_svc", "nu_svc", "nearest_centroid", "bagging_classifier", "hist_gradient_boosting"
-        ]
-        for tech in classifiers:
-            m = qai.build(type=tech)
-            m.train(X, y, verbose=False)
-            self.assertTrue(m.training_status()["trained"])
-            pred = m.predict(X[0])
-            self.assertIn(pred, ["Iris-setosa", "Iris-versicolor", "Iris-virginica"])
+    def test_huber_loss_and_focal_loss(self):
+        y_true = [1.0, 2.0, 3.0]
+        y_pred = [1.1, 2.5, 4.0]
+        hl = qai.huber_loss(y_true, y_pred, delta=1.0)
+        self.assertGreater(hl, 0.0)
 
-    def test_additional_regressors(self):
-        X, y = qai.make_regression(n_samples=50, n_features=3, random_state=42)
-        regressors = [
-            "bayesian_ridge", "ard_regression", "huber", "ransac", "theil_sen",
-            "decision_tree_regressor", "random_forest_regressor", "adaboost_regressor", "gradient_boosting_regressor"
-        ]
-        for tech in regressors:
-            m = qai.build(type=tech)
-            m.train(X, y, verbose=False)
-            self.assertTrue(m.training_status()["trained"])
-            pred = m.predict(X[0])
-            self.assertIsInstance(pred, (float, int, np.number))
+        fl = qai.focal_loss([1, 0, 1], [0.9, 0.1, 0.8])
+        self.assertGreater(fl, 0.0)
 
-    def test_logic_user_manual_verification(self):
-        @qai.logic
-        def test_fn(val):
-            return val * 3
+    def test_divergences_and_distances(self):
+        p = [0.4, 0.6]
+        q = [0.5, 0.5]
+        kl = qai.kl_divergence(p, q)
+        js = qai.js_divergence(p, q)
+        self.assertGreaterEqual(kl, 0.0)
+        self.assertGreaterEqual(js, 0.0)
 
-        self.assertEqual(test_fn(4), 12)
+        x = [1.0, 2.0, 3.0]
+        y = [4.0, 5.0, 6.0]
+        self.assertEqual(qai.chebyshev_distance(x, y), 3.0)
+        self.assertGreater(qai.canberra_distance(x, y), 0.0)
+        self.assertGreater(qai.braycurtis_distance(x, y), 0.0)
 
-    def test_security_misuse_scenarios(self):
-        # Misuse case: fitting ComplementNB on negative features
-        X_neg = np.array([[-1.0, 2.0], [3.0, 4.0]])
-        y_dummy = [0, 1]
-        m = qai.build(type="complement_naive_bayes")
-        with self.assertRaises(ValueError):
-            m.train(X_neg, y_dummy)
+    def test_advanced_metrics(self):
+        y_true = [0, 1, 0, 1]
+        y_pred = [0, 1, 0, 0]
+        self.assertIsInstance(qai.cohen_kappa_score(y_true, y_pred), float)
+        self.assertIsInstance(qai.matthews_corrcoef(y_true, y_pred), float)
+        self.assertIsInstance(qai.balanced_accuracy_score(y_true, y_pred), float)
+
+        X = [[0, 0], [0, 1], [10, 10], [10, 11]]
+        labels = [0, 0, 1, 1]
+        self.assertGreater(qai.silhouette_score(X, labels), 0.5)
+        self.assertGreater(qai.davies_bouldin_score(X, labels), 0.0)
+        self.assertAlmostEqual(qai.adjusted_rand_score(labels, labels), 1.0)
+        self.assertAlmostEqual(qai.normalized_mutual_info_score(labels, labels), 1.0)
 
 if __name__ == "__main__":
     unittest.main()

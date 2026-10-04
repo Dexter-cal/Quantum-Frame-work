@@ -108,3 +108,73 @@ def cross_entropy_loss(y_true, y_pred_proba, eps=1e-15) -> float:
     """Computes categorical cross-entropy loss."""
     y_t, y_p = np.asarray(y_true, dtype=float), np.clip(np.asarray(y_pred_proba, dtype=float), eps, 1 - eps)
     return float(-np.sum(y_t * np.log(y_p)) / len(y_t))
+
+
+# Advanced Loss Functions
+def huber_loss(y_true: Any, y_pred: Any, delta: float = 1.0) -> float:
+    """Computes Huber Loss for robust regression."""
+    y_t = np.array(y_true, dtype=float)
+    y_p = np.array(y_pred, dtype=float)
+    err = np.abs(y_t - y_p)
+    loss = np.where(err <= delta, 0.5 * (err ** 2), delta * (err - 0.5 * delta))
+    return float(np.mean(loss))
+
+
+def focal_loss(y_true: Any, y_pred_probs: Any, gamma: float = 2.0, alpha: float = 0.25) -> float:
+    """Computes Focal Loss for imbalanced classification."""
+    y_t = np.array(y_true, dtype=float)
+    y_p = np.clip(np.array(y_pred_probs, dtype=float), 1e-12, 1.0 - 1e-12)
+    pt = np.where(y_t == 1, y_p, 1 - y_p)
+    loss = -alpha * ((1 - pt) ** gamma) * np.log(pt)
+    return float(np.mean(loss))
+
+
+def triplet_loss(anchor: Any, positive: Any, negative: Any, margin: float = 1.0) -> float:
+    """Computes Triplet Loss for metric embedding learning."""
+    a = np.array(anchor, dtype=float)
+    p = np.array(positive, dtype=float)
+    n = np.array(negative, dtype=float)
+    pos_dist = np.sum((a - p) ** 2, axis=-1)
+    neg_dist = np.sum((a - n) ** 2, axis=-1)
+    loss = np.maximum(0.0, pos_dist - neg_dist + margin)
+    return float(np.mean(loss))
+
+
+# Divergences & Distance Metrics
+def kl_divergence(p: Any, q: Any) -> float:
+    """Computes Kullback-Leibler (KL) Divergence."""
+    p_arr = np.clip(np.array(p, dtype=float), 1e-12, 1.0)
+    q_arr = np.clip(np.array(q, dtype=float), 1e-12, 1.0)
+    return float(np.sum(p_arr * np.log(p_arr / q_arr)))
+
+
+def js_divergence(p: Any, q: Any) -> float:
+    """Computes Jensen-Shannon (JS) Divergence."""
+    p_arr = np.array(p, dtype=float)
+    q_arr = np.array(q, dtype=float)
+    m = 0.5 * (p_arr + q_arr)
+    return float(0.5 * kl_divergence(p_arr, m) + 0.5 * kl_divergence(q_arr, m))
+
+
+def chebyshev_distance(x: Any, y: Any) -> float:
+    """Computes Chebyshev distance (infinity norm)."""
+    x_arr = np.array(x, dtype=float)
+    y_arr = np.array(y, dtype=float)
+    return float(np.max(np.abs(x_arr - y_arr)))
+
+
+def canberra_distance(x: Any, y: Any) -> float:
+    """Computes Canberra distance metric."""
+    x_arr = np.array(x, dtype=float)
+    y_arr = np.array(y, dtype=float)
+    denom = np.abs(x_arr) + np.abs(y_arr) + 1e-12
+    return float(np.sum(np.abs(x_arr - y_arr) / denom))
+
+
+def braycurtis_distance(x: Any, y: Any) -> float:
+    """Computes Bray-Curtis distance metric."""
+    x_arr = np.array(x, dtype=float)
+    y_arr = np.array(y, dtype=float)
+    num = np.sum(np.abs(x_arr - y_arr))
+    denom = np.sum(np.abs(x_arr + y_arr)) + 1e-12
+    return float(num / denom)
