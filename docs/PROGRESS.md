@@ -832,3 +832,8 @@ whole build, every one logged honestly, nothing hidden or glossed over.
 ## Feature Explainability Module Complete
 - Done: Added `qai.feature_importance()` and `qai.permutation_importance()` in `qai/core/explainability.py`.
 - Real tests in `tests/test_explainability.py`.
+
+## Feature Selection & Learning Mechanics Extensions Complete
+- Done: `VarianceThreshold` and `SelectKBest` in `qai.preprocessing`.
+- Done: `LearningRateScheduler` and `EarlyStopping` in `qai.mechanics`.
+- Real tests in `tests/test_feature_selection.py` and `tests/test_mechanics_extensions.py`.

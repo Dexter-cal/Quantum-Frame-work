@@ -87,3 +87,7 @@ This document logs critical discoveries, architectural insights, edge cases, and
 ### 21. Model Explainability & Permutation Importance
 - **Discovery**: Black-box ML models benefit from feature importance attribution.
 - **Impact**: `feature_importance()` extracts model coefficients/trees feature importances, while `permutation_importance()` evaluates performance drops across feature shuffles.
+
+### 22. Feature Selection & Learning Mechanics Schedulers
+- **Discovery**: Preprocessing workflows benefit from explicit low-variance filtering (`VarianceThreshold`) and correlation-based feature filtering (`SelectKBest`).
+- **Impact**: Training mechanics now support decay schedulers (`LearningRateScheduler`) and early stopping convergence checks (`EarlyStopping`).
