@@ -519,3 +519,25 @@ ece = qai.expected_calibration_error(y_true, y_prob, n_bins=10)
 dist = qmath.levenshtein_distance("kitten", "sitting")
 jacc = qmath.jaccard_similarity(["a", "b"], ["a", "c"])
 ```
+
+### Advanced Framework Extensions
+```python
+import qai
+
+# Distributed Multi-Node & ONNX
+ctx = qai.init_distributed_context(rank=0, world_size=2)
+meta = qai.export_to_onnx(model, "model.onnx")
+
+# Bayesian Optimization & NAS
+opt = qai.bayesian_optimize("classifier", X, y, {"learning_rate": [0.01, 0.1]})
+nas = qai.search_architecture(X, y)
+
+# Federated Learning & Model Watermarking
+avg_w = qai.federated_averaging([w1, w2])
+wm = qai.watermark_model(model, secret_key="my_secret")
+valid = qai.verify_watermark(model, secret_key="my_secret")
+
+# Quantum Circuit Simulation
+qc = qai.QuantumCircuitSimulator(n_qubits=2)
+exp_val = qai.quantum_expectation(qc)
+```

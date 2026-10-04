@@ -130,3 +130,22 @@ def fairness_audit(y_true: Any, y_pred: Any, sensitive_features: Any) -> Dict[st
         "equalized_odds_difference": equalized_odds_difference(y_true, y_pred, sensitive_features),
         "disparate_impact_ratio": disparate_impact_ratio(y_pred, sensitive_features)
     }
+
+
+# Model Watermarking & Intellectual Property Stamping
+def watermark_model(model: Any, secret_key: str = "qai_secret_stamp") -> Dict[str, Any]:
+    """Stamps a cryptographic/metadata watermark onto a trained QAI model."""
+    import hashlib
+    signature = hashlib.sha256(secret_key.encode("utf-8")).hexdigest()
+    watermark_meta = {"secret_hash": signature, "watermarked": True}
+    setattr(model, "_watermark", watermark_meta)
+    return watermark_meta
+
+
+def verify_watermark(model: Any, secret_key: str = "qai_secret_stamp") -> bool:
+    """Verifies whether a model contains the expected secret watermark."""
+    import hashlib
+    if not hasattr(model, "_watermark"):
+        return False
+    signature = hashlib.sha256(secret_key.encode("utf-8")).hexdigest()
+    return getattr(model, "_watermark", {}).get("secret_hash") == signature

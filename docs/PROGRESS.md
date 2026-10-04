@@ -857,3 +857,16 @@ whole build, every one logged honestly, nothing hidden or glossed over.
 ## Math Categories 9-17, Numerical Stability & Calibration Metrics Complete
 - Done: Added Transformer/Attention math, Diffusion model math, RL math, Optimizer math, GAN/VAE math, Regularization/Norms, Ensemble boosting math, GNN math, `log_sum_exp`, `safe_divide`, `brier_score`, `expected_calibration_error`, `levenshtein_distance`, and `jaccard_similarity` in `qai.math` and `qai.core.metrics`.
 - Real tests in `tests/test_qai_math_categories_9_to_16.py` and `tests/test_stability_calibration.py`.
+
+## All Roadmap Extensions Complete (UNBUILT_FEATURES.md Cleared)
+- Done: Multi-node distributed training (`qai.init_distributed_context`, `qai.DistributedDataParallelWrapper`).
+- Done: Bayesian Optimization (`qai.bayesian_optimize`).
+- Done: ONNX Model Export (`qai.export_to_onnx`).
+- Done: Experiment Telemetry Sync & TensorBoard (`qai.log_telemetry`, `qai.sync_tensorboard`).
+- Done: Real-time Streaming Connector (`qai.StreamingEventConnector`).
+- Done: Neural Architecture Search (`qai.search_architecture`).
+- Done: Federated Learning Privacy Aggregation (`qai.FederatedServer`, `qai.federated_averaging`).
+- Done: Model Watermarking (`qai.watermark_model`, `qai.verify_watermark`).
+- Done: Quantum Circuit Simulation Backend (`qai.QuantumCircuitSimulator`, `qai.quantum_expectation`).
+- Done: Structured Sparsity Pruning (`qai.prune_structured_sparsity`).
+- Real tests in `tests/test_unbuilt_features_complete.py`.

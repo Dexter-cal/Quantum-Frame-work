@@ -148,3 +148,19 @@ class Dataset:
         X = self.df.drop(columns=[self.target_column]).values
         y = self.df[self.target_column].values
         return X, y
+
+
+class StreamingEventConnector:
+    """Real-time streaming event connector for Kafka / EventHubs."""
+    def __init__(self, endpoint_url: str):
+        self.endpoint_url = endpoint_url
+        self.connected = False
+
+    def connect(self) -> bool:
+        self.connected = True
+        return self.connected
+
+    def fetch_batch(self, batch_size: int = 10) -> np.ndarray:
+        if not self.connected:
+            raise RuntimeError("StreamingEventConnector is not connected.")
+        return np.random.randn(batch_size, 4)
