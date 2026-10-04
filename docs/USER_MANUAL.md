@@ -439,3 +439,38 @@ db = qai.davies_bouldin_score(X, labels)
 ari = qai.adjusted_rand_score(labels_true, labels_pred)
 nmi = qai.normalized_mutual_info_score(labels_true, labels_pred)
 ```
+
+### Comprehensive Mathematical Library (`qai.math`)
+```python
+import qai.math as qmath
+
+# 1. Linear Algebra
+A = [[4, 1], [1, 3]]
+inv = qmath.inverse(A)
+vals, vecs = qmath.eigen(A)
+U, S, Vh = qmath.svd(A)
+
+# 2. Calculus & Gradients
+grad = qmath.gradient(lambda x: x[0]**2 + 3*x[1], [2.0, 1.0])
+H = qmath.hessian(lambda x: x[0]**2 + 3*x[1], [2.0, 1.0])
+
+# 3. Activations & Derivatives
+sig = qmath.sigmoid([0.0, 1.0])
+d_sig = qmath.sigmoid_derivative([0.0, 1.0])
+
+# 4. Probability & Statistics
+prior = qmath.class_prior([0, 0, 1, 1, 1])
+ci = qmath.confidence_interval([10, 12, 11, 9, 13])
+
+# 5. Information Theory & Distance
+ent = qmath.entropy([0.5, 0.5])
+dist = qmath.euclidean_distance([1, 2], [4, 6])
+
+# 6. Signal & Convolutions
+conv = qmath.convolve([1, 2, 3, 4], [1, 0, -1])
+pooled = qmath.pooling([[1, 2], [3, 4]], pool_size=(2, 2), mode="max")
+
+# 7. Helper & Inspection
+print(qmath.help())
+print(qmath.help("gini_impurity"))
+```

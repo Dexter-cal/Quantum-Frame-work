@@ -95,3 +95,7 @@ This document logs critical discoveries, architectural insights, edge cases, and
 ### 23. Divergence Metrics & Clustering Validation
 - **Discovery**: Unsupervised clustering models require specialized evaluation metrics (`silhouette_score`, `davies_bouldin_score`, `adjusted_rand_score`, `normalized_mutual_info_score`).
 - **Impact**: Added divergence functions (`kl_divergence`, `js_divergence`), specialized losses (`huber_loss`, `focal_loss`, `triplet_loss`), and distance metrics (`chebyshev_distance`, `canberra_distance`, `braycurtis_distance`).
+
+### 24. Comprehensive Mathematical Library Architecture (`qai.math`)
+- **Discovery**: Unifying core mathematical operations (linear algebra, calculus gradients, probability distributions, information theory, signal/convolutions) directly into `qai.math` eliminates indirect dependencies and accelerates custom loss/layer development.
+- **Impact**: Added 70+ mathematical methods, complete with numerical derivative evaluation, Jacobian matrices, Hessian calculations, signal pooling, discrete convolutions, and documentation introspection.
