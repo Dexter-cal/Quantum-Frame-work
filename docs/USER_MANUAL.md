@@ -501,3 +501,21 @@ X_ord = ord_enc.fit_transform(X_categorical)
 kbins = qai.KBinsDiscretizer(n_bins=5)
 X_binned = kbins.fit_transform(X_continuous)
 ```
+
+### Numerical Stability & Calibration Metrics
+```python
+import qai
+import qai.math as qmath
+
+# Stable Log-Sum-Exp & Safe Division
+lse = qmath.log_sum_exp([1000.0, 1001.0, 1002.0])
+div = qmath.safe_divide(10.0, 0.0)
+
+# Confidence Calibration
+bs = qai.brier_score(y_true, y_prob)
+ece = qai.expected_calibration_error(y_true, y_prob, n_bins=10)
+
+# Text & String Edit Distance
+dist = qmath.levenshtein_distance("kitten", "sitting")
+jacc = qmath.jaccard_similarity(["a", "b"], ["a", "c"])
+```

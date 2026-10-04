@@ -130,3 +130,15 @@ def max_error(y_true: Any, y_pred: Any) -> float:
     yt = np.array(y_true, dtype=float)
     yp = np.array(y_pred, dtype=float)
     return float(np.max(np.abs(yt - yp)))
+
+
+def brier_score(y_true: Any, y_prob: Any) -> float:
+    """Computes Brier Score for probability calibration."""
+    from qai.math import brier_score as q_brier
+    return q_brier(y_true, y_prob)
+
+
+def expected_calibration_error(y_true: Any, y_prob: Any, n_bins: int = 10) -> float:
+    """Computes Expected Calibration Error (ECE)."""
+    from qai.math import expected_calibration_error as q_ece
+    return q_ece(y_true, y_prob, n_bins=n_bins)

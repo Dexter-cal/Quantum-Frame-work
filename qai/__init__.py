@@ -27,7 +27,7 @@ from .core.metrics import (
     classification_report, confusion_matrix, mean_absolute_error, r2_score, log_loss, roc_auc_score,
     cohen_kappa_score, matthews_corrcoef, balanced_accuracy_score, silhouette_score, davies_bouldin_score,
     adjusted_rand_score, normalized_mutual_info_score, mean_squared_log_error, mean_absolute_percentage_error,
-    median_absolute_error, explained_variance_score, max_error
+    median_absolute_error, explained_variance_score, max_error, brier_score, expected_calibration_error
 )
 from .core.explainability import feature_importance, permutation_importance
 from .core.generators import make_classification, make_regression
@@ -55,7 +55,8 @@ from . import math
 from .math import (
     sigmoid, relu, softmax, gelu, swish, tanh, euclidean_distance, cosine_similarity,
     manhattan_distance, minkowski_distance, huber_loss, focal_loss, triplet_loss,
-    kl_divergence, js_divergence, chebyshev_distance, canberra_distance, braycurtis_distance
+    kl_divergence, js_divergence, chebyshev_distance, canberra_distance, braycurtis_distance,
+    log_sum_exp, safe_divide, levenshtein_distance, jaccard_similarity
 )
 from .system import ResourceGuard, auto_clean_memory, check_ram_threshold
 
@@ -68,17 +69,19 @@ __all__ = [
     "log_loss", "roc_auc_score", "cohen_kappa_score", "matthews_corrcoef", "balanced_accuracy_score",
     "silhouette_score", "davies_bouldin_score", "adjusted_rand_score", "normalized_mutual_info_score",
     "mean_squared_log_error", "mean_absolute_percentage_error", "median_absolute_error",
-    "explained_variance_score", "max_error", "feature_importance", "permutation_importance",
-    "make_classification", "make_regression", "get_hardware_info", "get_optimal_device",
-    "save_logic_source", "load_logic_source", "StandardScaler", "LabelEncoder", "SimpleImputer",
-    "PolynomialFeatures", "MinMaxScaler", "RobustScaler", "Normalizer", "OneHotEncoder", "Binarizer",
-    "VarianceThreshold", "SelectKBest", "MaxAbsScaler", "OrdinalEncoder", "TargetEncoder", "KBinsDiscretizer",
-    "clean_dataset", "detect_drift", "weight_distance", "calibration_curve", "demographic_parity_difference",
+    "explained_variance_score", "max_error", "brier_score", "expected_calibration_error",
+    "feature_importance", "permutation_importance", "make_classification", "make_regression",
+    "get_hardware_info", "get_optimal_device", "save_logic_source", "load_logic_source",
+    "StandardScaler", "LabelEncoder", "SimpleImputer", "PolynomialFeatures", "MinMaxScaler",
+    "RobustScaler", "Normalizer", "OneHotEncoder", "Binarizer", "VarianceThreshold", "SelectKBest",
+    "MaxAbsScaler", "OrdinalEncoder", "TargetEncoder", "KBinsDiscretizer", "clean_dataset",
+    "detect_drift", "weight_distance", "calibration_curve", "demographic_parity_difference",
     "equalized_odds_difference", "disparate_impact_ratio", "fairness_audit", "ExperimentTracker",
     "system", "math", "sigmoid", "relu", "softmax", "gelu", "swish", "tanh",
     "euclidean_distance", "cosine_similarity", "manhattan_distance", "minkowski_distance",
     "huber_loss", "focal_loss", "triplet_loss", "kl_divergence", "js_divergence",
-    "chebyshev_distance", "canberra_distance", "braycurtis_distance",
+    "chebyshev_distance", "canberra_distance", "braycurtis_distance", "log_sum_exp",
+    "safe_divide", "levenshtein_distance", "jaccard_similarity",
     "ResourceGuard", "auto_clean_memory", "check_ram_threshold"
 ]
 __version__ = "0.1.0-prototype"

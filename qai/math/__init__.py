@@ -669,3 +669,527 @@ def list_by_category(category_name: str) -> List[str]:
     if category_name in _CATEGORIES:
         return _CATEGORIES[category_name]
     raise ValueError(f"Unknown category '{category_name}'. Valid categories: {list(_CATEGORIES.keys())}")
+
+
+# =====================================================================
+# 9. TRANSFORMER / ATTENTION MECHANICS
+# =====================================================================
+
+def scaled_dot_product_attention(Q: Any, K: Any, V: Any, mask: Optional[Any] = None) -> Tuple[np.ndarray, np.ndarray]:
+    """Scaled Dot-Product Attention: Softmax(Q K^T / sqrt(d_k)) V."""
+    q_arr = np.array(Q, dtype=float)
+    k_arr = np.array(K, dtype=float)
+    v_arr = np.array(V, dtype=float)
+    d_k = q_arr.shape[-1]
+    scores = np.matmul(q_arr, np.swapaxes(k_arr, -1, -2)) / np.sqrt(d_k)
+    if mask is not None:
+        scores = np.where(mask == 0, -1e9, scores)
+    attn_weights = softmax(scores, axis=-1)
+    output = np.matmul(attn_weights, v_arr)
+    return output, attn_weights
+
+def query_key_value_projection(x: Any, W_q: Any, W_k: Any, W_v: Any) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Projects input x into Query, Key, and Value matrices."""
+    x_arr = np.array(x, dtype=float)
+    Q = np.matmul(x_arr, W_q)
+    K = np.matmul(x_arr, W_k)
+    V = np.matmul(x_arr, W_v)
+    return Q, K, V
+
+def multi_head_attention(Q: Any, K: Any, V: Any, W_o: Any, n_heads: int = 8) -> Tuple[np.ndarray, np.ndarray]:
+    """Multi-Head Attention mechanism."""
+    output, weights = scaled_dot_product_attention(Q, K, V)
+    projected = np.matmul(output, W_o)
+    return projected, weights
+
+def masked_attention(Q: Any, K: Any, V: Any) -> Tuple[np.ndarray, np.ndarray]:
+    """Causal masked self-attention."""
+    seq_len = np.array(Q).shape[-2]
+    mask = np.tril(np.ones((seq_len, seq_len)))
+    return scaled_dot_product_attention(Q, K, V, mask=mask)
+
+def cross_attention(Q_decoder: Any, K_encoder: Any, V_encoder: Any) -> Tuple[np.ndarray, np.ndarray]:
+    """Cross-attention mechanism between encoder and decoder."""
+    return scaled_dot_product_attention(Q_decoder, K_encoder, V_encoder)
+
+def sinusoidal_positional_encoding(seq_len: int, d_model: int) -> np.ndarray:
+    """Sinusoidal Positional Encoding PE(pos, 2i) = sin(pos/10000^(2i/d_model))."""
+    pe = np.zeros((seq_len, d_model), dtype=float)
+    position = np.arange(0, seq_len, dtype=float)[:, np.newaxis]
+    div_term = np.exp(np.arange(0, d_model, 2, dtype=float) * -(math.log(10000.0) / d_model))
+    pe[:, 0::2] = np.sin(position * div_term)
+    pe[:, 1::2] = np.cos(position * div_term)
+    return pe
+
+def learned_positional_embedding(seq_len: int, d_model: int) -> np.ndarray:
+    """Randomly initialized learned positional embedding matrix."""
+    return np.random.randn(seq_len, d_model) * 0.02
+
+def layer_norm(x: Any, gamma: Optional[Any] = None, beta: Optional[Any] = None, eps: float = 1e-5) -> np.ndarray:
+    """Layer Normalization across last dimension."""
+    x_arr = np.array(x, dtype=float)
+    mean_val = np.mean(x_arr, axis=-1, keepdims=True)
+    var_val = np.var(x_arr, axis=-1, keepdims=True)
+    x_norm = (x_arr - mean_val) / np.sqrt(var_val + eps)
+    if gamma is not None:
+        x_norm *= gamma
+    if beta is not None:
+        x_norm += beta
+    return x_norm
+
+def residual_connection(x: Any, sublayer_out: Any) -> np.ndarray:
+    """Residual Add connection: x + sublayer_out."""
+    return np.array(x, dtype=float) + np.array(sublayer_out, dtype=float)
+
+def feed_forward_block(x: Any, W1: Any, b1: Any, W2: Any, b2: Any) -> np.ndarray:
+    """Position-wise Feed-Forward Network: Relu(x W1 + b1) W2 + b2."""
+    h = relu(np.matmul(x, W1) + b1)
+    return np.matmul(h, W2) + b2
+
+def attention_dropout(attn_weights: Any, p: float = 0.1, training: bool = True) -> np.ndarray:
+    """Applies dropout mask to attention weights."""
+    arr = np.array(attn_weights, dtype=float)
+    if not training or p <= 0:
+        return arr
+    mask = (np.random.rand(*arr.shape) >= p).astype(float)
+    return (arr * mask) / (1.0 - p)
+
+
+# =====================================================================
+# 10. DIFFUSION MODEL MATH
+# =====================================================================
+
+def forward_noise_step(x_zero: Any, noise: Any, beta_t: float) -> np.ndarray:
+    """Forward single-step diffusion noise addition: sqrt(1 - beta_t) * x_0 + sqrt(beta_t) * eps."""
+    x0 = np.array(x_zero, dtype=float)
+    eps = np.array(noise, dtype=float)
+    return np.sqrt(1.0 - beta_t) * x0 + np.sqrt(beta_t) * eps
+
+def forward_noise_closed_form(x_zero: Any, noise: Any, alpha_bar_t: float) -> np.ndarray:
+    """Closed-form forward diffusion at step t: sqrt(alpha_bar_t) * x_0 + sqrt(1 - alpha_bar_t) * eps."""
+    x0 = np.array(x_zero, dtype=float)
+    eps = np.array(noise, dtype=float)
+    return np.sqrt(alpha_bar_t) * x0 + np.sqrt(1.0 - alpha_bar_t) * eps
+
+def noise_schedule(n_steps: int = 1000, beta_start: float = 0.0001, beta_end: float = 0.02, mode: str = "linear") -> np.ndarray:
+    """Generates linear or cosine variance schedule beta_1...beta_T."""
+    if mode == "linear":
+        return np.linspace(beta_start, beta_end, n_steps)
+    elif mode == "cosine":
+        steps = np.arange(n_steps + 1, dtype=float)
+        f_t = np.cos(((steps / n_steps) + 0.008) / 1.008 * (math.pi / 2.0)) ** 2
+        alphas_cumprod = f_t / f_t[0]
+        betas = 1.0 - (alphas_cumprod[1:] / alphas_cumprod[:-1])
+        return np.clip(betas, 0.0001, 0.999)
+    else:
+        raise ValueError(f"Unknown noise schedule mode: {mode}")
+
+def alpha_bar(betas: Any) -> np.ndarray:
+    """Computes cumulative product alpha_bar_t = prod(1 - beta_i)."""
+    b_arr = np.array(betas, dtype=float)
+    return np.cumprod(1.0 - b_arr)
+
+def reverse_denoise_step(x_t: Any, predicted_noise: Any, beta_t: float, alpha_bar_t: float, alpha_bar_prev: float) -> np.ndarray:
+    """DDPM reverse step x_{t-1} estimation."""
+    xt = np.array(x_t, dtype=float)
+    p_eps = np.array(predicted_noise, dtype=float)
+    coeff = beta_t / np.sqrt(1.0 - alpha_bar_t)
+    mean = (1.0 / np.sqrt(1.0 - beta_t)) * (xt - coeff * p_eps)
+    return mean
+
+def score_function(predicted_noise: Any, sigma_t: float) -> np.ndarray:
+    """Computes score function grad_x log p(x) = -predicted_noise / sigma_t."""
+    p_eps = np.array(predicted_noise, dtype=float)
+    return -p_eps / (sigma_t + 1e-12)
+
+def denoising_score_matching_loss(predicted_noise: Any, target_noise: Any) -> float:
+    """Denoising Score Matching MSE Loss."""
+    return mse(target_noise, predicted_noise)
+
+def ddim_sample_step(x_t: Any, predicted_noise: Any, alpha_bar_t: float, alpha_bar_prev: float, eta: float = 0.0) -> np.ndarray:
+    """Deterministic DDIM sampling step."""
+    xt = np.array(x_t, dtype=float)
+    eps = np.array(predicted_noise, dtype=float)
+    pred_x0 = (xt - np.sqrt(1.0 - alpha_bar_t) * eps) / np.sqrt(alpha_bar_t)
+    dir_xt = np.sqrt(1.0 - alpha_bar_prev - eta**2) * eps
+    return np.sqrt(alpha_bar_prev) * pred_x0 + dir_xt
+
+def variance_schedule(betas: Any) -> np.ndarray:
+    """Calculates posterior variance beta_tilde_t = beta_t * (1 - alpha_bar_prev) / (1 - alpha_bar_t)."""
+    b = np.array(betas, dtype=float)
+    a_bar = alpha_bar(b)
+    a_bar_prev = np.append(1.0, a_bar[:-1])
+    return b * (1.0 - a_bar_prev) / (1.0 - a_bar + 1e-12)
+
+def latent_encode(x: Any, scale_factor: float = 0.18215) -> np.ndarray:
+    """Encodes image tensor into scaled latent representation."""
+    return np.array(x, dtype=float) * scale_factor
+
+def latent_decode(z: Any, scale_factor: float = 0.18215) -> np.ndarray:
+    """Decodes latent representation back into pixel space."""
+    return np.array(z, dtype=float) / scale_factor
+
+
+# =====================================================================
+# 11. REINFORCEMENT LEARNING MATH
+# =====================================================================
+
+def bellman_equation(reward: float, gamma: float, next_value: float) -> float:
+    """Bellman Equation for expected return: R + gamma * V(s')."""
+    return float(reward + gamma * next_value)
+
+def discounted_return(rewards: Any, gamma: float = 0.99) -> np.ndarray:
+    """Computes discounted cumulative returns G_t = sum_{k=0} gamma^k R_{t+k}."""
+    r_arr = np.array(rewards, dtype=float)
+    returns = np.zeros_like(r_arr)
+    running_add = 0.0
+    for t in reversed(range(len(r_arr))):
+        running_add = r_arr[t] + gamma * running_add
+        returns[t] = running_add
+    return returns
+
+def td_error(reward: float, gamma: float, next_value: float, current_value: float) -> float:
+    """Temporal Difference (TD) error: R + gamma * V(s') - V(s)."""
+    return float(reward + gamma * next_value - current_value)
+
+def advantage_function(td_target: float, baseline_value: float) -> float:
+    """Advantage Function A(s, a) = TD_target - V(s)."""
+    return float(td_target - baseline_value)
+
+def policy_gradient(action_log_probs: Any, advantages: Any) -> float:
+    """Policy Gradient Loss: -mean(log_prob * advantage)."""
+    lp = np.array(action_log_probs, dtype=float)
+    adv = np.array(advantages, dtype=float)
+    return float(-np.mean(lp * adv))
+
+def q_value_update(q_old: float, reward: float, gamma: float, max_next_q: float, alpha: float = 0.1) -> float:
+    """Q-learning Bellman update: Q_new = Q_old + alpha * (R + gamma * max(Q') - Q_old)."""
+    return float(q_old + alpha * (reward + gamma * max_next_q - q_old))
+
+
+# =====================================================================
+# 12. OPTIMIZER MATH
+# =====================================================================
+
+def sgd_update(param: Any, grad: Any, lr: float = 0.01) -> np.ndarray:
+    """Stochastic Gradient Descent update: param - lr * grad."""
+    p = np.array(param, dtype=float)
+    g = np.array(grad, dtype=float)
+    return p - lr * g
+
+def momentum_update(param: Any, grad: Any, velocity: Any, lr: float = 0.01, momentum: float = 0.9) -> Tuple[np.ndarray, np.ndarray]:
+    """Momentum SGD update."""
+    p = np.array(param, dtype=float)
+    g = np.array(grad, dtype=float)
+    v = momentum * np.array(velocity, dtype=float) + lr * g
+    return p - v, v
+
+def rmsprop_update(param: Any, grad: Any, square_avg: Any, lr: float = 0.01, alpha: float = 0.99, eps: float = 1e-8) -> Tuple[np.ndarray, np.ndarray]:
+    """RMSprop optimizer update."""
+    p = np.array(param, dtype=float)
+    g = np.array(grad, dtype=float)
+    s = alpha * np.array(square_avg, dtype=float) + (1.0 - alpha) * (g ** 2)
+    p_new = p - (lr / (np.sqrt(s) + eps)) * g
+    return p_new, s
+
+def adam_update(param: Any, grad: Any, m: Any, v: Any, t: int, lr: float = 0.001, beta1: float = 0.9, beta2: float = 0.999, eps: float = 1e-8) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Adam optimizer update with bias correction."""
+    p = np.array(param, dtype=float)
+    g = np.array(grad, dtype=float)
+    m_new = beta1 * np.array(m, dtype=float) + (1.0 - beta1) * g
+    v_new = beta2 * np.array(v, dtype=float) + (1.0 - beta2) * (g ** 2)
+    m_hat = m_new / (1.0 - beta1 ** t)
+    v_hat = v_new / (1.0 - beta2 ** t)
+    p_new = p - (lr / (np.sqrt(v_hat) + eps)) * m_hat
+    return p_new, m_new, v_new
+
+def learning_rate_decay(lr_initial: float, epoch: int, decay_rate: float = 0.1) -> float:
+    """Exponential learning rate decay: lr = lr_0 / (1 + decay_rate * epoch)."""
+    return float(lr_initial / (1.0 + decay_rate * epoch))
+
+def gradient_clipping(grad: Any, max_norm: float = 1.0) -> np.ndarray:
+    """Clips gradient tensor to maximum L2 norm."""
+    g = np.array(grad, dtype=float)
+    norm_g = np.linalg.norm(g)
+    if norm_g > max_norm and norm_g > 0:
+        return g * (max_norm / norm_g)
+    return g
+
+
+# =====================================================================
+# 13. GENERATIVE MODELS (GAN / VAE)
+# =====================================================================
+
+def discriminator_loss(real_scores: Any, fake_scores: Any) -> float:
+    """Standard GAN Discriminator Loss: -mean(log(D(x)) + log(1 - D(G(z))))."""
+    r = np.clip(np.array(real_scores, dtype=float), 1e-12, 1.0 - 1e-12)
+    f = np.clip(np.array(fake_scores, dtype=float), 1e-12, 1.0 - 1e-12)
+    return float(-np.mean(np.log(r) + np.log(1.0 - f)))
+
+def generator_loss(fake_scores: Any) -> float:
+    """Standard GAN Generator Loss: -mean(log(D(G(z))))."""
+    f = np.clip(np.array(fake_scores, dtype=float), 1e-12, 1.0 - 1e-12)
+    return float(-np.mean(np.log(f)))
+
+def minimax_objective(d_real: float, d_fake: float) -> float:
+    """Minimax GAN Objective Value."""
+    return float(math.log(max(1e-12, d_real)) + math.log(max(1e-12, 1.0 - d_fake)))
+
+def wasserstein_distance(p: Any, q: Any) -> float:
+    """Wasserstein-1 Distance (Earth Mover's Distance)."""
+    return float(stats.wasserstein_distance(np.array(p, dtype=float).ravel(), np.array(q, dtype=float).ravel()))
+
+def reconstruction_loss(x_true: Any, x_reconstructed: Any, mode: str = "mse") -> float:
+    """VAE Reconstruction loss (MSE or BCE)."""
+    if mode == "mse":
+        return mse(x_true, x_reconstructed)
+    elif mode == "bce":
+        return binary_cross_entropy(x_true, x_reconstructed)
+    else:
+        raise ValueError(f"Unknown reconstruction mode: {mode}")
+
+def reparameterization_trick(mu: Any, log_var: Any) -> np.ndarray:
+    """Reparameterization Trick: z = mu + std * eps."""
+    m = np.array(mu, dtype=float)
+    lv = np.array(log_var, dtype=float)
+    std_val = np.exp(0.5 * lv)
+    eps = np.random.randn(*m.shape)
+    return m + std_val * eps
+
+def evidence_lower_bound(x_true: Any, x_reconstructed: Any, mu: Any, log_var: Any) -> float:
+    """Evidence Lower Bound (ELBO): -Reconstruction_Loss - KL_Divergence."""
+    rec_loss = reconstruction_loss(x_true, x_reconstructed)
+    m = np.array(mu, dtype=float)
+    lv = np.array(log_var, dtype=float)
+    kl_div = -0.5 * np.sum(1.0 + lv - (m ** 2) - np.exp(lv))
+    return float(-rec_loss - kl_div)
+
+
+# =====================================================================
+# 14. REGULARIZATION & NORMALIZATION
+# =====================================================================
+
+def l1_regularization(weights: Any, l1_lambda: float = 0.01) -> float:
+    """L1 Lasso penalty: l1_lambda * sum(|w|)."""
+    w = np.array(weights, dtype=float)
+    return float(l1_lambda * np.sum(np.abs(w)))
+
+def l2_regularization(weights: Any, l2_lambda: float = 0.01) -> float:
+    """L2 Ridge weight decay penalty: 0.5 * l2_lambda * sum(w^2)."""
+    w = np.array(weights, dtype=float)
+    return float(0.5 * l2_lambda * np.sum(w ** 2))
+
+def dropout_mask(shape: Tuple[int, ...], drop_prob: float = 0.5) -> np.ndarray:
+    """Binary dropout mask with inverted scaling."""
+    if drop_prob <= 0:
+        return np.ones(shape, dtype=float)
+    mask = (np.random.rand(*shape) >= drop_prob).astype(float)
+    return mask / (1.0 - drop_prob)
+
+def batch_norm(x: Any, gamma: Optional[Any] = None, beta: Optional[Any] = None, eps: float = 1e-5) -> np.ndarray:
+    """Batch Normalization across batch dimension (axis 0)."""
+    x_arr = np.array(x, dtype=float)
+    mean_val = np.mean(x_arr, axis=0, keepdims=True)
+    var_val = np.var(x_arr, axis=0, keepdims=True)
+    x_norm = (x_arr - mean_val) / np.sqrt(var_val + eps)
+    if gamma is not None:
+        x_norm *= gamma
+    if beta is not None:
+        x_norm += beta
+    return x_norm
+
+def group_norm(x: Any, num_groups: int = 2, gamma: Optional[Any] = None, beta: Optional[Any] = None, eps: float = 1e-5) -> np.ndarray:
+    """Group Normalization across channel groups."""
+    x_arr = np.array(x, dtype=float)
+    N, C, *spatial = x_arr.shape
+    x_reshaped = x_arr.reshape(N, num_groups, C // num_groups, *spatial)
+    mean_val = np.mean(x_reshaped, axis=tuple(range(2, x_reshaped.ndim)), keepdims=True)
+    var_val = np.var(x_reshaped, axis=tuple(range(2, x_reshaped.ndim)), keepdims=True)
+    x_norm = (x_reshaped - mean_val) / np.sqrt(var_val + eps)
+    x_norm = x_norm.reshape(N, C, *spatial)
+    if gamma is not None:
+        x_norm *= gamma
+    if beta is not None:
+        x_norm += beta
+    return x_norm
+
+
+# =====================================================================
+# 15. ENSEMBLE / BOOSTING MATH
+# =====================================================================
+
+def gradient_boosting_update(y_true: Any, y_pred_prev: Any, learning_rate: float = 0.1) -> np.ndarray:
+    """Computes negative gradient pseudo-residuals for Gradient Boosting."""
+    yt = np.array(y_true, dtype=float)
+    yp = np.array(y_pred_prev, dtype=float)
+    residuals = yt - yp
+    return residuals
+
+def adaboost_weight_update(sample_weights: Any, alpha: float, y_true: Any, y_pred: Any) -> np.ndarray:
+    """AdaBoost sample weight update."""
+    w = np.array(sample_weights, dtype=float)
+    yt = np.array(y_true, dtype=float)
+    yp = np.array(y_pred, dtype=float)
+    incorrect = (yt != yp).astype(float)
+    new_w = w * np.exp(alpha * incorrect)
+    return new_w / np.sum(new_w)
+
+def bagging_sample_weight(n_samples: int) -> np.ndarray:
+    """Bootstrap sample weights for Bagging ensemble."""
+    indices = np.random.choice(n_samples, size=n_samples, replace=True)
+    weights = np.bincount(indices, minlength=n_samples)
+    return weights / np.sum(weights)
+
+
+# =====================================================================
+# 16. GRAPH NEURAL NETWORK MATH
+# =====================================================================
+
+def adjacency_matrix_ops(adj: Any, mode: str = "normalize") -> np.ndarray:
+    """Graph adjacency matrix operations: self_loops, degree, or symmetric normalization D^-1/2 A_tilde D^-1/2."""
+    A = np.array(adj, dtype=float)
+    if mode == "self_loops":
+        return A + np.eye(A.shape[0])
+    elif mode == "normalize":
+        A_tilde = A + np.eye(A.shape[0])
+        degree = np.sum(A_tilde, axis=1)
+        d_inv_sqrt = np.power(degree, -0.5, where=degree > 0)
+        d_inv_sqrt[degree == 0] = 0.0
+        D_mat = np.diag(d_inv_sqrt)
+        return np.matmul(np.matmul(D_mat, A_tilde), D_mat)
+    else:
+        raise ValueError(f"Unknown adjacency mode: {mode}")
+
+def graph_convolution(X: Any, A_norm: Any, W: Any) -> np.ndarray:
+    """GCN Layer: H = Relu(A_norm X W)."""
+    x_arr = np.array(X, dtype=float)
+    a_arr = np.array(A_norm, dtype=float)
+    w_arr = np.array(W, dtype=float)
+    return relu(np.matmul(np.matmul(a_arr, x_arr), w_arr))
+
+def message_passing(node_features: Any, adj: Any, aggregate_fn: str = "sum") -> np.ndarray:
+    """GNN Message Passing neighbor aggregation."""
+    X = np.array(node_features, dtype=float)
+    A = np.array(adj, dtype=float)
+    if aggregate_fn == "sum":
+        return np.matmul(A, X)
+    elif aggregate_fn == "mean":
+        deg = np.sum(A, axis=1, keepdims=True)
+        deg[deg == 0] = 1.0
+        return np.matmul(A, X) / deg
+    else:
+        raise ValueError(f"Unknown aggregation function: {aggregate_fn}")
+
+
+# =====================================================================
+# UPDATED CATEGORIES REGISTRY & HELP
+# =====================================================================
+
+_CATEGORIES = {
+    "linear_algebra": ["dot", "matmul", "transpose", "inverse", "pseudo_inverse", "determinant", "trace", "rank", "norm", "normalize", "eigen", "svd", "qr_decompose", "cholesky_decompose", "solve_linear_system", "identity", "zeros", "ones", "reshape", "concat", "outer", "cross_product", "trace_of_product"],
+    "calculus_gradients": ["gradient", "partial_derivative", "second_derivative", "hessian", "jacobian", "chain_rule", "numerical_integrate", "mse_gradient", "mae_gradient", "huber_gradient"],
+    "activations": ["sigmoid", "tanh", "relu", "leaky_relu", "elu", "gelu", "swish", "softmax", "softplus", "linear"],
+    "loss_functions": ["mse", "mae", "huber_loss", "hinge_loss", "focal_loss", "cross_entropy", "binary_cross_entropy", "kl_divergence_loss"],
+    "probability_statistics": ["mean", "median", "mode", "variance", "std", "covariance", "covariance_matrix", "correlation", "percentile", "z_score", "skewness", "kurtosis", "gaussian_pdf", "bernoulli_pmf", "binomial_pmf", "poisson_pmf", "uniform_pdf", "exponential_pdf", "bayes_theorem", "joint_probability", "marginal_probability", "conditional_probability", "expectation", "maximum_likelihood_estimate", "class_prior", "confidence_interval", "sample", "shuffle"],
+    "information_theory": ["entropy", "info_cross_entropy", "kl_divergence", "mutual_information", "information_gain", "gini_impurity", "perplexity"],
+    "distance_similarity": ["euclidean_distance", "manhattan_distance", "cosine_similarity", "mahalanobis_distance", "hamming_distance"],
+    "signal_convolution": ["convolve", "pooling", "fourier_transform", "inverse_fourier_transform"],
+    "transformer_attention": ["scaled_dot_product_attention", "query_key_value_projection", "multi_head_attention", "masked_attention", "cross_attention", "sinusoidal_positional_encoding", "learned_positional_embedding", "layer_norm", "residual_connection", "feed_forward_block", "attention_dropout"],
+    "diffusion_models": ["forward_noise_step", "forward_noise_closed_form", "noise_schedule", "alpha_bar", "reverse_denoise_step", "score_function", "denoising_score_matching_loss", "ddim_sample_step", "variance_schedule", "latent_encode", "latent_decode"],
+    "reinforcement_learning": ["bellman_equation", "discounted_return", "td_error", "advantage_function", "policy_gradient", "q_value_update"],
+    "optimizers": ["sgd_update", "momentum_update", "rmsprop_update", "adam_update", "learning_rate_decay", "gradient_clipping"],
+    "generative_models": ["discriminator_loss", "generator_loss", "minimax_objective", "wasserstein_distance", "reconstruction_loss", "reparameterization_trick", "evidence_lower_bound"],
+    "regularization_normalization": ["l1_regularization", "l2_regularization", "dropout_mask", "batch_norm", "group_norm"],
+    "ensemble_boosting": ["gradient_boosting_update", "adaboost_weight_update", "bagging_sample_weight"],
+    "graph_neural_networks": ["adjacency_matrix_ops", "graph_convolution", "message_passing"]
+}
+
+
+# =====================================================================
+# 17. NUMERICAL STABILITY, CALIBRATION & STRING DISTANCES
+# =====================================================================
+
+def log_sum_exp(x: Any, axis: Optional[int] = None, keepdims: bool = False) -> Union[float, np.ndarray]:
+    """Numerically stable Log-Sum-Exp computation: max(x) + log(sum(exp(x - max(x))))."""
+    arr = np.array(x, dtype=float)
+    max_val = np.max(arr, axis=axis, keepdims=True)
+    res = max_val + np.log(np.sum(np.exp(arr - max_val), axis=axis, keepdims=True))
+    if not keepdims and axis is not None:
+        res = np.squeeze(res, axis=axis)
+    elif not keepdims and axis is None:
+        res = float(res.ravel()[0])
+    return res
+
+def safe_divide(numerator: Any, denominator: Any, eps: float = 1e-12) -> Union[float, np.ndarray]:
+    """Division with epsilon safeguard against divide-by-zero crashes."""
+    num = np.array(numerator, dtype=float)
+    den = np.array(denominator, dtype=float)
+    den_safe = np.where(np.abs(den) < eps, np.sign(den) * eps + (den == 0) * eps, den)
+    out = num / den_safe
+    return float(out) if out.ndim == 0 else out
+
+def clip_by_value(x: Any, min_val: float = -1e9, max_val: float = 1e9) -> np.ndarray:
+    """Clips values to [min_val, max_val] range."""
+    return np.clip(np.array(x, dtype=float), min_val, max_val)
+
+def smooth_l1_loss(y_true: Any, y_pred: Any, beta: float = 1.0) -> float:
+    """Smooth L1 Loss (Huber variant with beta scaling)."""
+    yt = np.array(y_true, dtype=float)
+    yp = np.array(y_pred, dtype=float)
+    diff = np.abs(yt - yp)
+    loss = np.where(diff < beta, 0.5 * (diff ** 2) / beta, diff - 0.5 * beta)
+    return float(np.mean(loss))
+
+def brier_score(y_true: Any, y_prob: Any) -> float:
+    """Computes Brier Score mean((y_true - y_prob)^2) for probability calibration."""
+    yt = np.array(y_true, dtype=float)
+    yp = np.array(y_prob, dtype=float)
+    return float(np.mean((yt - yp) ** 2))
+
+def expected_calibration_error(y_true: Any, y_prob: Any, n_bins: int = 10) -> float:
+    """Computes Expected Calibration Error (ECE)."""
+    yt = np.array(y_true, dtype=int)
+    yp = np.array(y_prob, dtype=float)
+    bin_boundaries = np.linspace(0, 1, n_bins + 1)
+    ece = 0.0
+    n_samples = len(yt)
+
+    for i in range(n_bins):
+        bin_lower = bin_boundaries[i]
+        bin_upper = bin_boundaries[i + 1]
+        in_bin = (yp > bin_lower) & (yp <= bin_upper) if i > 0 else (yp >= bin_lower) & (yp <= bin_upper)
+        prop_in_bin = np.mean(in_bin)
+
+        if prop_in_bin > 0:
+            accuracy_in_bin = np.mean(yt[in_bin])
+            avg_confidence_in_bin = np.mean(yp[in_bin])
+            ece += np.abs(accuracy_in_bin - avg_confidence_in_bin) * prop_in_bin
+
+    return float(ece)
+
+def levenshtein_distance(s1: str, s2: str) -> int:
+    """Computes Levenshtein edit distance between two strings."""
+    if len(s1) < len(s2):
+        return levenshtein_distance(s2, s1)
+    if len(s2) == 0:
+        return len(s1)
+
+    previous_row = range(len(s2) + 1)
+    for i, c1 in enumerate(s1):
+        current_row = [i + 1]
+        for j, c2 in enumerate(s2):
+            insertions = previous_row[j + 1] + 1
+            deletions = current_row[j] + 1
+            substitutions = previous_row[j] + (c1 != c2)
+            current_row.append(min(insertions, deletions, substitutions))
+        previous_row = current_row
+
+    return int(previous_row[-1])
+
+def jaccard_similarity(a: Any, b: Any) -> float:
+    """Jaccard similarity coefficient |A intersect B| / |A union B|."""
+    set_a = set(a)
+    set_b = set(b)
+    intersection = len(set_a.intersection(set_b))
+    union = len(set_a.union(set_b))
+    return float(intersection / (union + 1e-12))

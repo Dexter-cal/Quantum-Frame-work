@@ -103,3 +103,7 @@ This document logs critical discoveries, architectural insights, edge cases, and
 ### 25. Governance Fairness Auditing & Feature Encoders
 - **Discovery**: Responsible AI models require fairness audit metrics (`demographic_parity_difference`, `equalized_odds_difference`, `disparate_impact_ratio`) to evaluate bias across sensitive demographic groups.
 - **Impact**: Added target encoding (`TargetEncoder`), ordinal encoding (`OrdinalEncoder`), discretizers (`KBinsDiscretizer`), absolute scaling (`MaxAbsScaler`), and specialized error metrics.
+
+### 26. Numerical Stability Safeguards & Model Calibration Metrics
+- **Discovery**: Real-world ML models suffer from Log-Sum-Exp overflow and divide-by-zero crashes when calculating loss gradients.
+- **Impact**: Added `log_sum_exp` and `safe_divide` to prevent silent numerical overflow/underflow, alongside calibration metrics (`brier_score`, `expected_calibration_error`) and text distance metrics (`levenshtein_distance`).
