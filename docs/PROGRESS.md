@@ -870,3 +870,15 @@ whole build, every one logged honestly, nothing hidden or glossed over.
 - Done: Quantum Circuit Simulation Backend (`qai.QuantumCircuitSimulator`, `qai.quantum_expectation`).
 - Done: Structured Sparsity Pruning (`qai.prune_structured_sparsity`).
 - Real tests in `tests/test_unbuilt_features_complete.py`.
+
+## Complete qai.data Data Manipulation & Universal Ingestion Library Complete
+- Done: `describe()`, `info()`, `remove_duplicates()`, `handle_missing()`, `filter()`, `split()` in `qai.data`.
+- Done: Universal Ingestion (`qai.data.load()`, `qai.data.detect_format()`, `qai.data.from_document()`).
+- Done: Formulas & Cell manipulation (`transform_column()`, `cell()`, `formula()`, `infer_schema()`, `column_stats()`).
+- Done: Search, Versioning & Quality (`search()`, `snapshot()`, `rollback()`, `diff()`, `define_expectations()`, `validate()`, `detect_pii()`, `anonymize()`, `quality_report()`, `mask()`).
+- Done: Export Formats (`to_json()`, `to_parquet()`, `to_excel()`, `batches()`).
+- Real tests in `tests/test_qai_data_complete.py`.
+
+## Advanced Time-Series, NLP & Active Learning Data Tools Complete
+- Done: `fuzzy_deduplicate()`, `generate_synthetic_data()`, `active_learning_queue()`, `rolling_window()`, `lag_feature()`, `remove_stopwords()`, `stem()`, `sample_weighted()`, `project_catalog()`, `estimate_load_cost()`, `incremental_sync()` in `qai.data`.
+- Real tests in `tests/test_qai_data_gaps.py`.

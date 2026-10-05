@@ -541,3 +541,64 @@ valid = qai.verify_watermark(model, secret_key="my_secret")
 qc = qai.QuantumCircuitSimulator(n_qubits=2)
 exp_val = qai.quantum_expectation(qc)
 ```
+
+### Complete Data Manipulation Library (`qai.data`)
+```python
+import qai.data as qdata
+
+# Universal Ingestion & Document Ingestion
+ds = qdata.load("dataset.parquet")
+doc_ds = qdata.from_document("book.pdf", chunk_size=500)
+
+# Summary & Cleaning
+info = ds.info()
+ds.remove_duplicates()
+ds.handle_missing(strategy="median")
+ds.filter(lambda row: row["age"] > 18)
+
+# Formulas & Cell Edits
+ds.cell(row=0, col="price").set(19.99)
+ds.formula("total", "= price * qty")
+
+# Search, Versioning & Quality
+matches = ds.search("target_value")
+ds.snapshot("before_clean")
+ds.rollback("before_clean")
+
+# PII Detection, Anonymization & Quality
+pii = ds.detect_pii()
+ds.anonymize(columns=["email"])
+report = ds.quality_report()
+
+# Multi-Format Export
+ds.to_json("output.json")
+ds.to_parquet("output.parquet")
+ds.to_excel("output.xlsx")
+```
+
+### Advanced Time-Series & NLP Data Extensions
+```python
+import qai.data as qdata
+
+ds = qdata.load("data.csv")
+
+# Fuzzy Deduplication & Synthetic Generation
+ds.fuzzy_deduplicate(threshold=0.85)
+syn_ds = ds.generate_synthetic_data(n_samples=50)
+
+# Active Learning Uncertainty Queue
+queue_ds = ds.active_learning_queue(model.predict_proba, top_k=10)
+
+# Time-Series Rolling Window & Lags
+ds.rolling_window(size=5, column="sales")
+ds.lag_feature(column="sales", periods=1)
+
+# NLP Text Preprocessing
+ds.remove_stopwords("text")
+ds.stem("text")
+
+# Cataloging & Incremental Sync
+catalog = qdata.project_catalog()
+cost = qdata.estimate_load_cost("large_file.csv")
+updated_ds = qdata.incremental_sync(ds, "new_batch.csv", key_col="id")
+```

@@ -10,7 +10,7 @@ Provides unified single-import access to modeling, pipelines, datasets,
 cross-validation, autotuning, benchmark, persistence, quantization, evaluation metrics,
 explainability, synthetic generators, hardware profiling, system utilities, math & activation functions,
 serving, preprocessing, governance, tracking, distributed multi-node, ONNX export, NAS, federated learning,
-and quantum circuit simulation.
+quantum circuit simulation, and qai.data manipulation & ingestion.
 """
 from .core import build, Model, logic, LogicError, CompatibilityError
 from .core.logic import save_logic_source, load_logic_source
@@ -53,7 +53,8 @@ from .governance import (
 from .tracking import ExperimentTracker, log_telemetry, sync_tensorboard
 from .mechanics import QuantumCircuitSimulator, quantum_expectation
 
-# System and Math modules
+# Data, System and Math sub-packages
+from . import data
 from . import system
 from . import math
 
@@ -86,7 +87,7 @@ __all__ = [
     "detect_drift", "weight_distance", "calibration_curve", "demographic_parity_difference",
     "equalized_odds_difference", "disparate_impact_ratio", "fairness_audit", "watermark_model",
     "verify_watermark", "ExperimentTracker", "log_telemetry", "sync_tensorboard",
-    "QuantumCircuitSimulator", "quantum_expectation", "system", "math", "sigmoid", "relu",
+    "QuantumCircuitSimulator", "quantum_expectation", "data", "system", "math", "sigmoid", "relu",
     "softmax", "gelu", "swish", "tanh", "euclidean_distance", "cosine_similarity",
     "manhattan_distance", "minkowski_distance", "huber_loss", "focal_loss", "triplet_loss",
     "kl_divergence", "js_divergence", "chebyshev_distance", "canberra_distance", "braycurtis_distance",
