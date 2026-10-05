@@ -882,3 +882,10 @@ whole build, every one logged honestly, nothing hidden or glossed over.
 ## Advanced Time-Series, NLP & Active Learning Data Tools Complete
 - Done: `fuzzy_deduplicate()`, `generate_synthetic_data()`, `active_learning_queue()`, `rolling_window()`, `lag_feature()`, `remove_stopwords()`, `stem()`, `sample_weighted()`, `project_catalog()`, `estimate_load_cost()`, `incremental_sync()` in `qai.data`.
 - Real tests in `tests/test_qai_data_gaps.py`.
+
+## Complete Production qai.runtime & CLI Engine Complete
+- Done: Semantic versioning (`ModelVersion`), model states (`validating`, `converting`, `archived`, `corrupted`, `dirty`), staging environment promotion (`deploy()`, `promote()`), A/B traffic splitting (`ab_test()`), auto-rollback triggers, deployment audit history (`deployment_history()`).
+- Done: Cryptographic model signing & HMAC verification (`sign_model()`, `verify_signature()`).
+- Done: Export bundling with minimal embedded runtime (`export()`, `include_runtime`).
+- Done: Full `qai-runtime` CLI router engine (`pull`, `push`, `list`, `ps`, `show`, `run`, `chat`, `serve`, `logs`).
+- Real tests in `tests/test_qai_runtime_complete.py`.

@@ -602,3 +602,34 @@ catalog = qdata.project_catalog()
 cost = qdata.estimate_load_cost("large_file.csv")
 updated_ds = qdata.incremental_sync(ds, "new_batch.csv", key_col="id")
 ```
+
+### Complete Production Runtime & CLI (`qai.runtime`)
+```python
+import qai
+import qai.runtime as qruntime
+
+model = qai.build(type="classifier")
+model.train(X, y)
+
+# Wrap model with production runtime
+rt_model = qruntime.RuntimeModelWrapper(model, name="fraud_detector")
+
+# Semantic Versioning & Staging
+rt_model.bump_version("minor") # -> "1.1.0"
+rt_model.deploy(environment="staging", auto_rollback_if="accuracy < 0.90")
+rt_model.promote(from_env="staging", to_env="production")
+
+# Cryptographic HMAC Security
+sig = rt_model.sign_model(private_key="my_secret_key")
+is_valid = rt_model.verify_signature(private_key="my_secret_key")
+
+# Live A/B Traffic Splitting
+ab_router = qruntime.ab_test(model_a, model_b, traffic_split=0.5)
+
+# Embedded Runtime Export
+rt_model.export("model_bundle.json", include_runtime=True, runtime_scope="predict_only")
+
+# CLI Commands
+qruntime.qai_runtime_cli(["list"])
+qruntime.qai_runtime_cli(["serve"])
+```
