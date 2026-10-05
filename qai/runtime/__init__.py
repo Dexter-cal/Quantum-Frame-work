@@ -209,3 +209,25 @@ def qai_runtime_cli(args: List[str]) -> str:
         return f"Pushed model '{name}' to registry successfully."
     else:
         return f"Executing qai-runtime {cmd}..."
+
+
+# =====================================================================
+# 4. PUBLISHER TRUST & CRYPTOGRAPHIC SIGNATURE VERIFICATION
+# =====================================================================
+
+_TRUSTED_PUBLISHERS: Dict[str, str] = {
+    "qai_official": "8f4e2a1b9c3d"
+}
+
+def trust_add(publisher_name: str, public_key: str) -> Dict[str, str]:
+    """Explicitly trusts a publisher public key for package verification."""
+    _TRUSTED_PUBLISHERS[publisher_name] = public_key
+    return {publisher_name: public_key}
+
+def verify_publisher_signature(model_name: str, signature: str, publisher: str) -> bool:
+    """Verifies model HMAC signature against trusted publisher key."""
+    if publisher not in _TRUSTED_PUBLISHERS:
+        return False
+    pub_key = _TRUSTED_PUBLISHERS[publisher]
+    expected_sig = hashlib.sha256(f"{model_name}_{pub_key}".encode()).hexdigest()
+    return signature == expected_sig

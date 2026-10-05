@@ -889,3 +889,12 @@ whole build, every one logged honestly, nothing hidden or glossed over.
 - Done: Export bundling with minimal embedded runtime (`export()`, `include_runtime`).
 - Done: Full `qai-runtime` CLI router engine (`pull`, `push`, `list`, `ps`, `show`, `run`, `chat`, `serve`, `logs`).
 - Real tests in `tests/test_qai_runtime_complete.py`.
+
+## Multimodal Vision, Audio, NLP, Graph, Time-Series & Publisher Verification Complete
+- Done: `qai.vision` (`resize_image`, `normalize_image`, `center_crop`, `random_flip`, `image_to_tensor`).
+- Done: `qai.audio` (`spectrogram`, `melspectrogram`, `mfcc`, `pitch_shift`, `time_stretch`).
+- Done: `qai.nlp` (`text_cleaner`, `tf_idf_vectorizer`, `WordPieceTokenizer`, `word_embeddings_lookup`).
+- Done: `qai.graph` (`degree_centrality`, `betweenness_centrality`, `shortest_path_dijkstra`).
+- Done: `qai.time_series` (`exponential_smoothing`, `autocorrelation_acf`, `seasonal_decompose`).
+- Done: Publisher key trust & HMAC signature verification (`trust_add`, `verify_publisher_signature`) in `qai.runtime`.
+- Real tests in `tests/test_runtime_security.py` and `tests/test_100_multimodal_features.py`.

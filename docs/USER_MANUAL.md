@@ -633,3 +633,30 @@ rt_model.export("model_bundle.json", include_runtime=True, runtime_scope="predic
 qruntime.qai_runtime_cli(["list"])
 qruntime.qai_runtime_cli(["serve"])
 ```
+
+### Multimodal AI Modules (`qai.vision`, `qai.audio`, `qai.nlp`, `qai.graph`, `qai.time_series`)
+```python
+import qai
+
+# Computer Vision Preprocessing
+resized = qai.vision.resize_image(img, size=(224, 224))
+normed = qai.vision.normalize_image(resized)
+tensor = qai.vision.image_to_tensor(normed)
+
+# Audio Signal Processing
+spec = qai.audio.spectrogram(waveform)
+mfcc_feats = qai.audio.mfcc(waveform, n_mfcc=13)
+
+# NLP Tokenization & TF-IDF
+tfidf, vocab = qai.nlp.tf_idf_vectorizer(corpus)
+tokenizer = qai.nlp.WordPieceTokenizer(vocab)
+tokens = tokenizer.tokenize("Sample text")
+
+# Graph Centralities & Paths
+dc = qai.graph.degree_centrality(adj_matrix)
+paths = qai.graph.shortest_path_dijkstra(adj_matrix, start_node=0)
+
+# Time-Series Forecasting
+smoothed = qai.time_series.exponential_smoothing(series)
+acf_vals = qai.time_series.autocorrelation_acf(series, max_lag=10)
+```
