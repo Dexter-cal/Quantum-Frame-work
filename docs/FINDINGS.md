@@ -119,3 +119,7 @@ This document logs critical discoveries, architectural insights, edge cases, and
 ### 29. Time-Series & Active Learning Data Gaps Closed
 - **Discovery**: Real-world dataset engineering requires near-duplicate fuzzy matching (`fuzzy_deduplicate`), model uncertainty queueing (`active_learning_queue`), and time-series feature engineering (`rolling_window`, `lag_feature`).
 - **Impact**: Added fuzzy deduplication, synthetic generation, active learning queue selection, rolling window means, lag features, text stemming, weighted sampling, and incremental file syncing.
+
+### 30. Production Serving, Cryptographic Security & CLI Runtime (`qai.runtime`)
+- **Discovery**: Production model deployments require semantic versioning (`major.minor.patch`), staging environment promotion gates, A/B traffic routing, HMAC cryptographic signatures against model supply-chain tampering, and auto-rollback triggers.
+- **Impact**: Added complete `qai.runtime` sub-package with `RuntimeModelWrapper`, cryptographic signing, embedded runtime bundling, and the `qai-runtime` CLI router.
