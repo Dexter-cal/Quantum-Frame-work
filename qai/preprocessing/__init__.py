@@ -446,3 +446,66 @@ class PowerTransformer:
 
     def fit_transform(self, X: Any, y: Any = None) -> np.ndarray:
         return self.fit(X, y).transform(X)
+
+
+class RecursiveFeatureElimination:
+    """Selects features by recursively considering smaller and smaller sets of features."""
+    def __init__(self, estimator: Any, n_features_to_select: int = 2):
+        self.estimator = estimator
+        self.n_features_to_select = n_features_to_select
+        self.ranking_ = None
+        self.support_ = None
+
+    def fit(self, X: Any, y: Any) -> "RecursiveFeatureElimination":
+        X_arr = np.array(X)
+        y_arr = np.array(y)
+        n_features = X_arr.shape[1]
+        current_features = list(range(n_features))
+
+        while len(current_features) > self.n_features_to_select:
+            self.estimator.train(X_arr[:, current_features], y_arr)
+            from qai.core.explainability import feature_importance
+            try:
+                imps = list(feature_importance(self.estimator).values())
+                worst_idx = np.argmin(imps)
+                current_features.pop(worst_idx)
+            except Exception:
+                current_features.pop(-1)
+
+        self.support_ = np.zeros(n_features, dtype=bool)
+        self.support_[current_features] = True
+        return self
+
+    def transform(self, X: Any) -> np.ndarray:
+        if self.support_ is None:
+            raise RuntimeError("RecursiveFeatureElimination is not fitted.")
+        return np.array(X)[:, self.support_]
+
+    def fit_transform(self, X: Any, y: Any) -> np.ndarray:
+        return self.fit(X, y).transform(X)
+
+
+class SelectFromModel:
+    """Select features based on importance weights."""
+    def __init__(self, estimator: Any, threshold: str = "mean"):
+        self.estimator = estimator
+        self.threshold = threshold
+        self.support_ = None
+
+    def fit(self, X: Any, y: Any) -> "SelectFromModel":
+        X_arr = np.array(X)
+        y_arr = np.array(y)
+        self.estimator.train(X_arr, y_arr)
+        from qai.core.explainability import feature_importance
+        imps = np.array(list(feature_importance(self.estimator).values()))
+        thresh_val = np.mean(imps) if self.threshold == "mean" else float(self.threshold)
+        self.support_ = imps >= thresh_val
+        return self
+
+    def transform(self, X: Any) -> np.ndarray:
+        if self.support_ is None:
+            raise RuntimeError("SelectFromModel is not fitted.")
+        return np.array(X)[:, self.support_]
+
+    def fit_transform(self, X: Any, y: Any) -> np.ndarray:
+        return self.fit(X, y).transform(X)

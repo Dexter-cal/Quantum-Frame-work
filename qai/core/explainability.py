@@ -53,3 +53,38 @@ def permutation_importance(model: Any, X: Any, y: Any, metric_fn: Any = None, n_
         norm = norm / total
 
     return {f"feature_{i}": float(v) for i, v in enumerate(norm)}
+
+
+def partial_dependence(model: Any, X: Any, feature_index: int, grid_resolution: int = 10) -> Tuple[np.ndarray, np.ndarray]:
+    """Computes Partial Dependence Plot (PDP) values for a specified feature."""
+    X_arr = np.array(X, dtype=float)
+    feature_vals = X_arr[:, feature_index]
+    grid = np.linspace(np.min(feature_vals), np.max(feature_vals), grid_resolution)
+    pdp_values = []
+
+    for val in grid:
+        X_temp = X_arr.copy()
+        X_temp[:, feature_index] = val
+        preds = model.predict(X_temp)
+        pdp_values.append(float(np.mean(preds)))
+
+    return grid, np.array(pdp_values)
+
+
+def shapley_value_approximation(model: Any, x_instance: Any, X_background: Any) -> Dict[str, float]:
+    """Computes approximate Marginal Contribution SHAP values for an instance."""
+    x_inst = np.array(x_instance, dtype=float)
+    X_bg = np.array(X_background, dtype=float)
+    base_pred = float(np.mean(model.predict(X_bg)))
+    inst_pred = float(model.predict(x_inst.reshape(1, -1))[0])
+    diff = inst_pred - base_pred
+
+    n_features = x_inst.shape[0]
+    shap_vals = {}
+    for i in range(n_features):
+        X_bg_i = X_bg.copy()
+        X_bg_i[:, i] = x_inst[i]
+        pred_i = float(np.mean(model.predict(X_bg_i)))
+        shap_vals[f"feature_{i}"] = pred_i - base_pred
+
+    return shap_vals

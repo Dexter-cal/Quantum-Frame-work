@@ -684,3 +684,22 @@ new_lr = lr_scheduler.step(val_loss)
 precision, recall, thresholds = qai.precision_recall_curve(y_true, y_scores)
 fpr, tpr, roc_thresholds = qai.roc_curve(y_true, y_scores)
 ```
+
+### Partial Dependence Plots & SHAP Approximations
+```python
+import qai
+
+# Partial Dependence Plot (PDP) values
+grid, pdp_values = qai.partial_dependence(model, X, feature_index=0)
+
+# Marginal Contribution SHAP Values
+shap_vals = qai.shapley_value_approximation(model, x_instance, X_background)
+
+# Recursive Feature Elimination (RFE)
+rfe = qai.RecursiveFeatureElimination(estimator=model, n_features_to_select=3)
+X_selected = rfe.fit_transform(X, y)
+
+# Threshold Selection
+sfm = qai.SelectFromModel(estimator=model, threshold="mean")
+X_important = sfm.fit_transform(X, y)
+```

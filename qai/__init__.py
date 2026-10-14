@@ -10,7 +10,7 @@ Provides unified single-import access to modeling, pipelines, datasets,
 cross-validation, autotuning, benchmark, persistence, quantization, evaluation metrics,
 explainability, synthetic generators, hardware profiling, system utilities, math & activation functions,
 serving, preprocessing, governance, tracking, distributed multi-node, ONNX export, NAS, federated learning,
-quantum circuit simulation, qai.data, qai.runtime, vision, audio, nlp, graph, time_series, and multi-output stacking modules.
+quantum circuit simulation, qai.data, qai.runtime, vision, audio, nlp, graph, time_series, and interpretability modules.
 """
 from .core import build, Model, logic, LogicError, CompatibilityError
 from .core.logic import save_logic_source, load_logic_source
@@ -35,7 +35,7 @@ from .core.metrics import (
     median_absolute_error, explained_variance_score, max_error, brier_score, expected_calibration_error,
     precision_recall_curve, roc_curve, det_curve, coverage_error, label_ranking_average_precision_score
 )
-from .core.explainability import feature_importance, permutation_importance
+from .core.explainability import feature_importance, permutation_importance, partial_dependence, shapley_value_approximation
 from .core.generators import make_classification, make_regression
 from .core.hardware import get_hardware_info, get_optimal_device
 from .techniques import register_technique, Technique
@@ -46,7 +46,7 @@ from .preprocessing import (
     StandardScaler, LabelEncoder, SimpleImputer, PolynomialFeatures, MinMaxScaler, RobustScaler,
     Normalizer, OneHotEncoder, Binarizer, VarianceThreshold, SelectKBest, MaxAbsScaler, OrdinalEncoder,
     TargetEncoder, KBinsDiscretizer, FunctionTransformer, ColumnTransformer, QuantileTransformer,
-    PowerTransformer, clean_dataset
+    PowerTransformer, RecursiveFeatureElimination, SelectFromModel, clean_dataset
 )
 from .governance import (
     detect_drift, weight_distance, calibration_curve, demographic_parity_difference,
@@ -88,16 +88,17 @@ __all__ = [
     "mean_squared_log_error", "mean_absolute_percentage_error", "median_absolute_error",
     "explained_variance_score", "max_error", "brier_score", "expected_calibration_error",
     "precision_recall_curve", "roc_curve", "det_curve", "coverage_error", "label_ranking_average_precision_score",
-    "feature_importance", "permutation_importance", "make_classification", "make_regression",
-    "get_hardware_info", "get_optimal_device", "save_logic_source", "load_logic_source",
-    "StandardScaler", "LabelEncoder", "SimpleImputer", "PolynomialFeatures", "MinMaxScaler",
-    "RobustScaler", "Normalizer", "OneHotEncoder", "Binarizer", "VarianceThreshold", "SelectKBest",
-    "MaxAbsScaler", "OrdinalEncoder", "TargetEncoder", "KBinsDiscretizer", "FunctionTransformer",
-    "ColumnTransformer", "QuantileTransformer", "PowerTransformer", "clean_dataset",
-    "detect_drift", "weight_distance", "calibration_curve", "demographic_parity_difference",
-    "equalized_odds_difference", "disparate_impact_ratio", "fairness_audit", "watermark_model",
-    "verify_watermark", "ExperimentTracker", "log_telemetry", "sync_tensorboard",
-    "QuantumCircuitSimulator", "quantum_expectation", "ReduceLROnPlateau", "data", "system", "math", "runtime",
+    "feature_importance", "permutation_importance", "partial_dependence", "shapley_value_approximation",
+    "make_classification", "make_regression", "get_hardware_info", "get_optimal_device",
+    "save_logic_source", "load_logic_source", "StandardScaler", "LabelEncoder", "SimpleImputer",
+    "PolynomialFeatures", "MinMaxScaler", "RobustScaler", "Normalizer", "OneHotEncoder", "Binarizer",
+    "VarianceThreshold", "SelectKBest", "MaxAbsScaler", "OrdinalEncoder", "TargetEncoder", "KBinsDiscretizer",
+    "FunctionTransformer", "ColumnTransformer", "QuantileTransformer", "PowerTransformer",
+    "RecursiveFeatureElimination", "SelectFromModel", "clean_dataset", "detect_drift", "weight_distance",
+    "calibration_curve", "demographic_parity_difference", "equalized_odds_difference",
+    "disparate_impact_ratio", "fairness_audit", "watermark_model", "verify_watermark",
+    "ExperimentTracker", "log_telemetry", "sync_tensorboard", "QuantumCircuitSimulator",
+    "quantum_expectation", "ReduceLROnPlateau", "data", "system", "math", "runtime",
     "vision", "audio", "nlp", "graph", "time_series",
     "sigmoid", "relu", "softmax", "gelu", "swish", "tanh", "euclidean_distance", "cosine_similarity",
     "manhattan_distance", "minkowski_distance", "huber_loss", "focal_loss", "triplet_loss",
