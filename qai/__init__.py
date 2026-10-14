@@ -10,7 +10,7 @@ Provides unified single-import access to modeling, pipelines, datasets,
 cross-validation, autotuning, benchmark, persistence, quantization, evaluation metrics,
 explainability, synthetic generators, hardware profiling, system utilities, math & activation functions,
 serving, preprocessing, governance, tracking, distributed multi-node, ONNX export, NAS, federated learning,
-quantum circuit simulation, qai.data, qai.runtime, vision, audio, nlp, graph, and time_series modules.
+quantum circuit simulation, qai.data, qai.runtime, vision, audio, nlp, graph, time_series, and multi-output stacking modules.
 """
 from .core import build, Model, logic, LogicError, CompatibilityError
 from .core.logic import save_logic_source, load_logic_source
@@ -32,7 +32,8 @@ from .core.metrics import (
     classification_report, confusion_matrix, mean_absolute_error, r2_score, log_loss, roc_auc_score,
     cohen_kappa_score, matthews_corrcoef, balanced_accuracy_score, silhouette_score, davies_bouldin_score,
     adjusted_rand_score, normalized_mutual_info_score, mean_squared_log_error, mean_absolute_percentage_error,
-    median_absolute_error, explained_variance_score, max_error, brier_score, expected_calibration_error
+    median_absolute_error, explained_variance_score, max_error, brier_score, expected_calibration_error,
+    precision_recall_curve, roc_curve, det_curve, coverage_error, label_ranking_average_precision_score
 )
 from .core.explainability import feature_importance, permutation_importance
 from .core.generators import make_classification, make_regression
@@ -44,14 +45,15 @@ from .learning import get_learning_technique, LearningTechnique
 from .preprocessing import (
     StandardScaler, LabelEncoder, SimpleImputer, PolynomialFeatures, MinMaxScaler, RobustScaler,
     Normalizer, OneHotEncoder, Binarizer, VarianceThreshold, SelectKBest, MaxAbsScaler, OrdinalEncoder,
-    TargetEncoder, KBinsDiscretizer, clean_dataset
+    TargetEncoder, KBinsDiscretizer, FunctionTransformer, ColumnTransformer, QuantileTransformer,
+    PowerTransformer, clean_dataset
 )
 from .governance import (
     detect_drift, weight_distance, calibration_curve, demographic_parity_difference,
     equalized_odds_difference, disparate_impact_ratio, fairness_audit, watermark_model, verify_watermark
 )
 from .tracking import ExperimentTracker, log_telemetry, sync_tensorboard
-from .mechanics import QuantumCircuitSimulator, quantum_expectation
+from .mechanics import QuantumCircuitSimulator, quantum_expectation, ReduceLROnPlateau
 
 # Data, System, Math, Runtime, Vision, Audio, NLP, Graph, Time-Series sub-packages
 from . import data
@@ -85,15 +87,17 @@ __all__ = [
     "silhouette_score", "davies_bouldin_score", "adjusted_rand_score", "normalized_mutual_info_score",
     "mean_squared_log_error", "mean_absolute_percentage_error", "median_absolute_error",
     "explained_variance_score", "max_error", "brier_score", "expected_calibration_error",
+    "precision_recall_curve", "roc_curve", "det_curve", "coverage_error", "label_ranking_average_precision_score",
     "feature_importance", "permutation_importance", "make_classification", "make_regression",
     "get_hardware_info", "get_optimal_device", "save_logic_source", "load_logic_source",
     "StandardScaler", "LabelEncoder", "SimpleImputer", "PolynomialFeatures", "MinMaxScaler",
     "RobustScaler", "Normalizer", "OneHotEncoder", "Binarizer", "VarianceThreshold", "SelectKBest",
-    "MaxAbsScaler", "OrdinalEncoder", "TargetEncoder", "KBinsDiscretizer", "clean_dataset",
+    "MaxAbsScaler", "OrdinalEncoder", "TargetEncoder", "KBinsDiscretizer", "FunctionTransformer",
+    "ColumnTransformer", "QuantileTransformer", "PowerTransformer", "clean_dataset",
     "detect_drift", "weight_distance", "calibration_curve", "demographic_parity_difference",
     "equalized_odds_difference", "disparate_impact_ratio", "fairness_audit", "watermark_model",
     "verify_watermark", "ExperimentTracker", "log_telemetry", "sync_tensorboard",
-    "QuantumCircuitSimulator", "quantum_expectation", "data", "system", "math", "runtime",
+    "QuantumCircuitSimulator", "quantum_expectation", "ReduceLROnPlateau", "data", "system", "math", "runtime",
     "vision", "audio", "nlp", "graph", "time_series",
     "sigmoid", "relu", "softmax", "gelu", "swish", "tanh", "euclidean_distance", "cosine_similarity",
     "manhattan_distance", "minkowski_distance", "huber_loss", "focal_loss", "triplet_loss",

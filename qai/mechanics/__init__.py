@@ -78,3 +78,25 @@ def quantum_expectation(circuit: QuantumCircuitSimulator) -> float:
     """Computes Pauli-Z quantum expectation value."""
     probs = np.abs(circuit.statevector) ** 2
     return float(probs[0] - np.sum(probs[1:]))
+
+
+class ReduceLROnPlateau:
+    """Reduces learning rate when validation metric has stopped improving."""
+    def __init__(self, initial_lr: float = 0.01, factor: float = 0.1, patience: int = 3, min_lr: float = 1e-6):
+        self.current_lr = initial_lr
+        self.factor = factor
+        self.patience = patience
+        self.min_lr = min_lr
+        self.best_metric = float("inf")
+        self.counter = 0
+
+    def step(self, metric: float) -> float:
+        if metric < self.best_metric:
+            self.best_metric = metric
+            self.counter = 0
+        else:
+            self.counter += 1
+            if self.counter >= self.patience:
+                self.current_lr = max(self.min_lr, self.current_lr * self.factor)
+                self.counter = 0
+        return self.current_lr

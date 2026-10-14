@@ -142,3 +142,33 @@ def expected_calibration_error(y_true: Any, y_prob: Any, n_bins: int = 10) -> fl
     """Computes Expected Calibration Error (ECE)."""
     from qai.math import expected_calibration_error as q_ece
     return q_ece(y_true, y_prob, n_bins=n_bins)
+
+
+def precision_recall_curve(y_true: Any, y_score: Any) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Computes precision-recall pairs for different probability thresholds."""
+    from sklearn.metrics import precision_recall_curve as sk_pr
+    return sk_pr(y_true, y_score)
+
+
+def roc_curve(y_true: Any, y_score: Any) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Computes Receiver Operating Characteristic (ROC) curve."""
+    from sklearn.metrics import roc_curve as sk_roc
+    return sk_roc(y_true, y_score)
+
+
+def det_curve(y_true: Any, y_score: Any) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Computes Detection Error Tradeoff (DET) curve."""
+    from sklearn.metrics import det_curve as sk_det
+    return sk_det(y_true, y_score)
+
+
+def coverage_error(y_true: Any, y_score: Any) -> float:
+    """Computes coverage error measure for multi-label classification."""
+    from sklearn.metrics import coverage_error as sk_coverage
+    return float(sk_coverage(y_true, y_score))
+
+
+def label_ranking_average_precision_score(y_true: Any, y_score: Any) -> float:
+    """Computes Label Ranking Average Precision (LRAP)."""
+    from sklearn.metrics import label_ranking_average_precision_score as sk_lrap
+    return float(sk_lrap(y_true, y_score))

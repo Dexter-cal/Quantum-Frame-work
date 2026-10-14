@@ -357,3 +357,92 @@ class KBinsDiscretizer:
 
     def fit_transform(self, X: Any, y: Any = None) -> np.ndarray:
         return self.fit(X, y).transform(X)
+
+
+class FunctionTransformer:
+    """Constructs a transformer from an arbitrary callable function."""
+    def __init__(self, func: Optional[Callable[[Any], Any]] = None):
+        self.func = func or (lambda x: x)
+
+    def fit(self, X: Any, y: Any = None) -> "FunctionTransformer":
+        return self
+
+    def transform(self, X: Any) -> np.ndarray:
+        return np.array(self.func(X))
+
+    def fit_transform(self, X: Any, y: Any = None) -> np.ndarray:
+        return self.transform(X)
+
+
+class ColumnTransformer:
+    """Applies transformers to specified column subsets."""
+    def __init__(self, transformers: List[Tuple[str, Any, List[Union[int, str]]]]):
+        self.transformers = transformers
+
+    def fit(self, X: Any, y: Any = None) -> "ColumnTransformer":
+        df = pd.DataFrame(X)
+        for name, trans, cols in self.transformers:
+            if hasattr(trans, "fit"):
+                trans.fit(df[cols].values, y)
+        return self
+
+    def transform(self, X: Any) -> np.ndarray:
+        df = pd.DataFrame(X)
+        parts = []
+        for name, trans, cols in self.transformers:
+            subset = df[cols].values
+            if hasattr(trans, "transform"):
+                part = trans.transform(subset)
+            else:
+                part = subset
+            parts.append(np.array(part))
+        return np.hstack(parts)
+
+    def fit_transform(self, X: Any, y: Any = None) -> np.ndarray:
+        return self.fit(X, y).transform(X)
+
+
+class QuantileTransformer:
+    """Non-linear transformation mapping data to uniform/normal distribution."""
+    def __init__(self, n_quantiles: int = 100, output_distribution: str = "uniform"):
+        self.n_quantiles = n_quantiles
+        self.output_distribution = output_distribution
+
+    def fit(self, X: Any, y: Any = None) -> "QuantileTransformer":
+        return self
+
+    def transform(self, X: Any) -> np.ndarray:
+        X_arr = np.array(X, dtype=float)
+        from scipy.stats import rankdata, norm
+        ranks = np.apply_along_axis(rankdata, 0, X_arr) / (X_arr.shape[0] + 1)
+        if self.output_distribution == "normal":
+            return norm.ppf(ranks)
+        return ranks
+
+    def fit_transform(self, X: Any, y: Any = None) -> np.ndarray:
+        return self.fit(X, y).transform(X)
+
+
+class PowerTransformer:
+    """Applies Box-Cox or Yeo-Johnson power transform to stabilize variance."""
+    def __init__(self, method: str = "yeo-johnson"):
+        self.method = method
+
+    def fit(self, X: Any, y: Any = None) -> "PowerTransformer":
+        return self
+
+    def transform(self, X: Any) -> np.ndarray:
+        X_arr = np.array(X, dtype=float)
+        if self.method == "box-cox" and np.any(X_arr <= 0):
+            raise ValueError("Box-Cox requires strictly positive values.")
+        from scipy.stats import boxcox, yeojohnson
+        out = np.zeros_like(X_arr)
+        for col in range(X_arr.shape[1]):
+            if self.method == "box-cox":
+                out[:, col], _ = boxcox(X_arr[:, col])
+            else:
+                out[:, col], _ = yeojohnson(X_arr[:, col])
+        return out
+
+    def fit_transform(self, X: Any, y: Any = None) -> np.ndarray:
+        return self.fit(X, y).transform(X)
