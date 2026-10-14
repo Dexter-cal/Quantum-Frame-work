@@ -10,7 +10,7 @@ Provides unified single-import access to modeling, pipelines, datasets,
 cross-validation, autotuning, benchmark, persistence, quantization, evaluation metrics,
 explainability, synthetic generators, hardware profiling, system utilities, math & activation functions,
 serving, preprocessing, governance, tracking, distributed multi-node, ONNX export, NAS, federated learning,
-quantum circuit simulation, qai.data manipulation & ingestion, and qai.runtime production serving & CLI.
+quantum circuit simulation, qai.data, qai.runtime, vision, audio, nlp, graph, and time_series modules.
 """
 from .core import build, Model, logic, LogicError, CompatibilityError
 from .core.logic import save_logic_source, load_logic_source
@@ -53,11 +53,16 @@ from .governance import (
 from .tracking import ExperimentTracker, log_telemetry, sync_tensorboard
 from .mechanics import QuantumCircuitSimulator, quantum_expectation
 
-# Data, System, Math and Runtime sub-packages
+# Data, System, Math, Runtime, Vision, Audio, NLP, Graph, Time-Series sub-packages
 from . import data
 from . import system
 from . import math
 from . import runtime
+from . import vision
+from . import audio
+from . import nlp
+from . import graph
+from . import time_series
 
 # Top-level math convenience exports
 from .math import (
@@ -89,6 +94,7 @@ __all__ = [
     "equalized_odds_difference", "disparate_impact_ratio", "fairness_audit", "watermark_model",
     "verify_watermark", "ExperimentTracker", "log_telemetry", "sync_tensorboard",
     "QuantumCircuitSimulator", "quantum_expectation", "data", "system", "math", "runtime",
+    "vision", "audio", "nlp", "graph", "time_series",
     "sigmoid", "relu", "softmax", "gelu", "swish", "tanh", "euclidean_distance", "cosine_similarity",
     "manhattan_distance", "minkowski_distance", "huber_loss", "focal_loss", "triplet_loss",
     "kl_divergence", "js_divergence", "chebyshev_distance", "canberra_distance", "braycurtis_distance",

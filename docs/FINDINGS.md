@@ -123,3 +123,7 @@ This document logs critical discoveries, architectural insights, edge cases, and
 ### 30. Production Serving, Cryptographic Security & CLI Runtime (`qai.runtime`)
 - **Discovery**: Production model deployments require semantic versioning (`major.minor.patch`), staging environment promotion gates, A/B traffic routing, HMAC cryptographic signatures against model supply-chain tampering, and auto-rollback triggers.
 - **Impact**: Added complete `qai.runtime` sub-package with `RuntimeModelWrapper`, cryptographic signing, embedded runtime bundling, and the `qai-runtime` CLI router.
+
+### 31. Multimodal Feature Suite & Publisher Trust Security
+- **Discovery**: Real-world AI applications extend beyond tabular data into computer vision, audio processing, NLP subwords, graph centralities, and time-series decomposition.
+- **Impact**: Added 100+ multimodal functions (`qai.vision`, `qai.audio`, `qai.nlp`, `qai.graph`, `qai.time_series`) and publisher public key verification (`trust_add`) to prevent supply-chain model tampering.
