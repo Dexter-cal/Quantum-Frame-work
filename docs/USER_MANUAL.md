@@ -660,3 +660,27 @@ paths = qai.graph.shortest_path_dijkstra(adj_matrix, start_node=0)
 smoothed = qai.time_series.exponential_smoothing(series)
 acf_vals = qai.time_series.autocorrelation_acf(series, max_lag=10)
 ```
+
+### Advanced Preprocessing & Column Transformers
+```python
+import qai
+
+# Column-Specific Pipeline Transforms
+col_trans = qai.ColumnTransformer([
+    ("scale", qai.StandardScaler(), [0]),
+    ("pass", qai.FunctionTransformer(), [1])
+])
+X_transformed = col_trans.fit_transform(X)
+
+# Quantile & Power Transforms
+qt = qai.QuantileTransformer(n_quantiles=100, output_distribution="normal")
+pt = qai.PowerTransformer(method="yeo-johnson")
+
+# Learning Rate Adaptation on Plateau
+lr_scheduler = qai.ReduceLROnPlateau(initial_lr=0.1, factor=0.5, patience=2)
+new_lr = lr_scheduler.step(val_loss)
+
+# PR & ROC Curves
+precision, recall, thresholds = qai.precision_recall_curve(y_true, y_scores)
+fpr, tpr, roc_thresholds = qai.roc_curve(y_true, y_scores)
+```

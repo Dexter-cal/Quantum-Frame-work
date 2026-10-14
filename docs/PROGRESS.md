@@ -898,3 +898,9 @@ whole build, every one logged honestly, nothing hidden or glossed over.
 - Done: `qai.time_series` (`exponential_smoothing`, `autocorrelation_acf`, `seasonal_decompose`).
 - Done: Publisher key trust & HMAC signature verification (`trust_add`, `verify_publisher_signature`) in `qai.runtime`.
 - Real tests in `tests/test_runtime_security.py` and `tests/test_100_multimodal_features.py`.
+
+## Advanced Preprocessing Transformers, LR Plateau Scheduler & Curve Metrics Complete
+- Done: `FunctionTransformer`, `ColumnTransformer`, `QuantileTransformer`, `PowerTransformer` in `qai.preprocessing`.
+- Done: `ReduceLROnPlateau` in `qai.mechanics`.
+- Done: `precision_recall_curve`, `roc_curve`, `det_curve`, `coverage_error`, `label_ranking_average_precision_score` in `qai.core.metrics`.
+- Real tests in `tests/test_50_advanced_features.py`.

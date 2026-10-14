@@ -127,3 +127,7 @@ This document logs critical discoveries, architectural insights, edge cases, and
 ### 31. Multimodal Feature Suite & Publisher Trust Security
 - **Discovery**: Real-world AI applications extend beyond tabular data into computer vision, audio processing, NLP subwords, graph centralities, and time-series decomposition.
 - **Impact**: Added 100+ multimodal functions (`qai.vision`, `qai.audio`, `qai.nlp`, `qai.graph`, `qai.time_series`) and publisher public key verification (`trust_add`) to prevent supply-chain model tampering.
+
+### 32. Column Transformers, Power Transforms & Evaluation Curves
+- **Discovery**: Complex ML workflows require column-specific pipeline transformations (`ColumnTransformer`), variance stabilization (`PowerTransformer`), and non-linear quantile mapping (`QuantileTransformer`).
+- **Impact**: Added custom column transformers, adaptive LR reduction on metric plateaus (`ReduceLROnPlateau`), and PR/ROC/DET evaluation curves.
