@@ -57,3 +57,19 @@ def word_embeddings_lookup(tokens: List[str], embedding_dim: int = 16) -> np.nda
         np.random.seed(seed)
         vecs.append(np.random.randn(embedding_dim))
     return np.array(vecs)
+
+
+def character_ngram_tokenizer(text: str, n: int = 3) -> List[str]:
+    """Extracts character n-grams from input text."""
+    clean = text_cleaner(text)
+    return [clean[i:i+n] for i in range(len(clean) - n + 1)]
+
+
+def readability_score_flesch(text: str) -> float:
+    """Computes Flesch Reading Ease score."""
+    words = text.split()
+    sentences = max(1, len(re.split(r'[.!?]+', text)))
+    word_count = max(1, len(words))
+    syllable_count = sum(len(re.findall(r'[aeiouy]+', w.lower())) for w in words)
+    score = 206.835 - 1.015 * (word_count / sentences) - 84.6 * (syllable_count / word_count)
+    return float(score)

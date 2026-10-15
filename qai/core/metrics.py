@@ -172,3 +172,36 @@ def label_ranking_average_precision_score(y_true: Any, y_score: Any) -> float:
     """Computes Label Ranking Average Precision (LRAP)."""
     from sklearn.metrics import label_ranking_average_precision_score as sk_lrap
     return float(sk_lrap(y_true, y_score))
+
+
+def zero_one_loss(y_true: Any, y_pred: Any) -> float:
+    """Computes 0-1 Classification Loss (fraction of misclassifications)."""
+    yt = np.array(y_true)
+    yp = np.array(y_pred)
+    return float(np.mean(yt != yp))
+
+
+def hamming_loss(y_true: Any, y_pred: Any) -> float:
+    """Computes Hamming Loss for multilabel classification."""
+    yt = np.array(y_true)
+    yp = np.array(y_pred)
+    return float(np.mean(yt != yp))
+
+
+def jaccard_score(y_true: Any, y_pred: Any, average: str = "binary") -> float:
+    """Computes Jaccard Similarity Score (IoU)."""
+    from sklearn.metrics import jaccard_score as sk_jaccard
+    return float(sk_jaccard(y_true, y_pred, average=average))
+
+
+def multilabel_confusion_matrix(y_true: Any, y_pred: Any) -> np.ndarray:
+    """Computes confusion matrix for each class or multi-label."""
+    from sklearn.metrics import multilabel_confusion_matrix as sk_mcm
+    return sk_mcm(y_true, y_pred)
+
+
+def brier_score_loss(y_true: Any, y_prob: Any) -> float:
+    """Computes Brier Score Loss for probability calibration."""
+    yt = np.array(y_true, dtype=float)
+    yp = np.array(y_prob, dtype=float)
+    return float(np.mean((yt - yp) ** 2))

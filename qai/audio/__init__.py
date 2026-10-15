@@ -46,3 +46,19 @@ def time_stretch(waveform: Any, rate: float = 1.2) -> np.ndarray:
     indices = np.round(np.arange(0, len(sig), rate)).astype(int)
     indices = indices[indices < len(sig)]
     return sig[indices]
+
+
+def zero_crossing_rate(waveform: Any) -> float:
+    """Computes Zero Crossing Rate (ZCR) of audio signal."""
+    sig = np.array(waveform, dtype=float)
+    zero_crossings = np.diff(np.signbit(sig))
+    return float(np.mean(zero_crossings))
+
+
+def spectral_centroid(waveform: Any, sample_rate: int = 16000) -> float:
+    """Computes spectral centroid (center of mass of magnitude spectrum)."""
+    sig = np.array(waveform, dtype=float)
+    fft_res = np.abs(np.fft.rfft(sig))
+    freqs = np.fft.rfftfreq(len(sig), 1.0 / sample_rate)
+    centroid = np.sum(freqs * fft_res) / (np.sum(fft_res) + 1e-12)
+    return float(centroid)
