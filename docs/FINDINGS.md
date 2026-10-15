@@ -131,3 +131,7 @@ This document logs critical discoveries, architectural insights, edge cases, and
 ### 32. Column Transformers, Power Transforms & Evaluation Curves
 - **Discovery**: Complex ML workflows require column-specific pipeline transformations (`ColumnTransformer`), variance stabilization (`PowerTransformer`), and non-linear quantile mapping (`QuantileTransformer`).
 - **Impact**: Added custom column transformers, adaptive LR reduction on metric plateaus (`ReduceLROnPlateau`), and PR/ROC/DET evaluation curves.
+
+### 33. Feature Elimination & Marginal Contribution SHAP Values
+- **Discovery**: Machine learning interpretability and feature selection are enhanced by combining model-agnostic Partial Dependence Plots (PDP) and marginal contribution SHAP approximations with recursive elimination loops (`RecursiveFeatureElimination`).
+- **Impact**: Added PDP value calculation, marginal contribution SHAP values, recursive feature elimination, and weight threshold selection.

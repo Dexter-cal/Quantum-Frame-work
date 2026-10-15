@@ -904,3 +904,8 @@ whole build, every one logged honestly, nothing hidden or glossed over.
 - Done: `ReduceLROnPlateau` in `qai.mechanics`.
 - Done: `precision_recall_curve`, `roc_curve`, `det_curve`, `coverage_error`, `label_ranking_average_precision_score` in `qai.core.metrics`.
 - Real tests in `tests/test_50_advanced_features.py`.
+
+## Partial Dependence, SHAP Approximation & Recursive Feature Elimination Complete
+- Done: `partial_dependence()`, `shapley_value_approximation()` in `qai.core.explainability`.
+- Done: `RecursiveFeatureElimination`, `SelectFromModel` in `qai.preprocessing`.
+- Real tests in `tests/test_50_interpretability_optimization.py`.
