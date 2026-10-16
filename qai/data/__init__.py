@@ -447,3 +447,39 @@ def incremental_sync(existing_ds: DataDataset, source_path: str, key_col: str = 
     delta_df = new_df[~new_df[key_col].isin(existing_keys)]
     combined_df = pd.concat([old_df, delta_df], ignore_index=True)
     return DataDataset.from_pandas(combined_df)
+
+
+def data_health_check(self: DataDataset) -> Dict[str, Any]:
+    """Performs full structural data health check."""
+    df = self.to_pandas()
+    return {
+        "is_empty": df.empty,
+        "null_cells": int(df.isnull().sum().sum()),
+        "duplicate_rows": int(df.duplicated().sum()),
+        "numeric_columns": len(df.select_dtypes(include=[np.number]).columns),
+        "string_columns": len(df.select_dtypes(include=[object]).columns)
+    }
+
+def detect_outliers_iqr(self: DataDataset, column: str, multiplier: float = 1.5) -> List[int]:
+    """Detects row indices of statistical outliers using IQR."""
+    df = self.to_pandas()
+    if column not in df.columns or not np.issubdtype(df[column].dtype, np.number):
+        return []
+    q1 = df[column].quantile(0.25)
+    q3 = df[column].quantile(0.75)
+    iqr = q3 - q1
+    lower_bound = q1 - multiplier * iqr
+    upper_bound = q3 + multiplier * iqr
+    outliers = df[(df[column] < lower_bound) | (df[column] > upper_bound)].index.tolist()
+    return outliers
+
+def interpolate_missing_values(self: DataDataset, method: str = "linear") -> DataDataset:
+    """Interpolates missing numerical values."""
+    df = self.to_pandas()
+    df = df.interpolate(method=method)
+    self.data = df.values.tolist()
+    return self
+
+DataDataset.data_health_check = data_health_check
+DataDataset.detect_outliers_iqr = detect_outliers_iqr
+DataDataset.interpolate_missing_values = interpolate_missing_values
