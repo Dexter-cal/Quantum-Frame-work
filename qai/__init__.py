@@ -10,7 +10,7 @@ Provides unified single-import access to modeling, pipelines, datasets,
 cross-validation, autotuning, benchmark, persistence, quantization, evaluation metrics,
 explainability, synthetic generators, hardware profiling, system utilities, math & activation functions,
 serving, preprocessing, governance, tracking, distributed multi-node, ONNX export, NAS, federated learning,
-quantum circuit simulation, qai.data, qai.runtime, vision, audio, nlp, graph, time_series, and interpretability modules.
+quantum circuit simulation, qai.data, qai.runtime, vision, audio, nlp, graph, time_series, interpretability, and multi-target stacking modules.
 """
 from .core import build, Model, logic, LogicError, CompatibilityError
 from .core.logic import save_logic_source, load_logic_source
@@ -40,7 +40,10 @@ from .core.explainability import feature_importance, permutation_importance, par
 from .core.generators import make_classification, make_regression
 from .core.hardware import get_hardware_info, get_optimal_device
 from .techniques import register_technique, Technique
-from .learning import get_learning_technique, LearningTechnique
+from .learning import (
+    get_learning_technique, LearningTechnique, MultiOutputClassifier, MultiOutputRegressor,
+    ClassifierChain, StackingClassifier, StackingRegressor
+)
 
 # Advanced sub-packages & utilities
 from .preprocessing import (
@@ -84,21 +87,23 @@ __all__ = [
     "k_fold_split", "VotingEnsemble", "AutoTuner", "autotune", "bayesian_optimize", "benchmark",
     "save_model", "load_model", "compress_model", "prune_structured_sparsity", "init_distributed_context",
     "DistributedDataParallelWrapper", "export_to_onnx", "search_architecture", "FederatedServer",
-    "federated_averaging", "classification_report", "confusion_matrix", "mean_absolute_error", "r2_score",
-    "log_loss", "roc_auc_score", "cohen_kappa_score", "matthews_corrcoef", "balanced_accuracy_score",
-    "silhouette_score", "davies_bouldin_score", "adjusted_rand_score", "normalized_mutual_info_score",
-    "mean_squared_log_error", "mean_absolute_percentage_error", "median_absolute_error",
-    "explained_variance_score", "max_error", "brier_score", "expected_calibration_error",
-    "precision_recall_curve", "roc_curve", "det_curve", "coverage_error", "label_ranking_average_precision_score",
-    "zero_one_loss", "hamming_loss", "jaccard_score", "multilabel_confusion_matrix", "brier_score_loss",
-    "feature_importance", "permutation_importance", "partial_dependence", "shapley_value_approximation",
-    "make_classification", "make_regression", "get_hardware_info", "get_optimal_device",
-    "save_logic_source", "load_logic_source", "StandardScaler", "LabelEncoder", "SimpleImputer",
-    "PolynomialFeatures", "MinMaxScaler", "RobustScaler", "Normalizer", "OneHotEncoder", "Binarizer",
-    "VarianceThreshold", "SelectKBest", "MaxAbsScaler", "OrdinalEncoder", "TargetEncoder", "KBinsDiscretizer",
-    "FunctionTransformer", "ColumnTransformer", "QuantileTransformer", "PowerTransformer",
-    "RecursiveFeatureElimination", "SelectFromModel", "clean_dataset", "detect_drift", "weight_distance",
-    "calibration_curve", "demographic_parity_difference", "equalized_odds_difference",
+    "federated_averaging", "MultiOutputClassifier", "MultiOutputRegressor", "ClassifierChain",
+    "StackingClassifier", "StackingRegressor", "classification_report", "confusion_matrix",
+    "mean_absolute_error", "r2_score", "log_loss", "roc_auc_score", "cohen_kappa_score",
+    "matthews_corrcoef", "balanced_accuracy_score", "silhouette_score", "davies_bouldin_score",
+    "adjusted_rand_score", "normalized_mutual_info_score", "mean_squared_log_error",
+    "mean_absolute_percentage_error", "median_absolute_error", "explained_variance_score",
+    "max_error", "brier_score", "expected_calibration_error", "precision_recall_curve",
+    "roc_curve", "det_curve", "coverage_error", "label_ranking_average_precision_score",
+    "zero_one_loss", "hamming_loss", "jaccard_score", "multilabel_confusion_matrix",
+    "brier_score_loss", "feature_importance", "permutation_importance", "partial_dependence",
+    "shapley_value_approximation", "make_classification", "make_regression", "get_hardware_info",
+    "get_optimal_device", "save_logic_source", "load_logic_source", "StandardScaler", "LabelEncoder",
+    "SimpleImputer", "PolynomialFeatures", "MinMaxScaler", "RobustScaler", "Normalizer", "OneHotEncoder",
+    "Binarizer", "VarianceThreshold", "SelectKBest", "MaxAbsScaler", "OrdinalEncoder", "TargetEncoder",
+    "KBinsDiscretizer", "FunctionTransformer", "ColumnTransformer", "QuantileTransformer",
+    "PowerTransformer", "RecursiveFeatureElimination", "SelectFromModel", "clean_dataset", "detect_drift",
+    "weight_distance", "calibration_curve", "demographic_parity_difference", "equalized_odds_difference",
     "disparate_impact_ratio", "fairness_audit", "watermark_model", "verify_watermark",
     "ExperimentTracker", "log_telemetry", "sync_tensorboard", "QuantumCircuitSimulator",
     "quantum_expectation", "ReduceLROnPlateau", "data", "system", "math", "runtime",

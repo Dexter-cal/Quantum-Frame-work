@@ -723,3 +723,24 @@ centroid = qai.audio.spectral_centroid(waveform, sample_rate=16000)
 # Latency Profiling
 result, latency_ms = qai.profile_execution_time(my_function, arg1, arg2)
 ```
+
+### Multi-Output Estimators & Stacking Ensembles
+```python
+import qai
+
+# Multi-Target Classification & Regression
+mo_cls = qai.MultiOutputClassifier(estimator=qai.build("classifier"))
+mo_cls.train(X, Y_multilabel)
+preds = mo_cls.predict(X)
+
+# Classifier Chain
+chain = qai.ClassifierChain(estimator=qai.build("classifier"))
+chain.train(X, Y_multilabel)
+
+# Stacking Ensembles
+m1 = qai.build("decision_tree")
+m2 = qai.build("knn")
+final_m = qai.build("classifier")
+stacking = qai.StackingClassifier(estimators=[m1, m2], final_estimator=final_m)
+stacking.train(X, y)
+```
