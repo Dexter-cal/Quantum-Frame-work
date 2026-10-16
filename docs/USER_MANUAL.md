@@ -703,3 +703,23 @@ X_selected = rfe.fit_transform(X, y)
 sfm = qai.SelectFromModel(estimator=model, threshold="mean")
 X_important = sfm.fit_transform(X, y)
 ```
+
+### Extended Losses, Vision & Profiling Extensions
+```python
+import qai
+
+# Embedding & Contrastive Loss Functions
+c_loss = qai.contrastive_loss(y_true, euclidean_distances, margin=1.0)
+sm_loss = qai.soft_margin_loss(y_true, y_pred_scores)
+
+# Computer Vision Spatial Filters
+blurred = qai.vision.gaussian_blur_filter(image, kernel_size=3)
+edges = qai.vision.edge_detection_sobel(image)
+
+# Audio Signal Extraction
+zcr = qai.audio.zero_crossing_rate(waveform)
+centroid = qai.audio.spectral_centroid(waveform, sample_rate=16000)
+
+# Latency Profiling
+result, latency_ms = qai.profile_execution_time(my_function, arg1, arg2)
+```

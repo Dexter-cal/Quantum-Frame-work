@@ -909,3 +909,12 @@ whole build, every one logged honestly, nothing hidden or glossed over.
 - Done: `partial_dependence()`, `shapley_value_approximation()` in `qai.core.explainability`.
 - Done: `RecursiveFeatureElimination`, `SelectFromModel` in `qai.preprocessing`.
 - Real tests in `tests/test_50_interpretability_optimization.py`.
+
+## 100+ Extended Loss, Vision, Audio, NLP & System Features Complete
+- Done: `contrastive_loss`, `cosine_embedding_loss`, `margin_ranking_loss`, `soft_margin_loss`, `poisson_nll_loss` in `qai.math`.
+- Done: `zero_one_loss`, `hamming_loss`, `jaccard_score`, `multilabel_confusion_matrix`, `brier_score_loss` in `qai.core.metrics`.
+- Done: `gaussian_blur_filter`, `edge_detection_sobel`, `color_histogram` in `qai.vision`.
+- Done: `zero_crossing_rate`, `spectral_centroid` in `qai.audio`.
+- Done: `character_ngram_tokenizer`, `readability_score_flesch` in `qai.nlp`.
+- Done: `profile_execution_time` in `qai.system`.
+- Real tests in `tests/test_100_extended_features.py`.

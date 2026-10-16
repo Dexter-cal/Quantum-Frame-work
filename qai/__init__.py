@@ -33,7 +33,8 @@ from .core.metrics import (
     cohen_kappa_score, matthews_corrcoef, balanced_accuracy_score, silhouette_score, davies_bouldin_score,
     adjusted_rand_score, normalized_mutual_info_score, mean_squared_log_error, mean_absolute_percentage_error,
     median_absolute_error, explained_variance_score, max_error, brier_score, expected_calibration_error,
-    precision_recall_curve, roc_curve, det_curve, coverage_error, label_ranking_average_precision_score
+    precision_recall_curve, roc_curve, det_curve, coverage_error, label_ranking_average_precision_score,
+    zero_one_loss, hamming_loss, jaccard_score, multilabel_confusion_matrix, brier_score_loss
 )
 from .core.explainability import feature_importance, permutation_importance, partial_dependence, shapley_value_approximation
 from .core.generators import make_classification, make_regression
@@ -71,9 +72,10 @@ from .math import (
     sigmoid, relu, softmax, gelu, swish, tanh, euclidean_distance, cosine_similarity,
     manhattan_distance, minkowski_distance, huber_loss, focal_loss, triplet_loss,
     kl_divergence, js_divergence, chebyshev_distance, canberra_distance, braycurtis_distance,
-    log_sum_exp, safe_divide, levenshtein_distance, jaccard_similarity
+    log_sum_exp, safe_divide, levenshtein_distance, jaccard_similarity, contrastive_loss,
+    cosine_embedding_loss, margin_ranking_loss, soft_margin_loss, poisson_nll_loss
 )
-from .system import ResourceGuard, auto_clean_memory, check_ram_threshold
+from .system import ResourceGuard, auto_clean_memory, check_ram_threshold, profile_execution_time
 
 __all__ = [
     "build", "Model", "register_technique", "Technique", "logic", "LogicError",
@@ -88,6 +90,7 @@ __all__ = [
     "mean_squared_log_error", "mean_absolute_percentage_error", "median_absolute_error",
     "explained_variance_score", "max_error", "brier_score", "expected_calibration_error",
     "precision_recall_curve", "roc_curve", "det_curve", "coverage_error", "label_ranking_average_precision_score",
+    "zero_one_loss", "hamming_loss", "jaccard_score", "multilabel_confusion_matrix", "brier_score_loss",
     "feature_importance", "permutation_importance", "partial_dependence", "shapley_value_approximation",
     "make_classification", "make_regression", "get_hardware_info", "get_optimal_device",
     "save_logic_source", "load_logic_source", "StandardScaler", "LabelEncoder", "SimpleImputer",
@@ -103,7 +106,8 @@ __all__ = [
     "sigmoid", "relu", "softmax", "gelu", "swish", "tanh", "euclidean_distance", "cosine_similarity",
     "manhattan_distance", "minkowski_distance", "huber_loss", "focal_loss", "triplet_loss",
     "kl_divergence", "js_divergence", "chebyshev_distance", "canberra_distance", "braycurtis_distance",
-    "log_sum_exp", "safe_divide", "levenshtein_distance", "jaccard_similarity",
-    "ResourceGuard", "auto_clean_memory", "check_ram_threshold"
+    "log_sum_exp", "safe_divide", "levenshtein_distance", "jaccard_similarity", "contrastive_loss",
+    "cosine_embedding_loss", "margin_ranking_loss", "soft_margin_loss", "poisson_nll_loss",
+    "ResourceGuard", "auto_clean_memory", "check_ram_threshold", "profile_execution_time"
 ]
 __version__ = "0.1.0-prototype"

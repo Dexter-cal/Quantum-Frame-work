@@ -135,3 +135,7 @@ This document logs critical discoveries, architectural insights, edge cases, and
 ### 33. Feature Elimination & Marginal Contribution SHAP Values
 - **Discovery**: Machine learning interpretability and feature selection are enhanced by combining model-agnostic Partial Dependence Plots (PDP) and marginal contribution SHAP approximations with recursive elimination loops (`RecursiveFeatureElimination`).
 - **Impact**: Added PDP value calculation, marginal contribution SHAP values, recursive feature elimination, and weight threshold selection.
+
+### 34. Deep Learning Distance Losses & Signal Feature Extensions
+- **Discovery**: Embeddings, Computer Vision, Audio, and Natural Language Processing require specialized loss formulations (e.g. `contrastive_loss`, `cosine_embedding_loss`) and signal feature extractors.
+- **Impact**: Added distance/embedding losses, image spatial filters, zero-crossing rates, spectral centroids, n-gram tokenization, and latency execution profilers.

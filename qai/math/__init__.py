@@ -1193,3 +1193,46 @@ def jaccard_similarity(a: Any, b: Any) -> float:
     intersection = len(set_a.intersection(set_b))
     union = len(set_a.union(set_b))
     return float(intersection / (union + 1e-12))
+
+
+# Advanced Deep Learning Loss Functions
+def contrastive_loss(y_true: Any, euclidean_distances: Any, margin: float = 1.0) -> float:
+    """Computes Contrastive Loss for Siamese network distance embeddings."""
+    y_t = np.array(y_true, dtype=float)
+    d = np.array(euclidean_distances, dtype=float)
+    loss = (1.0 - y_t) * 0.5 * (d ** 2) + y_t * 0.5 * (np.maximum(0.0, margin - d) ** 2)
+    return float(np.mean(loss))
+
+
+def cosine_embedding_loss(x1: Any, x2: Any, y_true: Any, margin: float = 0.0) -> float:
+    """Computes Cosine Embedding Loss."""
+    x1_arr = np.array(x1, dtype=float)
+    x2_arr = np.array(x2, dtype=float)
+    y_t = np.array(y_true, dtype=float)
+    cos_sim = np.sum(x1_arr * x2_arr, axis=-1) / (np.linalg.norm(x1_arr, axis=-1) * np.linalg.norm(x2_arr, axis=-1) + 1e-12)
+    loss = np.where(y_t == 1, 1.0 - cos_sim, np.maximum(0.0, cos_sim - margin))
+    return float(np.mean(loss))
+
+
+def margin_ranking_loss(x1: Any, x2: Any, y_true: Any, margin: float = 0.0) -> float:
+    """Computes Margin Ranking Loss max(0, -y * (x1 - x2) + margin)."""
+    x1_arr = np.array(x1, dtype=float)
+    x2_arr = np.array(x2, dtype=float)
+    y_t = np.array(y_true, dtype=float)
+    loss = np.maximum(0.0, -y_t * (x1_arr - x2_arr) + margin)
+    return float(np.mean(loss))
+
+
+def soft_margin_loss(y_true: Any, y_pred_scores: Any) -> float:
+    """Computes Soft Margin Loss log(1 + exp(-y * y_pred))."""
+    y_t = np.array(y_true, dtype=float)
+    y_p = np.array(y_pred_scores, dtype=float)
+    return float(np.mean(np.log1p(np.exp(-y_t * y_p))))
+
+
+def poisson_nll_loss(y_true: Any, log_input: Any) -> float:
+    """Computes Poisson Negative Log Likelihood Loss."""
+    y_t = np.array(y_true, dtype=float)
+    x_input = np.array(log_input, dtype=float)
+    loss = np.exp(x_input) - y_t * x_input
+    return float(np.mean(loss))

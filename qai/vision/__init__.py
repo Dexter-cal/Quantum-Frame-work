@@ -50,3 +50,44 @@ def image_to_tensor(image: Any) -> np.ndarray:
     if img.ndim == 3:
         return np.transpose(img, (2, 0, 1))
     return img
+
+
+def gaussian_blur_filter(image: Any, kernel_size: int = 3) -> np.ndarray:
+    """Applies Gaussian spatial blur smoothing to image."""
+    img = np.array(image, dtype=float)
+    kernel = np.ones((kernel_size, kernel_size)) / (kernel_size ** 2)
+    if img.ndim == 2:
+        from scipy.signal import convolve2d
+        return convolve2d(img, kernel, mode='same')
+    elif img.ndim == 3:
+        from scipy.signal import convolve2d
+        out = np.zeros_like(img)
+        for c in range(img.shape[2]):
+            out[:, :, c] = convolve2d(img[:, :, c], kernel, mode='same')
+        return out
+    return img
+
+
+def edge_detection_sobel(image: Any) -> np.ndarray:
+    """Computes Sobel gradient edge magnitude map."""
+    img = np.array(image, dtype=float)
+    if img.ndim == 3:
+        img = np.mean(img, axis=2)
+    sobel_x = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]])
+    sobel_y = np.array([[-1, -2, -1], [0, 0, 0], [1, 2, 1]])
+    from scipy.signal import convolve2d
+    gx = convolve2d(img, sobel_x, mode='same')
+    gy = convolve2d(img, sobel_y, mode='same')
+    return np.sqrt(gx**2 + gy**2)
+
+
+def color_histogram(image: Any, bins: int = 8) -> np.ndarray:
+    """Computes 3-channel color distribution histogram."""
+    img = np.array(image)
+    if img.ndim == 3:
+        h_r, _ = np.histogram(img[:, :, 0], bins=bins, range=(0, 256))
+        h_g, _ = np.histogram(img[:, :, 1], bins=bins, range=(0, 256))
+        h_b, _ = np.histogram(img[:, :, 2], bins=bins, range=(0, 256))
+        return np.concatenate([h_r, h_g, h_b])
+    h, _ = np.histogram(img, bins=bins, range=(0, 256))
+    return h

@@ -167,3 +167,12 @@ def get_env_summary() -> Dict[str, Any]:
         "cwd": os.getcwd(),
         "pid": os.getpid()
     }
+
+
+def profile_execution_time(fn: Callable[..., Any], *args: Any, **kwargs: Any) -> Tuple[Any, float]:
+    """Profiles execution latency in milliseconds."""
+    t0 = time.perf_counter()
+    res = fn(*args, **kwargs)
+    t1 = time.perf_counter()
+    duration_ms = (t1 - t0) * 1000.0
+    return res, round(duration_ms, 3)
