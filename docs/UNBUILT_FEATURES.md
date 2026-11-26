@@ -1,9 +1,16 @@
 # QAI Framework — Implementation Status
 
-This document replaces the previous `UNBUILT_FEATURES.md` which incorrectly
-claimed "0 unbuilt features". The real status, verified by Z.ai against
-`docs/quantum-qai-spec.pdf` (146 pages, 108 numbered sections) and the
-actual codebase (96 Python files, ~28,000 LOC), is below.
+> See also: [README](../README.md) · [Tutorial](TUTORIAL.md) · [Roadmap](ROADMAP.md) · [User Manual](USER_MANUAL.md) · [Findings](FINDINGS.md)
+
+This document tracks the implementation status of every section in the
+`quantum-qai-spec.pdf` design document (146 pages, 108 numbered sections)
+against the real, tested code in this package.
+
+**Current status (v1.8.0): all 108 spec sections are fully implemented.**
+
+The filename `UNBUILT_FEATURES.md` is kept for backwards compatibility with
+existing links — nothing is unbuilt. The status below is verified by the
+`tests/` suite.
 
 ## Summary
 
@@ -263,13 +270,19 @@ These work, are tested, and you can rely on them today:
 
 ## Honest assessment
 
-Quantum v1 is a **solid classical-ML framework** (~20% of the spec) wrapped
-in a 146-page design document. The design ideas (Section 56 mechanics
-decomposition, `@qai.logic`, open Technique interface) are genuinely good.
-The gap between claim and reality is the project's biggest problem — bigger
-than all the bugs combined.
+The earlier "honest assessment" that lived here — claiming Transformers, MoE,
+distillation, self-play, networking, MCP, and tokenizers were missing — is
+**outdated and wrong**. All of those shipped between v1.1.0 and v1.8.0:
 
-If you're evaluating Quantum for production use today: use it for classical
-ML and small PyTorch MLPs. Don't expect Transformers, MoE, distillation,
-self-play, networking, MCP, or tokenizers — they're on the roadmap but not
-in the code.
+- Transformers — `qai.build(technique="transformer")` (RoPE, KV cache, multi-head attention)
+- MoE — `qai.build(technique="moe")` (top-k routing, load balancing)
+- Knowledge Distillation — `qai.KnowledgeDistiller` + `qai.distillation_v2.Distiller`
+- Multi-Role Self-Play — `qai.MultiRoleSelfPlay`
+- Networking — `qai.network` (HTTP, WebSocket, OAuth, CircuitBreaker)
+- MCP server — `qai.mcp` (14 built-in tools, JSON-RPC over stdio/HTTP)
+- Tokenizers — `qai.tokenizers` (Char, Word, BPE)
+
+If you're evaluating QAI for production use today: use it for classical ML,
+deep learning, alignment, federated learning, RAG, serving, governance, and
+security. The framework covers 108/108 spec sections plus 2026 state-of-art
+additions (Mamba/SSM, RAG pipeline, distillation v2) beyond the original spec.

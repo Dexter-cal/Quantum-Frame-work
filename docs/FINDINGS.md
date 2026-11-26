@@ -1,5 +1,7 @@
 # QAI Engineering Findings & Architecture Notes
 
+> See also: [README](../README.md) · [Roadmap](ROADMAP.md) · [Implementation Status](UNBUILT_FEATURES.md) · [User Manual](USER_MANUAL.md) · [Changelog](../CHANGELOG.md)
+
 This document logs critical discoveries, architectural insights, edge cases, and runtime behavior observations uncovered during the implementation and auditing of `qai`.
 
 ## Findings Log

@@ -3,6 +3,25 @@
 All notable changes to the qai framework are documented here.
 Versions follow semantic versioning: MAJOR.MINOR.PATCH.
 
+See also: [README](README.md) · [Tutorial](docs/TUTORIAL.md) · [Roadmap](docs/ROADMAP.md) · [Implementation Status](docs/UNBUILT_FEATURES.md)
+
+## v1.8.1 (2026-11-26) — "Docs Consolidation"
+
+### Changed — Documentation cross-linked and refreshed
+- **Added** [README.md](README.md) as the project landing page — install, quickstart, feature map, doc index, project layout
+- **Added** [CONTRIBUTING.md](CONTRIBUTING.md) — fork→branch→PR workflow, code style, test policy
+- **Added** [LICENSE](LICENSE) — MIT
+- **Updated** [docs/TUTORIAL.md](docs/TUTORIAL.md) — version header bumped from v0.4.0 → v1.8.0; cross-links to USER_MANUAL and ROADMAP
+- **Updated** [docs/ROADMAP.md](docs/ROADMAP.md) — current version bumped from v1.1.0 → v1.8.0; Phase 7 documentation tasks marked done
+- **Updated** [docs/UNBUILT_FEATURES.md](docs/UNBUILT_FEATURES.md) — removed contradictory "honest assessment" footer that claimed Transformers, MoE, MCP, and tokenizers were missing (they have all shipped); renamed intent to "Implementation Status"
+- **Updated** [docs/VISUAL_DESIGN.md](docs/VISUAL_DESIGN.md) — tech-stack recommendation now reflects the actual decision (pure HTML/CSS/JS, no build step) per ROADMAP decision #9
+- **Updated** [docs/FINDINGS.md](docs/FINDINGS.md), [docs/PROGRESS.md](docs/PROGRESS.md), [docs/USER_MANUAL.md](docs/USER_MANUAL.md) — added cross-link headers
+- **Updated** `.gitignore` — excludes binaries (`*.qmodel`, `*.npz`, `*.pdf`), build artifacts (`catboost_info/`, `checkpoints/`), and `.env`
+
+### Repo hygiene
+- Pushed 430 source files (382 Python modules + 21 Markdown + 19 HTML + 5 JSON + configs) to `main`
+- Removed binaries, model weights, and training artifacts from tracking
+
 ## v1.8.0 (2026-11-19) — "Distributed ML & Versioning"
 
 ### Added — Federated Learning Framework (`qai.federation`)

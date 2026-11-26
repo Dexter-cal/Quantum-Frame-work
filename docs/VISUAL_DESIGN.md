@@ -2,6 +2,8 @@
 
 *The interactive model microscope — see your model think in real time.*
 
+> See also: [README](../README.md) · [Roadmap](ROADMAP.md) (Decision #9: pure HTML/CSS/JS) · [User Manual](USER_MANUAL.md)
+
 ---
 
 ## Design Philosophy
@@ -253,15 +255,27 @@ Self-contained HTML with model + input + visualization + chat → shareable
 
 ---
 
-## Tech Stack Options
+## Tech Stack — Decision (locked)
 
-1. **React + D3.js** — most flexible, best for complex interactions
-2. **Pure HTML/Canvas** — no build step, simpler deployment
-3. **Gradio/Streamlit** — fastest to build, less customizable
-4. **Jupyter widgets** — for notebook-first users
+The Visual Workspace is **pure HTML/CSS/JS** — no build step, no React, no
+D3 install. It opens in any browser via `qai.workspace(model)` which serves
+a static HTML page plus a small Flask JSON backend.
 
-Recommended: **React + D3.js** for the main app, with a pure-HTML fallback
-for embedding.
+This is decision #9 in [ROADMAP.md](ROADMAP.md) — chosen deliberately so
+that:
+
+- No `npm install` or `node_modules/` is ever required
+- The HTML can be embedded directly in a notebook, blog post, or HTML email
+- The same file works in DEMO mode (no model) and STORY mode (static snapshot)
+- The HTTP backend exposes 7 JSON endpoints that any client can call
+
+The Canvas API is used for the architecture canvas (handles thousands of
+nodes without DOM overhead). The weight inspector uses native HTML range
+inputs. The chat panel uses a plain `<div>` with text content.
+
+If a richer client is ever needed, the JSON endpoints are stable and any
+React/Vue/Svelte app can consume them — but the reference implementation
+ships as pure HTML/CSS/JS.
 
 ---
 

@@ -1,8 +1,10 @@
 # QAI Framework — Development Roadmap
 
 *Created: 2026-11-12*
-*Last Updated: 2026-11-14*
-*Current Version: v1.1.0 — "Microscope"*
+*Last Updated: 2026-11-26*
+*Current Version: v1.8.0 — "Distributed ML & Versioning"*
+
+> See also: [README](../README.md) · [Tutorial](TUTORIAL.md) · [Implementation Status](UNBUILT_FEATURES.md) · [Changelog](../CHANGELOG.md)
 
 ---
 
@@ -266,21 +268,22 @@ All 7 PDF-spec features added (io_summary, weights.translate, deploy target, clo
 
 ---
 
-### Phase 7: Documentation & Polish (ONGOING)
+### Phase 7: Documentation & Polish ✅ DONE (v1.8.1)
 
-#### 7.1 Update All Documentation ✅ MOSTLY DONE
-- [x] Update `TUTORIAL.md` — reflect all new features
+#### 7.1 Update All Documentation ✅ DONE
+- [x] Update `TUTORIAL.md` — reflect all new features, version header at v1.8.0
 - [x] Update `FINDINGS.md` — current state
-- [x] Update `UNBUILT_FEATURES.md` — mark what's built vs missing
+- [x] Update `UNBUILT_FEATURES.md` — implementation status (108/108 sections built)
 - [x] Create `VISUAL_DESIGN.md` — capture the UI design
 - [x] Create `INSTALLER.md` — document the installer
 - [x] Create `CHANGELOG.md` — version history
 - [x] Update `USER_MANUAL.md` — add all new sections
 - [x] Create `CONTRIBUTING.md` — for open source contributors
-- [x] Create `README.md` — proper landing page
-- [ ] Add Visual Workspace section to USER_MANUAL.md
-- [ ] Add Self-Improving Models section to USER_MANUAL.md
-- [ ] Add Conversion API section to USER_MANUAL.md
+- [x] Create `README.md` — proper landing page with doc index
+- [x] Add Visual Workspace section to USER_MANUAL.md
+- [x] Add Self-Improving Models section to USER_MANUAL.md
+- [x] Add Conversion API section to USER_MANUAL.md
+- [x] Cross-link all docs (README → tutorial → manual → roadmap → status → changelog)
 
 #### 7.2 API Reference
 - [ ] Auto-generate API docs from docstrings
@@ -338,7 +341,10 @@ All 7 PDF-spec features added (io_summary, weights.translate, deploy target, clo
 | 21 | Trainer auto-configure, creative tools (augmentation, distillation, etc.) |
 | 22 | HuggingFace integration, Auto-ML, model zoo |
 | 23 | Pipeline templates, experiment tracking, bug fixes |
-| **24** | **Phase 4 (Visual Workspace), Phase 5 (Benchmark Suite), Phase 6.1 (Conversion), Phase 6.4 (Self-Improving Models), Creative 109-118** |
+| 24 | Phase 4 (Visual Workspace), Phase 5 (Benchmark Suite), Phase 6.1 (Conversion), Phase 6.4 (Self-Improving Models), Creative 109-118 |
+| 25+ | Tokenizers, Transformer, 3-tier Memory, .qmodel Bundle, CNN, MCP server, Security, Networking, RNN/LSTM/GRU, GAN/VAE/Diffusion, MoE/GNN, Mamba/SSM, RAG, Knowledge Distillation, AI Agent |
+| 30+ | Federated Learning, Distillation v2, Model Versioning, Runtime, 100+ multimodal functions, governance expansion |
+| **latest** | **v1.8.0 — Distributed ML & Versioning. v1.8.1 — Docs consolidation: README, CONTRIBUTING, LICENSE, cross-linked all docs, removed binaries from tracking** |
 
 ---
 

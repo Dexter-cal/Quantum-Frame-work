@@ -1,5 +1,7 @@
 # qai (Python) — Implementation Progress
 
+> See also: [README](../README.md) · [Roadmap](ROADMAP.md) · [Implementation Status](UNBUILT_FEATURES.md) · [Findings](FINDINGS.md) · [Changelog](../CHANGELOG.md)
+
 Tracks each design-doc section against real, tested code in this package.
 Nothing gets marked done until it has a passing test in `tests/`.
 

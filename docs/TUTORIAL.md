@@ -1,6 +1,8 @@
 # QAI Framework — Tutorial
 
-*Updated for v0.4.0*
+*Updated for v1.8.0*
+
+> See also: [README](../README.md) · [User Manual](USER_MANUAL.md) · [Roadmap](ROADMAP.md) · [Implementation Status](UNBUILT_FEATURES.md) · [Changelog](../CHANGELOG.md)
 
 Welcome to **qai** — a unified, single-import ML/AI framework. This tutorial
 covers everything from basic classification to LLM fine-tuning, serving, and
@@ -8,7 +10,7 @@ MLOps pipelines.
 
 ```python
 import qai
-print(qai.__version__)  # 0.4.0
+print(qai.__version__)  # 1.8.0
 ```
 
 ---
@@ -588,4 +590,4 @@ print(qai.auto_select_device(model))
 
 ---
 
-*For the full API reference, see `docs/USER_MANUAL.md` (5,000+ lines).*
+*For the full API reference, see [USER_MANUAL.md](USER_MANUAL.md) (~5,000 lines). For implementation status by spec section, see [UNBUILT_FEATURES.md](UNBUILT_FEATURES.md).*
