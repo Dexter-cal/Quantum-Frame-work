@@ -1,6 +1,6 @@
 # QAI Framework — User Manual & Developer Reference
 
-> See also: [README](../README.md) · [Tutorial](TUTORIAL.md) · [Roadmap](ROADMAP.md) · [Implementation Status](UNBUILT_FEATURES.md) · [Visual Design](VISUAL_DESIGN.md) · [Changelog](../CHANGELOG.md) · [Contributing](../CONTRIBUTING.md)
+> See also: [README](../README.md) · **[Task Guides](guides/README.md)** (organized by task — data, training, serving, security...) · [Model Catalog](guides/MODEL_CATALOG.md) (learn one technique at a time) · [Tutorial](TUTORIAL.md) · [Roadmap](ROADMAP.md) · [Implementation Status](UNBUILT_FEATURES.md) · [Visual Design](VISUAL_DESIGN.md) · [Changelog](../CHANGELOG.md) · [Contributing](../CONTRIBUTING.md)
 
 Welcome to **qai** — a unified, single-import machine learning and artificial intelligence framework.
 

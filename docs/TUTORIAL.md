@@ -2,7 +2,7 @@
 
 *Updated for v1.8.0*
 
-> See also: [README](../README.md) · [User Manual](USER_MANUAL.md) · [Roadmap](ROADMAP.md) · [Implementation Status](UNBUILT_FEATURES.md) · [Changelog](../CHANGELOG.md)
+> See also: [README](../README.md) · **[Task Guides](guides/README.md)** (organized by what you want to *do*) · [User Manual](USER_MANUAL.md) · [Roadmap](ROADMAP.md) · [Implementation Status](UNBUILT_FEATURES.md) · [Changelog](../CHANGELOG.md)
 
 Welcome to **qai** — a unified, single-import ML/AI framework. This tutorial
 covers everything from basic classification to LLM fine-tuning, serving, and

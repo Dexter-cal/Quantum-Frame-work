@@ -3,7 +3,41 @@
 All notable changes to the qai framework are documented here.
 Versions follow semantic versioning: MAJOR.MINOR.PATCH.
 
-See also: [README](README.md) · [Tutorial](docs/TUTORIAL.md) · [Roadmap](docs/ROADMAP.md) · [Implementation Status](docs/UNBUILT_FEATURES.md)
+See also: [README](README.md) · [Task Guides](docs/guides/README.md) · [Tutorial](docs/TUTORIAL.md) · [Roadmap](docs/ROADMAP.md) · [Implementation Status](docs/UNBUILT_FEATURES.md)
+
+## v1.8.2 (2026-11-26) — "The Task Manual"
+
+### Added — Task-oriented guides (`docs/guides/`)
+Docs reorganized the way users think: **"I want to ___" → one chapter**.
+
+- **[guides/README.md](docs/guides/README.md)** — the "I want to..." index + reading paths
+- **[guides/DATA.md](docs/guides/DATA.md)** — load (CSV/JSON/Parquet/Excel/PDF/DOCX/EPUB), clean, dedup, PII, quality audit, Excel-style formulas, export
+- **[guides/TRAINING.md](docs/guides/TRAINING.md)** — four-beat pattern, Universal Trainer, 11 training enhancers (SAM/SWA/EMA/...), pipelines, Auto-ML, safety
+- **[guides/MODEL_CATALOG.md](docs/guides/MODEL_CATALOG.md)** — **all 229 registered techniques** organized into 16 families with when-to-use guidance (first time the full registry exists as documentation)
+- **[guides/EVALUATION.md](docs/guides/EVALUATION.md)** — metric catalog, explainability, calibration, benchmark suite, stress tests
+- **[guides/FINETUNING_ALIGNMENT.md](docs/guides/FINETUNING_ALIGNMENT.md)** — 6 PEFT methods + 8 alignment methods with a picking matrix
+- **[guides/SERVE_DEPLOY.md](docs/guides/SERVE_DEPLOY.md)** — ProductionServer, FastInferenceEngine (PagedAttention + CUDA), Gateway, runtime versioning/A-B/rollback, signing
+- **[guides/COMPRESS.md](docs/guides/COMPRESS.md)** — quantization matrix (int8/int4/GPTQ/AWQ/GGUF/EXL2), QAT, **distillation v2 (`distill`/`multi_distill`/`self_distill`)**, pruning, **NAS (`RandomSearch`/`GridSearch`/`EvolutionarySearch`/`ProgressiveGrowth`)**
+- **[guides/DISTRIBUTED.md](docs/guides/DISTRIBUTED.md)** — DDP/FSDP + **federated learning** (FedAvg/FedProx/Weighted, DP-SGD, secure aggregation, round stats)
+- **[guides/AGENTS_MCP.md](docs/guides/AGENTS_MCP.md)** — tools, ReAct, MultiAgent, AIAgent, test-time scaling, MCP server (14 tools + permissions/rate-limits/audit)
+- **[guides/MEMORY_RAG.md](docs/guides/MEMORY_RAG.md)** — 3-tier memory, conflict detection, KnowledgeAccumulator, RAGPipeline, memory-span config
+- **[guides/SECURITY_GOVERNANCE.md](docs/guides/SECURITY_GOVERNANCE.md)** — all 10 security tools, sandboxing, fairness audit, drift, watermarking, ModelGuardian
+- **[guides/MULTIMODAL.md](docs/guides/MULTIMODAL.md)** — vision/audio/nlp/graph/time_series suites + MediaManipulator + tokenizers
+- **[guides/MLOPS.md](docs/guides/MLOPS.md)** — MLOpsPipeline, tracking backends, registry, dashboards
+- **[guides/VISUAL_WORKSPACE.md](docs/guides/VISUAL_WORKSPACE.md)** — launching and using the model microscope
+- **[guides/TROUBLESHOOTING.md](docs/guides/TROUBLESHOOTING.md)** — `qai doctor`, error tables, health checks
+
+### Fixed — stale/contradictory claims removed
+- **ROADMAP.md**: replaced the stale "What's still toy scale" section (claimed no CUDA kernels — PagedAttention + CUDA dispatch are implemented; claimed HF loading untested — it's built) with an accurate "Accuracy notes" section
+- **Blind spots documented** (built but invisible in docs): federation, distillation_v2, nas_search, data_pipeline, serving_gateway, runtime versioning, the 11 training enhancers, and the 229-technique registry — full list in [ROADMAP Phase 6.6](docs/ROADMAP.md)
+
+### Added — idea backlog
+- 10 concrete new feature proposals in [ROADMAP Phase 6.6](docs/ROADMAP.md) (Playground Notebooks, Technique Recommender v2, Pipeline Diff, Shadow Deployment, Federation profiles, Distillation data generator, Budget-aware NAS, Replay slider, Explainability report builder, P2P registry sync)
+
+### Changed — navigation
+- README.md: guides table added, "start here" points to the task manual
+- TUTORIAL.md and USER_MANUAL.md headers now route to the guides
+- Every guide cross-links its neighbors and back to the index
 
 ## v1.8.1 (2026-11-26) — "Docs Consolidation"
 

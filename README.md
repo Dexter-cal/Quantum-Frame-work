@@ -148,6 +148,23 @@ Quantum-Frame-work/
 │   └── math/  system/  tracking/
 │
 ├── docs/                      ← documentation
+│   ├── guides/                ← THE TASK MANUAL — "I want to ___" chapters
+│   │   ├── README.md          ← index: pick your task
+│   │   ├── DATA.md            ← load / clean / manipulate / export
+│   │   ├── TRAINING.md        ← build, train, Trainer, Auto-ML
+│   │   ├── MODEL_CATALOG.md   ← all 229 techniques, by family
+│   │   ├── EVALUATION.md      ← metrics, explainability, benchmarks
+│   │   ├── FINETUNING_ALIGNMENT.md  ← LoRA/QLoRA + DPO/KTO/RLVR
+│   │   ├── SERVE_DEPLOY.md    ← serving, versioning, A/B
+│   │   ├── COMPRESS.md        ← quantize, distill, prune, NAS
+│   │   ├── DISTRIBUTED.md     ← DDP/FSDP/federation
+│   │   ├── AGENTS_MCP.md      ← agents, tools, MCP
+│   │   ├── MEMORY_RAG.md      ← memory tiers, RAG
+│   │   ├── SECURITY_GOVERNANCE.md
+│   │   ├── MULTIMODAL.md      ← vision/audio/nlp/graph/time series
+│   │   ├── MLOPS.md           ← tracking, registry, monitoring
+│   │   ├── VISUAL_WORKSPACE.md
+│   │   └── TROUBLESHOOTING.md
 │   ├── USER_MANUAL.md         ← full API reference (~5,000 lines)
 │   ├── TUTORIAL.md            ← 16-section walkthrough
 │   ├── ROADMAP.md             ← development roadmap & decision log
@@ -164,17 +181,40 @@ Quantum-Frame-work/
 
 ## Documentation
 
+**Start here → [docs/guides/README.md](docs/guides/README.md) — the task manual.**
+Pick what you want to *do* ("load data", "train a model", "serve it") and open
+that chapter. Like a real-life appliance manual, organized by task:
+
+| Guide | For when you want to... |
+|---|---|
+| [guides/DATA.md](docs/guides/DATA.md) | load, clean, manipulate, export data |
+| [guides/TRAINING.md](docs/guides/TRAINING.md) | build and train any model |
+| [guides/MODEL_CATALOG.md](docs/guides/MODEL_CATALOG.md) | learn one technique at a time (all 229, by family) |
+| [guides/EVALUATION.md](docs/guides/EVALUATION.md) | metrics, explainability, benchmarks |
+| [guides/FINETUNING_ALIGNMENT.md](docs/guides/FINETUNING_ALIGNMENT.md) | LoRA/QLoRA + DPO/KTO/SimPO/RLVR |
+| [guides/SERVE_DEPLOY.md](docs/guides/SERVE_DEPLOY.md) | production serving, versioning, A/B |
+| [guides/COMPRESS.md](docs/guides/COMPRESS.md) | quantization, distillation, pruning, NAS |
+| [guides/DISTRIBUTED.md](docs/guides/DISTRIBUTED.md) | DDP/FSDP + federated learning |
+| [guides/AGENTS_MCP.md](docs/guides/AGENTS_MCP.md) | agents, tools, MCP server |
+| [guides/MEMORY_RAG.md](docs/guides/MEMORY_RAG.md) | memory tiers, RAG |
+| [guides/SECURITY_GOVERNANCE.md](docs/guides/SECURITY_GOVERNANCE.md) | security, fairness, drift |
+| [guides/MULTIMODAL.md](docs/guides/MULTIMODAL.md) | vision/audio/text/graph/time-series |
+| [guides/MLOPS.md](docs/guides/MLOPS.md) | tracking, registry, monitoring |
+| [guides/VISUAL_WORKSPACE.md](docs/guides/VISUAL_WORKSPACE.md) | the model microscope UI |
+| [guides/TROUBLESHOOTING.md](docs/guides/TROUBLESHOOTING.md) | fix errors, check setup |
+
+**Reference docs:**
+
 | Document | Purpose |
 |---|---|
-| [README.md](README.md) | This file — landing page, install, quickstart |
-| [docs/TUTORIAL.md](docs/TUTORIAL.md) | 16-section hands-on tutorial — start here |
+| [docs/TUTORIAL.md](docs/TUTORIAL.md) | 16-section start-to-finish walkthrough |
 | [docs/USER_MANUAL.md](docs/USER_MANUAL.md) | Full API reference for every public class/function |
-| [docs/ROADMAP.md](docs/ROADMAP.md) | Development roadmap, decision log, session history |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | Development roadmap, decision log, blind-spot review, idea backlog |
 | [docs/PROGRESS.md](docs/PROGRESS.md) | Section-by-section implementation tracker |
 | [docs/FINDINGS.md](docs/FINDINGS.md) | Engineering findings, gotchas, architecture notes |
 | [docs/VISUAL_DESIGN.md](docs/VISUAL_DESIGN.md) | Visual Workspace UI design spec |
 | [docs/UNBUILT_FEATURES.md](docs/UNBUILT_FEATURES.md) | Implementation status by spec section (108/108 built) |
-| [CHANGELOG.md](CHANGELOG.md) | Version history (latest: v1.8.0) |
+| [CHANGELOG.md](CHANGELOG.md) | Version history (latest: v1.8.1) |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute — code style, tests, PRs |
 
 ---
