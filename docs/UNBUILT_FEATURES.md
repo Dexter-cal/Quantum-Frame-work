@@ -4,8 +4,7 @@
 
 **This is the only document that tracks remaining work.** Every feature not on
 this list is built, tested, and documented — see the
-[Module Registry](MODULE_REGISTRY.md) for the complete A–Z of what exists and
-[What IS solidly built](#what-is-solidly-built) below for the short version.
+[Module Registry](MODULE_REGISTRY.md) for the complete A–Z of what exists.
 
 The old version of this file mixed two things together: a list of everything
 built (which belongs in the README and the Task Manual) and a list of what was
