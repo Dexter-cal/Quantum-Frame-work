@@ -10,3 +10,26 @@ build/
 *.log
 .DS_Store
 quantum framework.zip
+
+# Binary / model artifacts
+*.qmodel
+*.qai.zip
+*.npz
+*.npy
+*.pt
+*.pth
+*.ckpt
+*.bin
+*.so
+*.joblib
+*.pickle
+*.pdf
+
+# Build/training artifacts
+catboost_info/
+checkpoints/
+*.egg-info/
+
+# Env
+.env
+showcase/catboost_info/
