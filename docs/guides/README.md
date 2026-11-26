@@ -25,6 +25,7 @@
 | **Track experiments / run MLOps** | [MLOPS.md](MLOPS.md) | Experiment tracking, model registry, drift monitoring, MLOpsPipeline |
 | **See a model think (visual UI)** | [VISUAL_WORKSPACE.md](VISUAL_WORKSPACE.md) | The model microscope — architecture canvas, weight sliders, story mode |
 | **Fix an error / check my setup** | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | `qai.doctor()`, health checks, preflight, OOM recovery, common errors |
+| **Browse every module that exists (A–Z)** | [../MODULE_REGISTRY.md](../MODULE_REGISTRY.md) | All 155 modules with real docstring one-liners — find any feature in seconds |
 
 ---
 
@@ -41,8 +42,8 @@ Quick answer needed?          Background / status?
 ────────────────────          ─────────────────────
 guides/TROUBLESHOOTING.md     docs/ROADMAP.md (plans, decisions)
 MODEL_CATALOG.md (per-model)  docs/FINDINGS.md (engineering notes)
-                              docs/UNBUILT_FEATURES.md (spec coverage 108/108)
-                              CHANGELOG.md (what shipped when)
+docs/MODULE_REGISTRY.md       docs/UNBUILT_FEATURES.md (what's left — focus list)
+(every module A–Z)            CHANGELOG.md (what shipped when)
 ```
 
 **Reading paths:**

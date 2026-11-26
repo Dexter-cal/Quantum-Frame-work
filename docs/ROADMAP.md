@@ -413,7 +413,7 @@ should land with Phase 4.3 work.
 | 24 | Phase 4 (Visual Workspace), Phase 5 (Benchmark Suite), Phase 6.1 (Conversion), Phase 6.4 (Self-Improving Models), Creative 109-118 |
 | 25+ | Tokenizers, Transformer, 3-tier Memory, .qmodel Bundle, CNN, MCP server, Security, Networking, RNN/LSTM/GRU, GAN/VAE/Diffusion, MoE/GNN, Mamba/SSM, RAG, Knowledge Distillation, AI Agent |
 | 30+ | Federated Learning, Distillation v2, Model Versioning, Runtime, 100+ multimodal functions, governance expansion |
-| **latest** | **v1.8.0 — Distributed ML & Versioning. v1.8.1 — Docs consolidation: README, CONTRIBUTING, LICENSE, cross-linked all docs, removed binaries from tracking** |
+| **latest** | **v1.8.0 — Distributed ML & Versioning. v1.8.1 — Docs consolidation: README, CONTRIBUTING, LICENSE, cross-linked all docs, removed binaries from tracking. v1.8.2 — Task Manual (16 guides + 229-technique catalog). v1.8.3 — MODULE_REGISTRY (all 155 modules documented; 40+ previously undocumented features surfaced) + UNBUILT_FEATURES converted to a verified 10-item focus list with file-level evidence** |
 
 ---
 

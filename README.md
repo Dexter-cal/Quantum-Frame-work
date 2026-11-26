@@ -108,7 +108,8 @@ For the full walkthrough see [docs/TUTORIAL.md](docs/TUTORIAL.md).
 | **Quantum** | Kronecker-product statevector simulator (H, X, Y, Z, S, T gates) |
 | **Visual Workspace** | `qai.workspace(model)` — interactive model microscope (pure HTML/CSS/JS) |
 
-Full feature inventory: [docs/IMPLEMENTATION_STATUS.md](docs/UNBUILT_FEATURES.md).
+Full feature inventory: [docs/MODULE_REGISTRY.md](docs/MODULE_REGISTRY.md) (every module, A–Z).
+What's still open: [docs/UNBUILT_FEATURES.md](docs/UNBUILT_FEATURES.md) (the short focus list).
 
 ---
 
@@ -171,7 +172,8 @@ Quantum-Frame-work/
 │   ├── PROGRESS.md            ← implementation progress tracker
 │   ├── FINDINGS.md            ← engineering findings & architecture notes
 │   ├── VISUAL_DESIGN.md       ← visual workspace UI design
-│   └── UNBUILT_FEATURES.md    ← implementation status (all 108 sections)
+│   ├── MODULE_REGISTRY.md     ← every module A–Z (generated from source)
+│   └── UNBUILT_FEATURES.md    ← focus list: the only remaining gaps
 │
 ├── tests/                     ← pytest test suite
 └── showcase/                  ← example apps (oracle, prism, evolve, nexus, atlas)
@@ -213,8 +215,9 @@ that chapter. Like a real-life appliance manual, organized by task:
 | [docs/PROGRESS.md](docs/PROGRESS.md) | Section-by-section implementation tracker |
 | [docs/FINDINGS.md](docs/FINDINGS.md) | Engineering findings, gotchas, architecture notes |
 | [docs/VISUAL_DESIGN.md](docs/VISUAL_DESIGN.md) | Visual Workspace UI design spec |
-| [docs/UNBUILT_FEATURES.md](docs/UNBUILT_FEATURES.md) | Implementation status by spec section (108/108 built) |
-| [CHANGELOG.md](CHANGELOG.md) | Version history (latest: v1.8.1) |
+| [docs/MODULE_REGISTRY.md](docs/MODULE_REGISTRY.md) | Every module A–Z with one-liners — generated from real docstrings |
+| [docs/UNBUILT_FEATURES.md](docs/UNBUILT_FEATURES.md) | The focus list: the only genuinely unbuilt/partial spots left |
+| [CHANGELOG.md](CHANGELOG.md) | Version history (latest: v1.8.3) |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute — code style, tests, PRs |
 
 ---

@@ -3,7 +3,67 @@
 All notable changes to the qai framework are documented here.
 Versions follow semantic versioning: MAJOR.MINOR.PATCH.
 
-See also: [README](README.md) · [Task Guides](docs/guides/README.md) · [Tutorial](docs/TUTORIAL.md) · [Roadmap](docs/ROADMAP.md) · [Implementation Status](docs/UNBUILT_FEATURES.md)
+See also: [README](README.md) · [Task Guides](docs/guides/README.md) · [Tutorial](docs/TUTORIAL.md) · [Roadmap](docs/ROADMAP.md) · [Module Registry](docs/MODULE_REGISTRY.md) · [Focus List](docs/UNBUILT_FEATURES.md)
+
+## v1.8.3 (2026-11-26) — "Every Module Documented + The Honest Focus List"
+
+### Added — docs/MODULE_REGISTRY.md (the missing feature index)
+- Complete inventory of **all 155 modules and subpackages**, grouped into 12
+  domains, each with a one-liner generated from the module's real docstring
+  (`scripts/gen_module_registry.py` — regenerate after adding modules).
+- **40+ features that were built earlier but never documented** are now
+  findable, including: `qai.interpret` (mechanistic interpretability:
+  activation patching, circuit tracing, sparse autoencoders, logit lens),
+  `qai.frontier2025` (Mamba-2, DeepSeekMoE, TTT), `qai.mind` (QuantumMind
+  flagship agent), `qai.memory_vault` (HOT/WARM/COLD persistent memory),
+  `qai.hyperparam_optimizer` (true GP-surrogate Bayesian optimization),
+  `qai.active_learning_v2` (Uncertainty/QBC/BALD/CoreSet query strategies),
+  `qai.feature_store`, `qai.data_profiler`, `qai.data_augmentor`,
+  `qai.pipeline_builder`, `qai.observability`, `qai.model_monitor`,
+  `qai.modellog`, `qai.model_versioner`, `qai.ab_testing` (statistical
+  significance), `qai.self_healing`, `qai.compression_advisor`,
+  `qai.confidence_calibrator`, `qai.model_card_generator`, `qai.model_chat`,
+  `qai.model_health`, `qai.surgery`, `qai.experiment_compare`, `qai.autoscale`,
+  `qai.cbridge`, `qai.cpc_ai`, `qai.hf_converter`, `qai.modelfile` (all three
+  model-file modules), `qai.federated_bridge`, `qai.integrations(_real)`
+  (LangChain/LlamaIndex/Haystack/FAISS adapters), `qai.visual_workspace_v2`,
+  `qai.webui`, `qai.api_reference`, `qai.autodoc`, `qai.agents_base`,
+  `qai.workspace_html`.
+- Coverage check added: every module in `qai/` is now either documented in the
+  registry, the User Manual, or a task guide — no more "features with no
+  documentation".
+
+### Changed — docs/UNBUILT_FEATURES.md is now the focus list
+- **Removed** everything built (feature tables, "what's solid" essays) — that
+  content lives in the README and the Task Manual; the file now only tracks
+  what is genuinely left.
+- **Corrected two stale claims**: `load_region()` and peer-to-peer
+  `connect_peer` were listed as "still missing" — both are built
+  (`qai.WeightRegionLoader` / `qai.PeerConnection`). Removed from the list.
+- **New verified focus list** (10 items, each with file-level evidence from a
+  full-tree audit for `NotImplementedError`/`stub`/`placeholder`):
+  structured pruning stub (`governance/extended.py`), placeholder distillation
+  loss in `distillation_v2._train_epoch` (real KL exists in
+  `qai.KnowledgeDistiller`), `qai.bayesian_optimize()` random-search stand-in,
+  GPU `conv2d` numpy fallback, GGUF loading in `qai.formats`,
+  `import_model` for tflite/openvino/tensorrt, OAuth callback receiver,
+  unsupervised scoring placeholder in `auto_ml`, heuristic agent planner args,
+  approximate CLIP-style similarity.
+
+### Fixed — false "limited/missing" statements
+- `docs/UNBUILT_FEATURES.md` previously said "per-request `load_region()` is
+  still missing" and "peer-to-peer `connect_peer` is still missing" — both
+  features exist and are exported; claims deleted.
+- Cross-checked every module referenced by the docs against the code: all
+  "built" claims in README, guides, and USER_MANUAL now resolve to real
+  modules (verified programmatically).
+
+### Docs wiring
+- README: feature-inventory line now points to MODULE_REGISTRY + focus list;
+  project tree and reference-docs table updated.
+- guides/README.md: new "Browse every module (A–Z)" task row; docs-map diagram
+  updated.
+- USER_MANUAL header: Module Registry + Focus List cross-links added.
 
 ## v1.8.2 (2026-11-26) — "The Task Manual"
 
