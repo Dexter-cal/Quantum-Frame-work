@@ -1,0 +1,3818 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>QAI Model Microscope v2</title>
+<link rel='preconnect' href='https://fonts.googleapis.com'>
+<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
+<link href='https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap' rel='stylesheet'>
+<style>
+
+:root {
+  --bg-0: #05070d;
+  --bg-1: #0a0e1a;
+  --bg-2: #131826;
+  --bg-3: #1a2030;
+  --bg-4: #232b3d;
+  --glass: rgba(26, 32, 48, 0.55);
+  --glass-strong: rgba(26, 32, 48, 0.85);
+  --border: rgba(94, 234, 212, 0.12);
+  --border-strong: rgba(94, 234, 212, 0.35);
+  --text: #e6edf3;
+  --text-2: #b1bac4;
+  --text-3: #8b949e;
+  --text-4: #6e7681;
+  --accent: #5eead4;
+  --accent-2: #2dd4bf;
+  --accent-glow: rgba(94, 234, 212, 0.4);
+  --info: #60a5fa;
+  --info-glow: rgba(96, 165, 250, 0.35);
+  --warn: #fbbf24;
+  --danger: #f87171;
+  --good: #4ade80;
+  --purple: #c084fc;
+  --pink: #f472b6;
+  --orange: #fb923c;
+  --gradient-1: radial-gradient(circle at 20% 30%, rgba(94, 234, 212, 0.18), transparent 50%);
+  --gradient-2: radial-gradient(circle at 80% 70%, rgba(192, 132, 252, 0.15), transparent 50%);
+  --gradient-3: radial-gradient(circle at 50% 100%, rgba(96, 165, 250, 0.12), transparent 50%);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.45);
+  --shadow-glow: 0 0 24px var(--accent-glow);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', Consolas, monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: var(--font-sans);
+  background: var(--bg-0);
+  color: var(--text);
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Animated gradient mesh background */
+.mesh-bg {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    var(--gradient-1),
+    var(--gradient-2),
+    var(--gradient-3),
+    linear-gradient(180deg, var(--bg-0), var(--bg-1));
+}
+.mesh-bg::before {
+  content: '';
+  position: absolute; inset: -50%;
+  background-image: radial-gradient(circle at 1px 1px, rgba(94, 234, 212, 0.06) 1px, transparent 0);
+  background-size: 32px 32px;
+  animation: drift 60s linear infinite;
+}
+@keyframes drift {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(64px, 64px); }
+}
+
+.app-shell {
+  position: relative; z-index: 1;
+  display: grid;
+  grid-template-rows: 56px 1fr 28px;
+  grid-template-areas: "topbar" "main" "status";
+  height: 100vh;
+}
+
+/* ========== LIGHT THEME (override variables when body.light-theme) ========== */
+body.light-theme {
+  --bg-0: #f5f7fa;
+  --bg-1: #ffffff;
+  --bg-2: #eef2f6;
+  --bg-3: #e2e8f0;
+  --bg-4: #cbd5e1;
+  --glass: rgba(255, 255, 255, 0.65);
+  --glass-strong: rgba(255, 255, 255, 0.85);
+  --border: rgba(45, 212, 191, 0.25);
+  --border-strong: rgba(45, 212, 191, 0.5);
+  --text: #1e293b;
+  --text-2: #475569;
+  --text-3: #64748b;
+  --text-4: #94a3b8;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.16);
+  --gradient-1: radial-gradient(circle at 20% 30%, rgba(45, 212, 191, 0.12), transparent 50%);
+  --gradient-2: radial-gradient(circle at 80% 70%, rgba(192, 132, 252, 0.10), transparent 50%);
+  --gradient-3: radial-gradient(circle at 50% 100%, rgba(96, 165, 250, 0.08), transparent 50%);
+}
+body.light-theme .mesh-bg {
+  background:
+    var(--gradient-1),
+    var(--gradient-2),
+    var(--gradient-3),
+    linear-gradient(180deg, var(--bg-0), var(--bg-1));
+}
+body.light-theme .mesh-bg::before {
+  background-image: radial-gradient(circle at 1px 1px, rgba(45, 212, 191, 0.08) 1px, transparent 0);
+}
+body.light-theme .mesh-bg::after { opacity: 0.02; }
+body.light-theme .prediction-display {
+  background: linear-gradient(135deg, #0d9488, #7c3aed);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+body.light-theme .chat-msg.user {
+  background: linear-gradient(90deg, rgba(45, 212, 191, 0.08), var(--bg-2));
+}
+body.light-theme .chat-msg.pred {
+  background: linear-gradient(90deg, rgba(192, 132, 252, 0.08), var(--bg-2));
+}
+
+/* ========== TOP BAR ========== */
+.topbar {
+  grid-area: topbar;
+  display: flex; align-items: center;
+  padding: 0 20px; gap: 16px;
+  background: var(--glass-strong);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--border);
+  z-index: 10;
+}
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 14px; letter-spacing: -0.01em; }
+.brand-logo {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--accent), var(--purple));
+  display: flex; align-items: center; justify-content: center;
+  color: var(--bg-0);
+  font-weight: 900;
+  font-size: 14px;
+  box-shadow: 0 4px 12px var(--accent-glow);
+  position: relative; overflow: hidden;
+}
+.brand-logo::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.3) 50%, transparent 70%);
+  animation: shimmer 3s infinite;
+}
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+.brand-text { color: var(--text); }
+.brand-text .micro { color: var(--text-3); font-weight: 400; font-size: 11px; }
+.topbar-sep { width: 1px; height: 24px; background: var(--border); }
+.model-info { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-3); }
+.model-info b { color: var(--text); font-weight: 600; }
+.pill {
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 10px; font-weight: 500;
+  color: var(--accent);
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.pill.purple { color: var(--purple); border-color: rgba(192, 132, 252, 0.3); }
+.pill.info { color: var(--info); border-color: rgba(96, 165, 250, 0.3); }
+.pill.warn { color: var(--warn); border-color: rgba(251, 191, 36, 0.3); }
+.pill.danger { color: var(--danger); border-color: rgba(248, 113, 113, 0.3); }
+.topbar-spacer { flex: 1; }
+.topbar-btn {
+  background: var(--bg-3);
+  color: var(--text-2);
+  border: 1px solid var(--border);
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 12px; font-weight: 500;
+  transition: var(--transition-fast);
+  display: flex; align-items: center; gap: 6px;
+}
+.topbar-btn:hover {
+  background: var(--accent);
+  color: var(--bg-0);
+  border-color: var(--accent);
+  box-shadow: var(--shadow-glow);
+  transform: translateY(-1px);
+}
+.topbar-btn.danger:hover {
+  background: var(--danger);
+  border-color: var(--danger);
+  box-shadow: 0 0 24px rgba(248, 113, 113, 0.4);
+}
+.cmd-palette-btn {
+  background: var(--bg-2);
+  color: var(--text-3);
+  border: 1px solid var(--border);
+  padding: 7px 12px 7px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 11px;
+  display: flex; align-items: center; gap: 8px;
+  min-width: 220px;
+  transition: var(--transition-fast);
+}
+.cmd-palette-btn:hover { border-color: var(--accent); color: var(--text); }
+.cmd-palette-btn kbd {
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 9px; color: var(--text-3);
+  margin-left: auto;
+}
+
+/* ========== MAIN LAYOUT ========== */
+.main {
+  grid-area: main;
+  display: grid;
+  grid-template-columns: 340px 1fr 340px;
+  grid-template-areas: "input canvas output";
+  overflow: hidden; min-height: 0;
+}
+.col {
+  background: var(--glass);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  overflow: hidden; min-height: 0;
+}
+.col:last-child { border-right: none; }
+.col.input { grid-area: input; }
+.col.canvas { grid-area: canvas; background: var(--bg-1); border: none; position: relative; }
+.col.output { grid-area: output; }
+
+.col-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+}
+.col-header h3 {
+  font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--text-3);
+}
+.col-header-actions { display: flex; gap: 4px; }
+.icon-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-3);
+  width: 24px; height: 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: var(--transition-fast);
+  font-size: 13px;
+}
+.icon-btn:hover { background: var(--bg-3); border-color: var(--border); color: var(--text); }
+
+.col-body { flex: 1; overflow-y: auto; min-height: 0; }
+.col-body::-webkit-scrollbar { width: 8px; }
+.col-body::-webkit-scrollbar-track { background: transparent; }
+.col-body::-webkit-scrollbar-thumb {
+  background: var(--bg-3);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.col-body::-webkit-scrollbar-thumb:hover { background: var(--bg-4); }
+
+/* ========== INPUT PANEL ========== */
+.chat-history {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px;
+  display: flex; flex-direction: column; gap: 8px;
+  min-height: 0;
+}
+.chat-msg {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  font-size: 12px; word-wrap: break-word;
+  position: relative;
+  animation: msgIn 0.3s ease;
+}
+@keyframes msgIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.chat-msg.user {
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(90deg, rgba(94, 234, 212, 0.05), var(--bg-2));
+}
+.chat-msg.pred {
+  border-left: 3px solid var(--purple);
+  background: linear-gradient(90deg, rgba(192, 132, 252, 0.05), var(--bg-2));
+}
+.chat-msg .lbl {
+  color: var(--text-4);
+  font-size: 9px; text-transform: uppercase; letter-spacing: 0.8px;
+  margin-bottom: 4px; font-weight: 600;
+}
+.chat-msg code {
+  background: var(--bg-3);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 11px; color: var(--accent);
+}
+
+.examples-block { padding: 10px 14px; border-top: 1px solid var(--border); flex-shrink: 0; }
+.examples-title {
+  color: var(--text-4); font-size: 9px;
+  text-transform: uppercase; letter-spacing: 1px;
+  margin-bottom: 8px; font-weight: 600;
+}
+.example-btns { display: flex; flex-wrap: wrap; gap: 4px; }
+.example-btn {
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  padding: 4px 9px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  transition: var(--transition-fast);
+}
+.example-btn:hover {
+  border-color: var(--accent); color: var(--accent);
+  background: rgba(94, 234, 212, 0.05);
+}
+.file-drop {
+  margin: 0 14px 12px;
+  padding: 14px;
+  border: 1.5px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  text-align: center;
+  color: var(--text-3); font-size: 11px;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  background: var(--bg-2);
+}
+.file-drop:hover, .file-drop.dragover {
+  border-color: var(--accent); color: var(--accent);
+  background: rgba(94, 234, 212, 0.05);
+}
+.chat-input-row {
+  padding: 12px;
+  border-top: 1px solid var(--border);
+  display: flex; gap: 8px;
+  flex-shrink: 0;
+}
+.chat-input {
+  flex: 1;
+  background: var(--bg-0);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  outline: none;
+  transition: var(--transition-fast);
+}
+.chat-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(94, 234, 212, 0.1); }
+.send-btn {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: var(--bg-0);
+  border: none;
+  padding: 0 16px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-weight: 700; font-size: 12px;
+  transition: var(--transition-fast);
+  box-shadow: 0 4px 12px var(--accent-glow);
+}
+.send-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px var(--accent-glow); }
+.send-btn:active { transform: translateY(0); }
+.send-btn:disabled { background: var(--bg-3); color: var(--text-4); cursor: not-allowed; box-shadow: none; transform: none; }
+
+/* ========== CANVAS PANEL ========== */
+.canvas-wrap { flex: 1; position: relative; overflow: hidden; min-height: 0; }
+#archCanvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; }
+#archCanvas:active { cursor: grabbing; }
+#threeCanvas { position: absolute; inset: 0; width: 100%; height: 100%; display: none; }
+.canvas-controls {
+  position: absolute; top: 12px; right: 12px;
+  display: flex; gap: 4px;
+  background: var(--glass-strong);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 4px; z-index: 5;
+}
+.canvas-controls button {
+  background: transparent; color: var(--text-3);
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 11px; font-weight: 500;
+  transition: var(--transition-fast);
+  display: flex; align-items: center; gap: 4px;
+}
+.canvas-controls button:hover { background: var(--bg-3); color: var(--text); }
+.canvas-controls button.active {
+  background: var(--accent); color: var(--bg-0); font-weight: 600;
+}
+.canvas-controls .divider { width: 1px; background: var(--border); margin: 4px 2px; }
+.mode-toggle {
+  position: absolute; top: 12px; left: 12px;
+  display: flex;
+  background: var(--glass-strong);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 3px; z-index: 5;
+}
+.mode-toggle button {
+  background: transparent; border: none;
+  padding: 5px 12px;
+  border-radius: 6px;
+  color: var(--text-3);
+  font-size: 10px; font-weight: 600;
+  cursor: pointer;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  transition: var(--transition-fast);
+}
+.mode-toggle button.active {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: var(--bg-0);
+  box-shadow: var(--shadow-sm);
+}
+.minimap {
+  position: absolute; bottom: 12px; right: 12px;
+  width: 140px; height: 90px;
+  background: var(--glass-strong);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  z-index: 5; overflow: hidden;
+}
+.minimap canvas { width: 100%; height: 100%; display: block; }
+.minimap-label {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: rgba(0,0,0,0.5);
+  font-size: 8px; text-align: center; padding: 2px;
+  color: var(--text-4);
+  text-transform: uppercase; letter-spacing: 1px;
+}
+.canvas-loading {
+  position: absolute; inset: 0;
+  background: rgba(5, 7, 13, 0.7);
+  backdrop-filter: blur(4px);
+  display: none;
+  align-items: center; justify-content: center;
+  z-index: 20;
+}
+.canvas-loading.active { display: flex; }
+.spinner {
+  width: 32px; height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ========== OUTPUT PANEL ========== */
+.tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  background: var(--glass-strong);
+  flex-shrink: 0;
+}
+.tab {
+  flex: 1;
+  padding: 10px 4px;
+  text-align: center;
+  font-size: 10px;
+  text-transform: uppercase; letter-spacing: 1px;
+  font-weight: 600;
+  color: var(--text-3);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: var(--transition-fast);
+}
+.tab:hover { color: var(--text); background: rgba(255,255,255,0.02); }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); background: rgba(94, 234, 212, 0.05); }
+.output-section { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+.output-section-title {
+  color: var(--text-4);
+  font-size: 9px;
+  text-transform: uppercase; letter-spacing: 1px;
+  margin-bottom: 8px; font-weight: 600;
+}
+.prediction-display {
+  font-size: 36px;
+  font-weight: 800;
+  text-align: center;
+  padding: 8px 0;
+  font-family: var(--font-mono);
+  background: linear-gradient(135deg, var(--accent), var(--purple));
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  animation: predPulse 2s ease-in-out infinite;
+}
+@keyframes predPulse {
+  0%, 100% { filter: drop-shadow(0 0 0 transparent); }
+  50% { filter: drop-shadow(0 0 12px var(--accent-glow)); }
+}
+.prediction-label {
+  text-align: center;
+  color: var(--text-3);
+  font-size: 11px;
+  margin-bottom: 10px;
+  font-family: var(--font-mono);
+}
+.confidence-bar-container {
+  background: var(--bg-0);
+  height: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  margin: 8px 0;
+}
+.confidence-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--danger) 0%, var(--warn) 50%, var(--good) 100%);
+  width: 0%;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 3px;
+}
+.confidence-label {
+  display: flex; justify-content: space-between;
+  font-size: 10px; color: var(--text-3);
+  font-family: var(--font-mono);
+}
+.metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.metric-card {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  transition: var(--transition-fast);
+}
+.metric-card:hover { border-color: var(--accent); }
+.metric-card .label {
+  color: var(--text-4); font-size: 8px;
+  text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;
+}
+.metric-card .value {
+  font-size: 16px; font-weight: 700;
+  color: var(--text);
+  font-family: var(--font-mono);
+  margin-top: 2px;
+}
+.metric-card .value .unit { color: var(--text-4); font-size: 10px; font-weight: 400; }
+.explanation-list, .health-list { font-size: 11px; }
+.explanation-row { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+.explanation-row .name { width: 90px; color: var(--text-3); font-family: var(--font-mono); font-size: 10px; }
+.explanation-row .bar {
+  flex: 1;
+  background: var(--bg-2);
+  height: 6px; border-radius: 3px; overflow: hidden;
+}
+.explanation-row .fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+.explanation-row .val { color: var(--text); font-family: var(--font-mono); font-size: 10px; min-width: 40px; text-align: right; }
+.health-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+.health-row:last-child { border-bottom: none; }
+.health-row .name { color: var(--text-3); font-size: 11px; }
+.health-row .val { color: var(--text); font-family: var(--font-mono); font-weight: 600; font-size: 11px; }
+.health-row .val.warn { color: var(--warn); }
+.health-row .val.danger { color: var(--danger); }
+.health-row .val.good { color: var(--good); }
+
+/* ========== WEIGHT INSPECTOR ========== */
+.inspector {
+  grid-column: 1 / -1;
+  height: 220px;
+  background: var(--glass-strong);
+  backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  z-index: 5;
+  grid-area: inspector;
+}
+.inspector-tabs {
+  display: flex;
+  background: var(--bg-2);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.inspector-tab {
+  padding: 8px 16px;
+  font-size: 10px;
+  text-transform: uppercase; letter-spacing: 0.8px;
+  font-weight: 600;
+  color: var(--text-3);
+  cursor: pointer;
+  border-right: 1px solid var(--border);
+  border-bottom: 2px solid transparent;
+  transition: var(--transition-fast);
+}
+.inspector-tab:hover { color: var(--text); }
+.inspector-tab.active { color: var(--accent); border-bottom-color: var(--accent); background: var(--bg-1); }
+.inspector-body { flex: 1; overflow-y: auto; padding: 12px 16px; display: none; }
+.inspector-body.active { display: block; }
+.heatmap { display: grid; gap: 1px; background: var(--border); padding: 1px; width: fit-content; border-radius: 4px; }
+.heatmap-cell {
+  width: 11px; height: 11px;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+.heatmap-cell:hover { transform: scale(1.4); z-index: 2; position: relative; outline: 1.5px solid var(--accent); }
+.slider-row {
+  display: grid;
+  grid-template-columns: 130px 1fr 60px;
+  gap: 10px;
+  align-items: center;
+  margin: 7px 0;
+  font-size: 11px;
+}
+.slider-row .name { color: var(--text-3); font-family: var(--font-mono); font-size: 10px; }
+.slider-row input[type="range"] {
+  -webkit-appearance: none; appearance: none;
+  background: var(--bg-2);
+  height: 4px;
+  border-radius: 2px;
+  outline: none;
+}
+.slider-row input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  cursor: pointer;
+  box-shadow: 0 2px 6px var(--accent-glow);
+  transition: var(--transition-fast);
+}
+.slider-row input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+.slider-row .val { color: var(--text); font-family: var(--font-mono); text-align: right; font-size: 10px; }
+.sensitivity-canvas { width: 100%; height: 160px; background: var(--bg-0); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.history-list { font-size: 11px; }
+.history-row {
+  display: grid;
+  grid-template-columns: 80px 1fr 80px 80px;
+  gap: 10px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+.history-row .ts { color: var(--text-4); }
+.history-row .name { color: var(--text-2); }
+.history-row .old { color: var(--warn); }
+.history-row .new { color: var(--good); }
+
+/* ========== STATUS BAR ========== */
+.statusbar {
+  grid-area: status;
+  background: var(--glass-strong);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 16px;
+  font-size: 10px; color: var(--text-3);
+  font-family: var(--font-mono);
+  z-index: 10;
+}
+.statusbar .stat { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+.statusbar .stat b { color: var(--text); font-weight: 600; }
+.statusbar .pulse {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--good);
+  box-shadow: 0 0 8px var(--good);
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+.statusbar .pulse.demo { background: var(--warn); box-shadow: 0 0 8px var(--warn); }
+
+/* ========== COMMAND PALETTE ========== */
+.cmd-palette-overlay {
+  position: fixed; inset: 0;
+  background: rgba(5, 7, 13, 0.7);
+  backdrop-filter: blur(8px);
+  display: none;
+  align-items: flex-start; justify-content: center;
+  z-index: 100; padding-top: 12vh;
+}
+.cmd-palette-overlay.active { display: flex; animation: fadeIn 0.15s ease; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.cmd-palette {
+  width: 90%; max-width: 560px;
+  background: var(--bg-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  animation: paletteIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+@keyframes paletteIn {
+  from { transform: translateY(-12px) scale(0.97); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+.cmd-input-wrap { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+.cmd-input-wrap svg { color: var(--text-3); flex-shrink: 0; }
+.cmd-input { flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-size: 15px; font-family: var(--font-sans); }
+.cmd-input::placeholder { color: var(--text-4); }
+.cmd-list { max-height: 360px; overflow-y: auto; padding: 6px; }
+.cmd-group { padding: 6px 10px 4px; font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-4); font-weight: 700; }
+.cmd-item {
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px; color: var(--text-2);
+  transition: var(--transition-fast);
+}
+.cmd-item:hover, .cmd-item.selected { background: var(--bg-3); color: var(--text); }
+.cmd-item .icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; color: var(--accent); flex-shrink: 0; }
+.cmd-item .label { flex: 1; }
+.cmd-item kbd {
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-4);
+}
+
+/* ========== STORY MODE ========== */
+.story-tour {
+  position: fixed; bottom: 250px; left: 50%;
+  transform: translateX(-50%);
+  background: var(--glass-strong);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-lg);
+  padding: 14px 18px;
+  box-shadow: var(--shadow-lg), 0 0 32px var(--accent-glow);
+  max-width: 520px; z-index: 90;
+  display: none;
+  animation: paletteIn 0.3s ease;
+}
+.story-tour.active { display: block; }
+.story-tour .step-num { color: var(--accent); font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 6px; font-weight: 700; }
+.story-tour .step-text { color: var(--text); font-size: 13px; margin-bottom: 10px; line-height: 1.5; }
+.story-tour .step-nav { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.story-tour .step-nav button {
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  padding: 5px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 11px;
+  transition: var(--transition-fast);
+}
+.story-tour .step-nav button:hover { background: var(--accent); color: var(--bg-0); border-color: var(--accent); }
+.story-progress { height: 3px; background: var(--bg-3); border-radius: 2px; overflow: hidden; margin-bottom: 10px; }
+.story-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--purple));
+  transition: width 0.3s ease;
+  width: 0%;
+}
+
+/* ========== COMPARE OVERLAY ========== */
+.compare-overlay {
+  position: fixed; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--glass-strong);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  box-shadow: var(--shadow-lg);
+  width: 90%; max-width: 540px;
+  display: none; z-index: 80;
+  animation: paletteIn 0.2s ease;
+}
+.compare-overlay.active { display: block; }
+.compare-overlay h3 { color: var(--accent); margin-bottom: 12px; font-size: 14px; font-weight: 700; }
+.compare-overlay .close { position: absolute; top: 12px; right: 16px; cursor: pointer; color: var(--text-3); font-size: 18px; transition: var(--transition-fast); }
+.compare-overlay .close:hover { color: var(--danger); }
+.compare-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.compare-result { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+.compare-cell { background: var(--bg-2); padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+.compare-cell h4 { color: var(--text-3); font-size: 9px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; font-weight: 700; }
+.compare-cell .pred { font-size: 22px; color: var(--text); font-family: var(--font-mono); font-weight: 700; }
+.compare-diff { margin-top: 10px; padding: 10px; background: var(--bg-2); border-radius: var(--radius-sm); text-align: center; font-family: var(--font-mono); font-size: 12px; border: 1px solid var(--border); }
+
+/* ========== TOAST ========== */
+.toast-container { position: fixed; bottom: 50px; right: 20px; z-index: 200; display: flex; flex-direction: column; gap: 8px; }
+.toast {
+  background: var(--glass-strong);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-strong);
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  font-size: 12px; color: var(--text);
+  box-shadow: var(--shadow-md);
+  animation: toastIn 0.3s ease;
+  display: flex; align-items: center; gap: 8px;
+  max-width: 360px;
+}
+@keyframes toastIn {
+  from { transform: translateX(20px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+.toast.success { border-color: var(--good); }
+.toast.error { border-color: var(--danger); }
+.toast.info { border-color: var(--info); }
+
+/* ========== COUNTERFACTUAL OVERLAY ========== */
+.cf-overlay {
+  position: fixed; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--glass-strong);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  box-shadow: var(--shadow-lg);
+  width: 90%; max-width: 620px;
+  display: none; z-index: 80;
+  animation: paletteIn 0.2s ease;
+  max-height: 85vh; overflow-y: auto;
+}
+.cf-overlay.active { display: block; }
+.cf-overlay h3 { color: var(--accent); margin-bottom: 12px; font-size: 14px; font-weight: 700; }
+.cf-overlay .close { position: absolute; top: 12px; right: 16px; cursor: pointer; color: var(--text-3); font-size: 18px; }
+.cf-overlay .close:hover { color: var(--danger); }
+.cf-step-progress {
+  display: flex; align-items: center; gap: 8px;
+  margin: 10px 0;
+  padding: 8px 10px;
+  background: var(--bg-2);
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+}
+.cf-step-progress .step-num { color: var(--accent); font-weight: 700; font-family: var(--font-mono); }
+.cf-step-progress .step-info { color: var(--text-3); flex: 1; }
+.cf-step-progress .flipped-badge {
+  background: var(--good);
+  color: var(--bg-0);
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.cf-step-progress .not-flipped-badge {
+  background: var(--warn);
+  color: var(--bg-0);
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.cf-diff-grid {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;
+  margin-top: 10px;
+}
+.cf-diff-cell {
+  background: var(--bg-2);
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+.cf-diff-cell .label {
+  color: var(--text-4); font-size: 8px; text-transform: uppercase;
+  letter-spacing: 0.8px; font-weight: 700; margin-bottom: 4px;
+}
+.cf-diff-cell .value { color: var(--text); }
+.cf-diff-cell.changed { border-color: var(--accent); background: rgba(94, 234, 212, 0.05); }
+.cf-diff-cell.changed .value { color: var(--accent); }
+.cf-history-chart {
+  width: 100%; height: 100px;
+  background: var(--bg-0);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-top: 8px;
+}
+
+/* ========== TRAINING REPLAY ========== */
+.training-replay {
+  position: absolute;
+  bottom: 12px; left: 12px;
+  background: var(--glass-strong);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  z-index: 5;
+  display: none;
+  align-items: center; gap: 10px;
+  min-width: 320px;
+}
+.training-replay.active { display: flex; }
+.training-replay .label {
+  color: var(--text-3);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 700;
+}
+.training-replay input[type="range"] {
+  -webkit-appearance: none; appearance: none;
+  width: 180px;
+  background: var(--bg-2);
+  height: 4px;
+  border-radius: 2px;
+  outline: none;
+}
+.training-replay input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  box-shadow: 0 2px 6px var(--accent-glow);
+}
+.training-replay .epoch-val {
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  min-width: 38px;
+}
+.training-replay .play-btn {
+  background: var(--bg-3); border: 1px solid var(--border); color: var(--text);
+  width: 22px; height: 22px;
+  border-radius: 4px;
+  cursor: pointer; font-size: 10px;
+  display: flex; align-items: center; justify-content: center;
+}
+.training-replay .play-btn:hover { background: var(--accent); color: var(--bg-0); }
+
+/* ========== TRAINING REPLAY OVERLAY (chart) ========== */
+.training-chart-overlay {
+  position: fixed;
+  top: 70px; right: 20px;
+  background: var(--glass-strong);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  box-shadow: var(--shadow-lg);
+  width: 360px;
+  display: none; z-index: 70;
+  animation: paletteIn 0.2s ease;
+}
+.training-chart-overlay.active { display: block; }
+.training-chart-overlay h3 { color: var(--accent); margin-bottom: 8px; font-size: 12px; font-weight: 700; }
+.training-chart-overlay .close {
+  position: absolute; top: 10px; right: 14px;
+  cursor: pointer; color: var(--text-3); font-size: 16px;
+}
+.training-chart-overlay .close:hover { color: var(--danger); }
+.training-chart-overlay canvas {
+  width: 100%; height: 180px;
+  background: var(--bg-0);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+.training-chart-overlay .legend {
+  display: flex; gap: 12px; margin-top: 8px;
+  font-size: 10px; color: var(--text-3);
+}
+.training-chart-overlay .legend-item {
+  display: flex; align-items: center; gap: 4px;
+}
+.training-chart-overlay .legend-swatch {
+  width: 10px; height: 3px; border-radius: 1px;
+}
+
+/* ========== VOICE MODE INDICATOR ========== */
+.voice-indicator {
+  position: fixed;
+  top: 70px; left: 20px;
+  background: var(--glass-strong);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-lg);
+  padding: 10px 14px;
+  box-shadow: var(--shadow-md), 0 0 24px var(--accent-glow);
+  z-index: 75;
+  display: none;
+  align-items: center; gap: 8px;
+  font-size: 11px; color: var(--text);
+}
+.voice-indicator.active { display: flex; }
+.voice-indicator .mic-icon {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--bg-0);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px;
+  animation: micPulse 1.5s ease-in-out infinite;
+}
+@keyframes micPulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--accent-glow); }
+  50% { box-shadow: 0 0 0 8px transparent; }
+}
+.voice-indicator .status { color: var(--text); font-weight: 600; }
+.voice-indicator .transcript {
+  color: var(--text-3); font-family: var(--font-mono); font-size: 10px;
+  max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.toast .icon { font-size: 14px; }
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 1199px) {
+  .main { grid-template-columns: 1fr 1fr; grid-template-areas: "input canvas"; }
+  .col.output { display: none; }
+  .col.output.mobile-active {
+    display: flex; position: absolute;
+    top: 56px; bottom: 28px; right: 0; left: 0;
+    z-index: 50; background: var(--bg-1);
+  }
+  .minimap { width: 100px; height: 70px; }
+}
+@media (max-width: 767px) {
+  .main { grid-template-columns: 1fr; grid-template-areas: "canvas"; }
+  .col.input, .col.output { display: none; }
+  .col.input.mobile-active, .col.output.mobile-active {
+    display: flex; position: absolute;
+    top: 56px; bottom: 72px; left: 0; right: 0;
+    z-index: 50; background: var(--bg-1);
+  }
+  .topbar { padding: 0 10px; gap: 6px; }
+  .topbar-btn { padding: 6px 8px; font-size: 11px; }
+  .topbar-btn .label-text { display: none; }
+  .cmd-palette-btn { min-width: 0; padding: 6px 8px; flex: 1; }
+  .cmd-palette-btn kbd { display: none; }
+  .inspector { height: 180px; }
+  .mobile-tab-bar { display: flex !important; bottom: 28px; }
+  .brand-text .micro { display: none; }
+  .canvas-controls button .label-text { display: none; }
+  .model-info .pill { display: none; }
+  .model-info .pill#modelType, .model-info .pill#paramCount { display: inline-block; }
+  .chat-input-row { padding-bottom: 80px; }
+}
+
+.mobile-tab-bar {
+  display: none;
+  position: absolute; bottom: 28px; left: 0; right: 0;
+  background: var(--glass-strong);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+  height: 44px;
+  align-items: center; justify-content: space-around;
+  z-index: 60;
+}
+.mobile-tab-bar button {
+  background: transparent; color: var(--text-3); border: none;
+  padding: 8px 20px; font-size: 10px;
+  cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px;
+  font-weight: 600;
+  border-bottom: 2px solid transparent;
+}
+.mobile-tab-bar button.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+.hidden { display: none !important; }
+.spacer { flex: 1; }
+
+</style>
+</head>
+<body>
+
+<div class="mesh-bg"></div>
+
+<div class="app-shell">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-logo">Q</div>
+      <div class="brand-text">QAI<span class="micro"> model microscope</span></div>
+    </div>
+    <div class="topbar-sep"></div>
+    <div class="model-info">
+      model: <b id="modelName">—</b>
+      <span class="pill" id="modelType">—</span>
+      <span class="pill purple" id="paramCount">—</span>
+      <span class="pill info" id="rendererBadge">—</span>
+    </div>
+    <div class="topbar-spacer"></div>
+    <button class="cmd-palette-btn" onclick="openCmdPalette()">
+      <span style="color:var(--text-3);">⌘</span> Search & actions
+      <kbd>⌘K</kbd>
+    </button>
+    <button class="topbar-btn" onclick="exportStory()" title="Export a self-contained story">📁 <span class="label-text">Export</span></button>
+    <button class="topbar-btn" onclick="toggleStoryMode()" title="Guided tour">📖 <span class="label-text">Story</span></button>
+    <button class="topbar-btn" onclick="openCompare()" title="Compare two inputs side by side">⚖ <span class="label-text">Compare</span></button>
+    <button class="topbar-btn" onclick="runAdversarial()" title="One-click adversarial probe">🛡 <span class="label-text">Adversarial</span></button>
+    <button class="topbar-btn" onclick="openCounterfactual()" title="Find smallest change to flip prediction">🔀 <span class="label-text">Counterfactual</span></button>
+    <button class="topbar-btn" onclick="toggleTrainingReplay()" title="Scrub through training epochs">📈 <span class="label-text">Replay</span></button>
+    <button class="topbar-btn" onclick="toggleVoiceMode()" title="Toggle voice input/output (accessibility)" id="voiceBtn">🎤 <span class="label-text">Voice</span></button>
+    <button class="topbar-btn" onclick="cycleTheme()" title="Toggle theme (dark/light/auto)" id="themeBtn">🌙 <span class="label-text">Theme</span></button>
+    <button class="topbar-btn danger" onclick="resetWeights()" title="Reset weight edits">↺ <span class="label-text">Reset</span></button>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- COLUMN 1: INPUT -->
+    <div class="col input mobile-active" id="colInput">
+      <div class="col-header">
+        <h3>Input</h3>
+        <div class="col-header-actions">
+          <button class="icon-btn" onclick="clearChat()" title="Clear history">🗑</button>
+        </div>
+      </div>
+      <div class="chat-history" id="chatHistory">
+        <div class="chat-msg pred">
+          <div class="lbl">Welcome</div>
+          Type an input below to send it through the model. Try <code>[1.0, 2.0, 3.0, 4.0]</code> or pick an example.
+        </div>
+      </div>
+      <div class="examples-block">
+        <div class="examples-title">Examples</div>
+        <div class="example-btns" id="exampleBtns">
+          <button class="example-btn" onclick="sendExample('[5.1, 3.5, 1.4, 0.2]')">iris setosa</button>
+          <button class="example-btn" onclick="sendExample('[6.2, 2.9, 4.3, 1.3]')">iris versicolor</button>
+          <button class="example-btn" onclick="sendExample('[7.7, 3.8, 6.7, 2.2]')">iris virginica</button>
+          <button class="example-btn" onclick="sendExample('[1.0, 2.0, 3.0, 4.0]')">[1,2,3,4]</button>
+          <button class="example-btn" onclick="sendExample('Hello world')">text</button>
+          <button class="example-btn" onclick="sendRandom()">🎲 random</button>
+        </div>
+      </div>
+      <div class="file-drop" id="fileDrop">Drop CSV / image / text here<br><span style="font-size:10px">or click to upload</span></div>
+      <div class="chat-input-row">
+        <input class="chat-input" id="chatInput" placeholder="[1.0, 2.0, ...] or text" onkeydown="if(event.key==='Enter')sendInput()">
+        <button class="send-btn" id="sendBtn" onclick="sendInput()">Send</button>
+      </div>
+    </div>
+
+    <!-- COLUMN 2: ARCHITECTURE CANVAS -->
+    <div class="col canvas" id="colCanvas">
+      <div class="col-header">
+        <h3 id="canvasTitle">Architecture Canvas</h3>
+        <div class="col-header-actions">
+          <button class="icon-btn" onclick="toggleAnim()" id="animBtn" title="Replay forward-pass animation">▶</button>
+        </div>
+      </div>
+      <div class="canvas-wrap">
+        <canvas id="archCanvas"></canvas>
+        <canvas id="threeCanvas"></canvas>
+
+        <!-- Mode toggle: 2D / 3D -->
+        <div class="mode-toggle" id="modeToggle" style="display:none">
+          <button onclick="setMode('2d')" id="mode2d" class="active">2D</button>
+          <button onclick="setMode('3d')" id="mode3d">3D</button>
+        </div>
+
+        <!-- Render mode controls -->
+        <div class="canvas-controls">
+          <button onclick="setRenderMode('full')" id="modeFull" class="active">Full</button>
+          <button onclick="setRenderMode('summary')" id="modeSummary">Summary</button>
+          <button onclick="setRenderMode('block')" id="modeBlock">Block</button>
+          <div class="divider"></div>
+          <button onclick="zoomBy(1.2)" title="Zoom in">+</button>
+          <button onclick="zoomBy(0.8)" title="Zoom out">−</button>
+          <button onclick="resetView()" title="Reset view">⟲</button>
+        </div>
+
+        <!-- Mini-map -->
+        <div class="minimap">
+          <canvas id="minimapCanvas"></canvas>
+          <div class="minimap-label">overview</div>
+        </div>
+
+        <!-- Loading overlay -->
+        <div class="canvas-loading" id="canvasLoading">
+          <div class="spinner"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COLUMN 3: OUTPUT -->
+    <div class="col output" id="colOutput">
+      <div class="tabs">
+        <div class="tab active" onclick="setOutputTab('prediction', this)">Prediction</div>
+        <div class="tab" onclick="setOutputTab('explanation', this)">Explain</div>
+        <div class="tab" onclick="setOutputTab('health', this)">Health</div>
+      </div>
+      <div class="col-body">
+        <div class="output-section" id="outputPrediction">
+          <div class="output-section-title">Predicted Output</div>
+          <div class="prediction-display" id="predictionValue">—</div>
+          <div class="prediction-label" id="predictionLabel">no input yet</div>
+          <div class="confidence-bar-container"><div class="confidence-bar" id="confBar"></div></div>
+          <div class="confidence-label">
+            <span>confidence</span>
+            <span id="confVal">—</span>
+          </div>
+        </div>
+        <div class="output-section">
+          <div class="output-section-title">Metrics</div>
+          <div class="metric-grid">
+            <div class="metric-card"><div class="label">Latency</div><div class="value" id="mLatency">—<span class="unit">ms</span></div></div>
+            <div class="metric-card"><div class="label">Tokens/s</div><div class="value" id="mTps">—</div></div>
+            <div class="metric-card"><div class="label">Params active</div><div class="value" id="mActive">—</div></div>
+            <div class="metric-card"><div class="label">Surprise</div><div class="value" id="mSurprise">—</div></div>
+          </div>
+        </div>
+        <div class="output-section" id="outputExplanation" style="display:none">
+          <div class="output-section-title">Top contributing features</div>
+          <div class="explanation-list" id="explanationList"><div style="color:var(--text-3);font-size:11px">No prediction yet.</div></div>
+        </div>
+        <div class="output-section" id="outputHealth" style="display:none">
+          <div class="output-section-title">Blind spot detection</div>
+          <div class="health-list" id="healthList"><div style="color:var(--text-3);font-size:11px">Click "Health" to inspect.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WEIGHT INSPECTOR -->
+    <div class="inspector">
+      <div class="inspector-tabs">
+        <div class="inspector-tab active" onclick="setInspectorTab('heatmap', this)">Heatmap</div>
+        <div class="inspector-tab" onclick="setInspectorTab('sliders', this)">Sliders</div>
+        <div class="inspector-tab" onclick="setInspectorTab('sensitivity', this)">Sensitivity</div>
+        <div class="inspector-tab" onclick="setInspectorTab('history', this)">History</div>
+      </div>
+      <div class="inspector-body active" id="inspectorHeatmap">
+        <div id="heatmapContainer"><div style="color:var(--text-3);font-size:11px">Loading weights…</div></div>
+      </div>
+      <div class="inspector-body" id="inspectorSliders">
+        <div id="slidersContainer"><div style="color:var(--text-3);font-size:11px">Loading top-K weights…</div></div>
+      </div>
+      <div class="inspector-body" id="inspectorSensitivity">
+        <canvas class="sensitivity-canvas" id="sensitivityCanvas"></canvas>
+        <div style="font-size:10px;color:var(--text-3);margin-top:6px">Pick a weight slider above to sweep its value from min→max.</div>
+      </div>
+      <div class="inspector-body" id="inspectorHistory">
+        <div class="history-list" id="historyList"><div style="color:var(--text-3);font-size:11px">No weight edits yet. Drag a slider to start.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATUS BAR -->
+  <div class="statusbar">
+    <div class="stat"><div class="pulse" id="statusPulse"></div><span id="statusMode">live</span></div>
+    <div class="stat">tokens: <b id="sTokens">0 in / 0 out</b></div>
+    <div class="stat">latency: <b id="sLatency">—ms</b></div>
+    <div class="stat">conf: <b id="sConf">—%</b></div>
+    <div class="stat">params active: <b id="sActive">— / —</b></div>
+    <div class="stat" id="sExperts" style="display:none">experts: <b>—</b></div>
+    <div class="spacer"></div>
+    <div class="stat">qai v1.1.0 — microscope v2</div>
+  </div>
+</div>
+
+<!-- COMMAND PALETTE -->
+<div class="cmd-palette-overlay" id="cmdPaletteOverlay">
+  <div class="cmd-palette">
+    <div class="cmd-input-wrap">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input class="cmd-input" id="cmdInput" placeholder="Search actions, neurons, layers…" oninput="filterCmd()" onkeydown="handleCmdKeydown(event)">
+    </div>
+    <div class="cmd-list" id="cmdList"></div>
+  </div>
+</div>
+
+<!-- STORY MODE OVERLAY -->
+<div class="story-tour" id="storyTour">
+  <div class="step-num">Step <span id="storyStep">1</span> of <span id="storyTotal">5</span></div>
+  <div class="story-progress"><div class="story-progress-fill" id="storyProgress"></div></div>
+  <div class="step-text" id="storyText">Welcome to the model microscope.</div>
+  <div class="step-nav">
+    <button onclick="prevStoryStep()">Prev</button>
+    <button onclick="nextStoryStep()" id="storyNextBtn">Next</button>
+    <button onclick="closeStory()">Close</button>
+  </div>
+</div>
+
+<!-- COMPARE OVERLAY -->
+<div class="compare-overlay" id="compareOverlay">
+  <span class="close" onclick="closeCompare()">✕</span>
+  <h3>Compare two inputs</h3>
+  <div class="compare-inputs">
+    <input class="chat-input" id="compareA" placeholder="input A" value="[5.1, 3.5, 1.4, 0.2]">
+    <input class="chat-input" id="compareB" placeholder="input B" value="[7.7, 3.8, 6.7, 2.2]">
+  </div>
+  <button class="send-btn" onclick="runCompare()" style="width:100%">Compare</button>
+  <div class="compare-result" id="compareResult" style="display:none">
+    <div class="compare-cell"><h4>Input A</h4><div class="pred" id="predA">—</div></div>
+    <div class="compare-cell"><h4>Input B</h4><div class="pred" id="predB">—</div></div>
+  </div>
+  <div class="compare-diff" id="compareDiff" style="display:none">max diff: —</div>
+</div>
+
+<!-- MOBILE TAB BAR -->
+<div class="mobile-tab-bar">
+  <button onclick="setMobileTab('input')" id="mtInput" class="active">Input</button>
+  <button onclick="setMobileTab('canvas')" id="mtCanvas">Canvas</button>
+  <button onclick="setMobileTab('output')" id="mtOutput">Output</button>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- COUNTERFACTUAL OVERLAY -->
+<div class="cf-overlay" id="cfOverlay">
+  <span class="close" onclick="closeCF()">✕</span>
+  <h3>🔀 Counterfactual Explorer</h3>
+  <div style="font-size:11px;color:var(--text-3);margin-bottom:12px">
+    Find the smallest input change that flips the prediction. Hill-climbs per-feature toward the target class.
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+    <input class="chat-input" id="cfInput" placeholder="input (e.g. [5.1, 3.5, 1.4, 0.2])" value="[5.1, 3.5, 1.4, 0.2]">
+    <select class="chat-input" id="cfTarget" style="background:var(--bg-0);color:var(--text);border:1px solid var(--border)">
+      <option value="">auto (2nd most likely)</option>
+      <option value="0">class 0</option>
+      <option value="1">class 1</option>
+      <option value="2">class 2</option>
+    </select>
+  </div>
+  <button class="send-btn" onclick="runCounterfactual()" style="width:100%;margin-bottom:10px">Find Counterfactual</button>
+  <div id="cfResult" style="display:none">
+    <div class="cf-step-progress" id="cfStepProgress"></div>
+    <div class="cf-diff-grid" id="cfDiffGrid"></div>
+    <div style="margin-top:10px">
+      <div style="font-size:9px;color:var(--text-4);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:4px">Confidence over steps</div>
+      <canvas class="cf-history-chart" id="cfHistoryChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- TRAINING REPLAY OVERLAY (chart) -->
+<div class="training-chart-overlay" id="trainingChartOverlay">
+  <span class="close" onclick="closeTrainingChart()">✕</span>
+  <h3>📈 Training History</h3>
+  <canvas id="trainingChartCanvas"></canvas>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--danger)"></div>loss</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--good)"></div>accuracy</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--info)"></div>learning rate</div>
+  </div>
+  <div style="margin-top:8px;font-size:10px;color:var(--text-3);font-family:var(--font-mono)" id="trainingStats">— epochs</div>
+</div>
+
+<!-- TRAINING REPLAY SLIDER (bottom-left of canvas) -->
+<div class="training-replay" id="trainingReplay">
+  <span class="label">Epoch</span>
+  <button class="play-btn" onclick="playTrainingReplay()" id="trPlayBtn">▶</button>
+  <input type="range" min="1" max="100" value="1" id="trSlider" oninput="scrubTrainingReplay(this.value)">
+  <span class="epoch-val" id="trEpoch">1</span>
+</div>
+
+<!-- VOICE MODE INDICATOR -->
+<div class="voice-indicator" id="voiceIndicator">
+  <div class="mic-icon">🎤</div>
+  <div>
+    <div class="status" id="voiceStatus">Listening…</div>
+    <div class="transcript" id="voiceTranscript"></div>
+  </div>
+</div>
+
+<script>
+
+// ============================================================================
+// State
+// ============================================================================
+const STATE = {
+  mode: 'live',          // 'live' | 'demo' | 'story'
+  model: null,
+  layers: [],
+  typeInfo: null,        // {renderer, family, supports_3d, ...}
+  typeData: null,        // renderer-specific data (tree, attention, etc.)
+  renderMode: 'full',
+  viewMode: '2d',        // '2d' | '3d'
+  zoom: 1.0,
+  pan: { x: 0, y: 0 },
+  animating: false,
+  activeLayer: null,
+  activeLayerIdx: -1,
+  lastOutput: null,
+  selectedLayer: 0,
+  selectedWeight: 0,
+  storyStep: 0,
+  storySteps: [
+    "Welcome to the model microscope. We're about to walk through what happens when an input flows through your model.",
+    "Step 1: Your input arrives at the input layer (left side of canvas). Each node glows brighter when its value is larger.",
+    "Step 2: Activations propagate through hidden layers. The strongest paths are highlighted — these are the weights doing the work.",
+    "Step 3: The winning output node gets a golden ring. The confidence bar on the right shows how sure the model is.",
+    "Step 4: Drag a slider in the Weight Inspector below to mutate a weight — watch the prediction change in real time.",
+    "Done. Try the Compare button to overlay two inputs, or Adversarial to probe for vulnerabilities. Press Cmd+K for the command palette."
+  ],
+  // NEW v1.4: theme + family interactions
+  theme: 'dark',        // 'dark' | 'light' | 'auto'
+  selectedAttentionHead: 0,
+  draggingCentroid: -1,
+  pinnedTreeNode: -1,
+  selectedCNNChannel: -1,
+  tokensIn: 0, tokensOut: 0,
+  cmdSelectedIdx: 0,
+  cmdItems: [],
+  threeScene: null,
+};
+
+// ============================================================================
+// API client
+// ============================================================================
+const API = {
+  async get(url) {
+    if (STATE.mode !== 'live') return null;
+    try {
+      const r = await fetch(url);
+      return await r.json();
+    } catch (e) { return null; }
+  },
+  async post(url, body) {
+    if (STATE.mode !== 'live') return null;
+    try {
+      const r = await fetch(url, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(body),
+      });
+      return await r.json();
+    } catch (e) { return null; }
+  },
+};
+
+// ============================================================================
+// Boot
+// ============================================================================
+window.addEventListener('DOMContentLoaded', async () => {
+  // Check for embedded bootstrap (story mode)
+  if (window.__QAI_BOOTSTRAP__) {
+    STATE.mode = 'story';
+    STATE.model = window.__QAI_BOOTSTRAP__.model;
+    STATE.layers = window.__QAI_BOOTSTRAP__.layers || [];
+    STATE.typeInfo = window.__QAI_BOOTSTRAP__.type || {renderer: 'generic'};
+    STATE.typeData = window.__QAI_BOOTSTRAP__.type_data || {};
+    document.getElementById('statusMode').textContent = 'story';
+    document.getElementById('statusPulse').classList.add('demo');
+  } else {
+    // Try to connect to backend
+    try {
+      const meta = await API.get('/api/model');
+      const typeInfo = await API.get('/api/type');
+      if (meta) {
+        STATE.model = meta;
+        STATE.typeInfo = typeInfo || {renderer: 'generic'};
+        STATE.mode = 'live';
+      } else { throw new Error('no backend'); }
+    } catch (e) {
+      STATE.mode = 'demo';
+      STATE.model = syntheticModel();
+      STATE.typeInfo = {renderer: 'mlp', family: 'neural_network', supports_3d: true};
+      STATE.typeData = {};
+      document.getElementById('statusMode').textContent = 'demo';
+      document.getElementById('statusPulse').classList.add('demo');
+    }
+  }
+
+  renderModelInfo();
+  if (!STATE.layers.length) await loadLayers();
+  if (!STATE.typeData || !Object.keys(STATE.typeData).length) await loadTypeData();
+  await loadHealth();
+
+  setupCanvas();
+  setupFileDrop();
+  setupKeyboard();
+  setupMinimap();
+  drawCanvas();
+  drawHeatmap();
+  drawSliders();
+  buildCmdPalette();
+});
+
+function syntheticModel() {
+  return {
+    name: 'DemoMLP', type: 'MLPClassifier', trained: true,
+    n_layers: 4, n_params: 86,
+    layers: [
+      {name: 'dense_0', shape: [4, 8], n_params: 32, min: -1.2, max: 1.3, mean: 0.05, std: 0.6, weights: Array.from({length: 32}, (_, i) => Math.sin(i * 0.7) * 0.8)},
+      {name: 'dense_1', shape: [8, 6], n_params: 48, min: -1.5, max: 1.6, mean: -0.02, std: 0.7, weights: Array.from({length: 48}, (_, i) => Math.cos(i * 0.5) * 0.9)},
+      {name: 'dense_2', shape: [6, 2], n_params: 12, min: -2.0, max: 2.1, mean: 0.1, std: 1.0, weights: Array.from({length: 12}, (_, i) => Math.tan(i * 0.3) * 0.5)},
+    ],
+  };
+}
+
+function renderModelInfo() {
+  document.getElementById('modelName').textContent = STATE.model.name;
+  document.getElementById('modelType').textContent = STATE.model.type;
+  document.getElementById('paramCount').textContent = (STATE.model.n_params || 0).toLocaleString() + ' params';
+  document.getElementById('rendererBadge').textContent = (STATE.typeInfo?.renderer || 'generic').toUpperCase();
+  // Show 3D toggle if renderer supports it
+  if (STATE.typeInfo?.supports_3d) {
+    document.getElementById('modeToggle').style.display = 'flex';
+  }
+}
+
+// ============================================================================
+// Loaders
+// ============================================================================
+async function loadLayers() {
+  if (STATE.mode === 'live') {
+    const data = await API.get('/api/layers');
+    STATE.layers = data?.layers || [];
+  } else if (STATE.mode === 'story') {
+    STATE.layers = STATE.model.layers || [];
+  } else {
+    STATE.layers = STATE.model.layers || [];
+  }
+}
+
+async function loadTypeData() {
+  if (STATE.mode === 'live') {
+    STATE.typeData = await API.get('/api/type_data') || {};
+  } else if (STATE.mode === 'story') {
+    STATE.typeData = window.__QAI_BOOTSTRAP__?.type_data || {};
+  }
+}
+
+async function loadHealth() {
+  let h;
+  if (STATE.mode === 'live') {
+    h = await API.get('/api/health');
+  } else {
+    h = {
+      n_layers: STATE.layers.length, n_params: STATE.model.n_params || 0,
+      dead_neurons: 4, saturated_neurons: 2,
+      total_weights_inspected: STATE.model.n_params || 0,
+      dead_pct: 4.3, saturated_pct: 2.2, overall_health: 'good',
+    };
+  }
+  STATE.health = h;
+  renderHealth();
+}
+
+function renderHealth() {
+  const h = STATE.health;
+  if (!h) return;
+  const el = document.getElementById('healthList');
+  const cls = (v, thresh) => v > thresh * 2 ? 'danger' : (v > thresh ? 'warn' : 'good');
+  el.innerHTML = `
+    <div class="health-row"><span class="name">Layers inspected</span><span class="val good">${h.n_layers}</span></div>
+    <div class="health-row"><span class="name">Total params</span><span class="val">${(h.n_params||0).toLocaleString()}</span></div>
+    <div class="health-row"><span class="name">Dead neurons</span><span class="val ${cls(h.dead_pct, 3)}">${h.dead_neurons} (${h.dead_pct}%)</span></div>
+    <div class="health-row"><span class="name">Saturated neurons</span><span class="val ${cls(h.saturated_pct, 5)}">${h.saturated_neurons} (${h.saturated_pct}%)</span></div>
+    <div class="health-row"><span class="name">Overall health</span><span class="val ${h.overall_health === 'good' ? 'good' : 'warn'}">${h.overall_health?.toUpperCase()}</span></div>
+  `;
+}
+
+// ============================================================================
+// Canvas setup (pan, zoom, click)
+// ============================================================================
+let canvas, ctx, minimapCanvas, minimapCtx;
+let nodePositions = [];
+
+function setupCanvas() {
+  canvas = document.getElementById('archCanvas');
+  ctx = canvas.getContext('2d');
+  minimapCanvas = document.getElementById('minimapCanvas');
+  minimapCtx = minimapCanvas.getContext('2d');
+  resizeCanvas();
+  window.addEventListener('resize', () => { resizeCanvas(); drawCanvas(); drawMinimap(); });
+
+  let dragging = false, lastX = 0, lastY = 0;
+  canvas.addEventListener('mousedown', (e) => { dragging = true; lastX = e.clientX; lastY = e.clientY; });
+  window.addEventListener('mouseup', () => { dragging = false; });
+  window.addEventListener('mousemove', (e) => {
+    if (!dragging) return;
+    STATE.pan.x += (e.clientX - lastX); STATE.pan.y += (e.clientY - lastY);
+    lastX = e.clientX; lastY = e.clientY;
+    drawCanvas();
+  });
+  canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    zoomBy(e.deltaY < 0 ? 1.1 : 0.9);
+  }, { passive: false });
+  canvas.addEventListener('click', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const cx = e.clientX - rect.left, cy = e.clientY - rect.top;
+    for (const n of nodePositions) {
+      const dx = n.sx - cx, dy = n.sy - cy;
+      if (dx*dx + dy*dy < 200) {
+        // NEW v1.4: Handle family-specific interactions
+        if (n.isHead) {
+          // Transformer: switch attention head
+          STATE.selectedAttentionHead = n.headIdx;
+          drawCanvas();
+          showToast('info', `Switched to attention head ${n.headIdx}`);
+          return;
+        }
+        if (n.isCentroid) {
+          // KMeans: start dragging this centroid
+          STATE.draggingCentroid = n.centroidIdx;
+          showToast('info', `Dragging centroid ${n.centroidIdx}`);
+          drawCanvas();
+          return;
+        }
+        // Default: select layer
+        if (n.layer !== undefined) STATE.selectedLayer = n.layer;
+        document.getElementById('inspectorHeatmap').scrollIntoView({behavior:'smooth'});
+        setInspectorTab('heatmap', document.querySelector('.inspector-tab'));
+        showToast('info', `Selected ${n.label || 'node'}`);
+        return;
+      }
+    }
+  });
+  // NEW v1.4: Mouse-move handler for centroid dragging
+  canvas.addEventListener('mousemove', (e) => {
+    if (STATE.draggingCentroid < 0) return;
+    const rect = canvas.getBoundingClientRect();
+    const cx = e.clientX - rect.left, cy = e.clientY - rect.top;
+    const cl = STATE.typeData?.clustering;
+    if (!cl || !cl.centroids) return;
+    // Convert canvas coords back to data coords
+    const W = canvas.clientWidth, H = canvas.clientHeight;
+    const points = cl.points || [];
+    const cents = cl.centroids;
+    const allPts = [...points.map(p => [p[0] || 0, p[1] || 0]),
+                     ...cents.map(c => [c[0] || 0, c[1] || 0])];
+    const xs = allPts.map(p => p[0]), ys = allPts.map(p => p[1]);
+    const xMin = Math.min(...xs), xMax = Math.max(...xs);
+    const yMin = Math.min(...ys), yMax = Math.max(...ys);
+    const pad = 40;
+    const dx = xMin + (cx - pad) / Math.max(1, W - 2*pad) * (xMax - xMin);
+    const dy = yMin + (cy - pad) / Math.max(1, H - 2*pad) * (yMax - yMin);
+    // Update the centroid's first 2 dims
+    cl.centroids[STATE.draggingCentroid][0] = dx;
+    cl.centroids[STATE.draggingCentroid][1] = dy;
+    drawCanvas();
+  });
+  // NEW v1.4: Release centroid on mouseup
+  window.addEventListener('mouseup', () => {
+    if (STATE.draggingCentroid >= 0) {
+      STATE.draggingCentroid = -1;
+      drawCanvas();
+    }
+  });
+}
+
+function setupMinimap() {
+  // periodic redraw
+  setInterval(drawMinimap, 500);
+}
+
+function resizeCanvas() {
+  const dpr = window.devicePixelRatio || 1;
+  for (const c of [canvas, minimapCanvas]) {
+    if (!c) continue;
+    c.width = c.clientWidth * dpr;
+    c.height = c.clientHeight * dpr;
+    const cx = c.getContext('2d');
+    if (cx) cx.scale(dpr, dpr);
+  }
+}
+
+function zoomBy(f) {
+  STATE.zoom *= f;
+  STATE.zoom = Math.max(0.3, Math.min(3, STATE.zoom));
+  drawCanvas();
+}
+
+function resetView() {
+  STATE.zoom = 1.0; STATE.pan = {x: 0, y: 0};
+  drawCanvas();
+  showToast('info', 'View reset');
+}
+
+function setRenderMode(mode) {
+  STATE.renderMode = mode;
+  ['Full', 'Summary', 'Block'].forEach(m => {
+    document.getElementById('mode' + m).classList.toggle('active', m.toLowerCase() === mode);
+  });
+  drawCanvas();
+}
+
+async function setMode(mode) {
+  STATE.viewMode = mode;
+  document.getElementById('mode2d').classList.toggle('active', mode === '2d');
+  document.getElementById('mode3d').classList.toggle('active', mode === '3d');
+  if (mode === '3d') {
+    document.getElementById('archCanvas').style.display = 'none';
+    document.getElementById('threeCanvas').style.display = 'block';
+    showLoading(true);
+    try { await initThree(); } catch (e) { showToast('error', '3D init failed: ' + e.message); }
+    showLoading(false);
+  } else {
+    document.getElementById('archCanvas').style.display = 'block';
+    document.getElementById('threeCanvas').style.display = 'none';
+    if (STATE.threeScene) { cancelAnimationFrame(STATE.threeScene._raf); STATE.threeScene = null; }
+    drawCanvas();
+  }
+}
+
+function showLoading(show) {
+  document.getElementById('canvasLoading').classList.toggle('active', show);
+}
+
+function toggleAnim() {
+  STATE.animating = !STATE.animating;
+  document.getElementById('animBtn').textContent = STATE.animating ? '⏸' : '▶';
+  if (STATE.animating) animateForwardPass();
+}
+
+function animateForwardPass() {
+  if (!STATE.animating) return;
+  let layer = 0;
+  const step = () => {
+    if (!STATE.animating) return;
+    STATE.activeLayerIdx = layer;
+    drawCanvas();
+    layer++;
+    if (layer >= STATE.layers.length + 1) {
+      STATE.animating = false;
+      STATE.activeLayerIdx = -1;
+      document.getElementById('animBtn').textContent = '▶';
+      drawCanvas();
+      return;
+    }
+    setTimeout(step, 350);
+  };
+  step();
+}
+
+// ============================================================================
+// RENDERER DISPATCH (per-model-type)
+// ============================================================================
+function drawCanvas() {
+  if (!ctx) return;
+  const W = canvas.clientWidth, H = canvas.clientHeight;
+  ctx.clearRect(0, 0, W, H);
+  ctx.save();
+  ctx.translate(STATE.pan.x, STATE.pan.y);
+  ctx.scale(STATE.zoom, STATE.zoom);
+
+  nodePositions = [];
+  const renderer = STATE.typeInfo?.renderer || 'generic';
+  // Dispatch
+  try {
+    if (renderer === 'mlp' || renderer === 'generic') drawMLP(W, H);
+    else if (renderer === 'transformer') drawTransformer(W, H);
+    else if (renderer === 'decision_tree') drawDecisionTree(W, H);
+    else if (renderer === 'gradient_boosting') drawEnsemble(W, H);
+    else if (renderer === 'kmeans') drawKMeans(W, H);
+    else if (renderer === 'svm') drawSVM(W, H);
+    else if (renderer === 'naive_bayes') drawNaiveBayes(W, H);
+    else if (renderer === 'pca') drawPCA(W, H);
+    else if (renderer === 'cnn') drawCNN(W, H);
+    else if (renderer === 'autoencoder') drawAutoencoder(W, H);
+    else if (renderer === 'rl') drawRL(W, H);
+    else if (renderer === 'moe') drawMoE(W, H);
+    else drawMLP(W, H);
+  } catch (e) {
+    ctx.fillStyle = '#f87171';
+    ctx.font = '12px monospace';
+    ctx.fillText('Renderer error: ' + e.message, 20, 30);
+  }
+  ctx.restore();
+  drawMinimap();
+}
+
+function colorForWeight(w, min, max) {
+  if (w === undefined || w === null || isNaN(w)) return 'rgba(110, 118, 129, 0.3)';
+  const range = Math.max(1e-9, max - min);
+  const mag = Math.max(-1, Math.min(1, (w - min) / range * 2 - 1));
+  if (mag > 0) {
+    return `rgba(96, 165, 250, ${0.15 + Math.abs(mag) * 0.85})`;
+  } else {
+    return `rgba(244, 114, 182, ${0.15 + Math.abs(mag) * 0.85})`;
+  }
+}
+
+function getCss(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+// ---- MLP / generic neural network renderer -----------------------------
+function drawMLP(W, H) {
+  const layers = STATE.layers;
+  if (!layers.length) {
+    ctx.fillStyle = getCss('--text-3');
+    ctx.font = '14px sans-serif';
+    ctx.fillText('No weights to display', 20, 30);
+    return;
+  }
+  const nCols = layers.length + 1;
+  const colW = (W - 80) / nCols;
+  layers.forEach((L, i) => {
+    const x = 40 + colW * (i + 1);
+    const inN = Math.min(L.shape[0], STATE.renderMode === 'full' ? 16 : 6);
+    const outN = Math.min(L.shape[1], STATE.renderMode === 'full' ? 16 : 6);
+    // edges first
+    const maxEdges = STATE.renderMode === 'full' ? 60 : 18;
+    for (let e = 0; e < maxEdges; e++) {
+      const a = e % inN, b = (e * 7) % outN;
+      const y1 = H / 2 - (inN * 22) / 2 + a * 22 + 11;
+      const y2 = H / 2 - (outN * 22) / 2 + b * 22 + 11;
+      const wIdx = (a * L.shape[1] + b) % L.weights.length;
+      const w = L.weights ? L.weights[wIdx] : 0;
+      const isActive = STATE.activeLayerIdx === i;
+      ctx.strokeStyle = colorForWeight(w, L.min, L.max);
+      ctx.lineWidth = Math.abs(w) * 1.5 + 0.2;
+      ctx.globalAlpha = isActive ? 0.85 : 0.35;
+      ctx.beginPath();
+      ctx.moveTo(x - colW * 0.4 + 6, y1);
+      ctx.lineTo(x + colW * 0.4 - 6, y2);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1.0;
+    // input nodes
+    for (let k = 0; k < inN; k++) {
+      const y = H / 2 - (inN * 22) / 2 + k * 22 + 11;
+      const w = L.weights ? L.weights[k * Math.floor(L.weights.length / Math.max(1, inN))] : 0;
+      ctx.fillStyle = colorForWeight(w, L.min, L.max);
+      ctx.beginPath(); ctx.arc(x - colW * 0.4, y, 6, 0, Math.PI * 2); ctx.fill();
+      if (k === 0) {
+        ctx.fillStyle = getCss('--text-3'); ctx.font = '9px monospace';
+        ctx.fillText(L.name, x - colW * 0.4 - 30, y - 18);
+      }
+      nodePositions.push({sx: x - colW * 0.4, sy: y, layer: i, idx: k, label: L.name + '[' + k + ']'});
+    }
+    // output nodes
+    for (let k = 0; k < outN; k++) {
+      const y = H / 2 - (outN * 22) / 2 + k * 22 + 11;
+      const w = L.weights ? L.weights[k * Math.floor(L.weights.length / Math.max(1, outN))] : 0;
+      const isActive = STATE.activeLayerIdx === i + 1;
+      ctx.fillStyle = colorForWeight(w, L.min, L.max);
+      if (isActive) {
+        ctx.strokeStyle = getCss('--accent'); ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(x + colW * 0.4, y, 9, 0, Math.PI * 2); ctx.stroke();
+      }
+      ctx.beginPath(); ctx.arc(x + colW * 0.4, y, 6, 0, Math.PI * 2); ctx.fill();
+      nodePositions.push({sx: x + colW * 0.4, sy: y, layer: i + 1, idx: k, label: 'out[' + k + ']'});
+    }
+  });
+}
+
+// ---- Transformer renderer (token stream + attention matrix) ------------
+function drawTransformer(W, H) {
+  const tokens = STATE.typeData?.attention?.tokens || ['the', 'quick', 'brown', 'fox', 'jumps'];
+  const heads = STATE.typeData?.attention?.heads || [];
+  const nTokens = Math.min(tokens.length, 12);
+  const tokenH = 28;
+  const startY = 70;
+  const selectedHead = STATE.selectedAttentionHead || 0;
+  // Token row at top
+  ctx.fillStyle = getCss('--text-3');
+  ctx.font = '9px sans-serif';
+  ctx.fillText('TOKENS', 30, 30);
+  ctx.font = '11px monospace';
+  for (let i = 0; i < nTokens; i++) {
+    const x = 30 + i * 70;
+    // token box
+    ctx.fillStyle = 'rgba(94, 234, 212, 0.1)';
+    ctx.strokeStyle = getCss('--accent');
+    ctx.lineWidth = 1;
+    roundRect(ctx, x, startY, 60, tokenH, 4);
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = getCss('--text');
+    ctx.fillText(tokens[i], x + 8, startY + 18);
+    nodePositions.push({sx: x + 30, sy: startY + 14, layer: 0, idx: i, label: 'token: ' + tokens[i]});
+  }
+  // Attention matrix below — uses selectedHead
+  const matrixY = startY + tokenH + 30;
+  const cellSize = Math.min(40, (W - 200) / nTokens);
+  ctx.fillStyle = getCss('--text-3'); ctx.font = '9px sans-serif';
+  ctx.fillText(`ATTENTION HEAD ${selectedHead}`, 30, matrixY - 8);
+  ctx.fillStyle = getCss('--accent'); ctx.font = '8px monospace';
+  ctx.fillText('💡 click a head below to switch', W - 200, matrixY - 8);
+  if (heads.length > selectedHead) {
+    const head = heads[selectedHead];
+    for (let i = 0; i < nTokens; i++) {
+      for (let j = 0; j < nTokens; j++) {
+        const v = head[i]?.[j] || 0;
+        const x = 30 + j * cellSize;
+        const y = matrixY + i * cellSize;
+        // Use a richer color scheme: stronger = brighter teal
+        ctx.fillStyle = `rgba(94, 234, 212, ${Math.min(1, v * 1.5)})`;
+        ctx.fillRect(x, y, cellSize - 1, cellSize - 1);
+        // Border on high-attention cells
+        if (v > 0.3) {
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(x, y, cellSize - 1, cellSize - 1);
+        }
+      }
+    }
+    // Axis labels (tokens on x and y)
+    ctx.fillStyle = getCss('--text-3'); ctx.font = '8px monospace';
+    for (let i = 0; i < nTokens; i++) {
+      const x = 30 + i * cellSize + cellSize/2 - 8;
+      ctx.fillText(tokens[i]?.slice(0, 4) || 't' + i, x, matrixY - 4);
+      ctx.fillText(tokens[i]?.slice(0, 4) || 't' + i, 30 - 22, matrixY + i * cellSize + cellSize/2 + 3);
+    }
+  }
+  // Head selector (clickable)
+  const headY = matrixY + nTokens * cellSize + 30;
+  ctx.fillStyle = getCss('--text-3'); ctx.font = '9px sans-serif';
+  ctx.fillText('HEADS', 30, headY - 8);
+  const nHeads = heads.length || 4;
+  const headColors = ['#5eead4', '#c084fc', '#f472b6', '#fb923c', '#60a5fa', '#4ade80'];
+  for (let h = 0; h < nHeads; h++) {
+    const x = 30 + h * 50;
+    const isSelected = h === selectedHead;
+    if (isSelected) {
+      ctx.shadowColor = headColors[h % headColors.length];
+      ctx.shadowBlur = 8;
+    }
+    ctx.fillStyle = isSelected ? headColors[h % headColors.length] : 'rgba(94, 234, 212, 0.2)';
+    roundRect(ctx, x, headY, 40, 24, 4);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = isSelected ? getCss('--bg-0') : getCss('--text-3');
+    ctx.font = 'bold 10px monospace';
+    ctx.fillText('h' + h, x + 12, headY + 16);
+    // Register as clickable
+    nodePositions.push({
+      sx: x + 20, sy: headY + 12, layer: 2, idx: h,
+      label: 'attention head ' + h, isHead: true, headIdx: h,
+    });
+  }
+  // Aggregate attention pattern (top tokens for selected head)
+  if (heads.length > selectedHead) {
+    const summaryY = headY + 50;
+    ctx.fillStyle = getCss('--text-3'); ctx.font = '9px sans-serif';
+    ctx.fillText('TOP ATTENTIONS', 30, summaryY - 8);
+    // Find the strongest attention pairs
+    const pairs = [];
+    const head = heads[selectedHead];
+    for (let i = 0; i < nTokens; i++) {
+      for (let j = 0; j < nTokens; j++) {
+        if (i !== j) pairs.push({from: i, to: j, v: head[i]?.[j] || 0});
+      }
+    }
+    pairs.sort((a, b) => b.v - a.v);
+    const top = pairs.slice(0, 5);
+    ctx.font = '10px monospace';
+    top.forEach((p, i) => {
+      const y = summaryY + i * 16;
+      const bar = p.v * 200;
+      ctx.fillStyle = headColors[selectedHead % headColors.length] + '66';
+      ctx.fillRect(120, y - 8, bar, 10);
+      ctx.fillStyle = getCss('--text');
+      ctx.fillText(`${tokens[p.from]?.slice(0,8)} → ${tokens[p.to]?.slice(0,8)}`, 30, y);
+      ctx.fillStyle = getCss('--text-3');
+      ctx.fillText((p.v * 100).toFixed(1) + '%', 330, y);
+    });
+  }
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+// ---- Decision tree renderer (tidy tree layout) --------------------------
+function drawDecisionTree(W, H) {
+  const tree = STATE.typeData?.tree;
+  if (!tree) { drawMLP(W, H); return; }
+  const nodes = tree.node_count || 0;
+  const levels = Math.min(Math.ceil(Math.log2(nodes + 1)), 6);
+  const levelH = (H - 80) / Math.max(levels, 1);
+  // simple recursive layout
+  const positions = new Array(nodes);
+  function layout(idx, depth, xMin, xMax) {
+    if (idx < 0 || idx >= nodes || depth >= levels) return;
+    const xMid = (xMin + xMax) / 2;
+    positions[idx] = {x: xMid, y: 40 + depth * levelH, depth};
+    const cl = tree.children_left[idx], cr = tree.children_right[idx];
+    if (cl > 0 && cl < nodes) layout(cl, depth + 1, xMin, xMid);
+    if (cr > 0 && cr < nodes) layout(cr, depth + 1, xMid, xMax);
+  }
+  layout(0, 0, 30, W - 30);
+  // draw edges
+  ctx.strokeStyle = 'rgba(110, 118, 129, 0.4)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i < nodes; i++) {
+    if (!positions[i]) continue;
+    const cl = tree.children_left[i], cr = tree.children_right[i];
+    if (cl > 0 && cl < nodes && positions[cl]) {
+      ctx.beginPath();
+      ctx.moveTo(positions[i].x, positions[i].y);
+      ctx.lineTo(positions[cl].x, positions[cl].y);
+      ctx.stroke();
+    }
+    if (cr > 0 && cr < nodes && positions[cr]) {
+      ctx.beginPath();
+      ctx.moveTo(positions[i].x, positions[i].y);
+      ctx.lineTo(positions[cr].x, positions[cr].y);
+      ctx.stroke();
+    }
+  }
+  // draw nodes
+  for (let i = 0; i < nodes; i++) {
+    if (!positions[i]) continue;
+    const isLeaf = tree.children_left[i] === -1;
+    const imp = tree.impurity?.[i] || 0;
+    ctx.fillStyle = isLeaf ? getCss('--good') : `rgba(94, 234, 212, ${1 - imp})`;
+    ctx.strokeStyle = isLeaf ? getCss('--good') : getCss('--accent');
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(positions[i].x, positions[i].y, isLeaf ? 5 : 8, 0, Math.PI * 2);
+    ctx.fill(); ctx.stroke();
+    nodePositions.push({sx: positions[i].x, sy: positions[i].y, layer: 0, idx: i, label: 'node ' + i});
+    // Feature label
+    if (!isLeaf && i < 12) {
+      ctx.fillStyle = getCss('--text-3'); ctx.font = '8px monospace';
+      const feat = tree.feature?.[i] || 0;
+      ctx.fillText(`f${feat}`, positions[i].x + 10, positions[i].y - 8);
+    }
+  }
+  // title
+  ctx.fillStyle = getCss('--text-3'); ctx.font = '9px sans-serif';
+  ctx.fillText(`DECISION TREE — ${nodes} nodes, max depth ${levels}`, 30, 25);
+}
+
+// ---- Ensemble (random forest / boosting) --------------------------------
+function drawEnsemble(W, H) {
+  const ens = STATE.typeData?.ensemble;
+  if (!ens) { drawMLP(W, H); return; }
+  const trees = ens.trees || [];
+  const nEst = ens.n_estimators || trees.length;
+  ctx.fillStyle = getCss('--text-3'); ctx.font = '9px sans-serif';
+  ctx.fillText(`ENSEMBLE — ${nEst} estimators (showing ${trees.length})`, 30, 25);
+  const cols = Math.min(trees.length, 4);
+  const rows = Math.ceil(trees.length / cols);
+  const cellW = (W - 60) / cols;
+  const cellH = (H - 60) / rows;
+  trees.forEach((t, i) => {
+    const col = i % cols, row = Math.floor(i / cols);
+    const x0 = 30 + col * cellW, y0 = 40 + row * cellH;
+    // Box
+    ctx.fillStyle = 'rgba(94, 234, 212, 0.04)';
+    ctx.strokeStyle = 'rgba(94, 234, 212, 0.2)';
+    ctx.lineWidth = 1;
+    roundRect(ctx, x0 + 5, y0 + 5, cellW - 10, cellH - 10, 6);
+    ctx.fill(); ctx.stroke();
+    // Mini tree
+    ctx.fillStyle = getCss('--text-3'); ctx.font = '8px monospace';
+    ctx.fillText(`tree_${i} (${t.node_count}n)`, x0 + 10, y0 + 18);
+    // Draw a tiny tree silhouette
+    const nodes = Math.min(t.node_count, 15);
+    for (let n = 0; n < nodes; n++) {
+      const nx = x0 + 20 + (n % 5) * (cellW - 40) / 5;
+      const ny = y0 + 30 + Math.floor(n / 5) * (cellH - 50) / 3;
+      ctx.fillStyle = `rgba(94, 234, 212, ${0.3 + Math.random() * 0.4})`;
+      ctx.beginPath(); ctx.arc(nx, ny, 3, 0, Math.PI * 2); ctx.fill();
+    }
+  });
+}
+
+// ---- KMeans clustering --------------------------------------------------
+function drawKMeans(W, H) {
+  const cl = STATE.typeData?.clustering;
+  if (!cl) { drawMLP(W, H); return; }
+  const centroids = cl.centroids || [];
+  const points = cl.points || [];
+  const nClusters = cl.n_clusters || centroids.length;
+  // 2D projection (use first 2 features)
+  const allPts = [...points.map(p => [p[0] || 0, p[1] || 0]),
+                   ...centroids.map(c => [c[0] || 0, c[1] || 0])];
+  if (!allPts.length) { drawMLP(W, H); return; }
+  const xs = allPts.map(p => p[0]), ys = allPts.map(p => p[1]);
+  const xMin = Math.min(...xs), xMax = Math.max(...xs);
+  const yMin = Math.min(...ys), yMax = Math.max(...ys);
+  const pad = 40;
+  const toX = v => pad + (v - xMin) / Math.max(0.001, xMax - xMin) * (W - 2*pad);
+  const toY = v => pad + (v - yMin) / Math.max(0.001, yMax - yMin) * (H - 2*pad);
+  const fromX = px => xMin + (px - pad) / Math.max(1, W - 2*pad) * (xMax - xMin);
+  const fromY = py => yMin + (py - pad) / Math.max(1, H - 2*pad) * (yMax - yMin);
+  const colors = ['#5eead4', '#c084fc', '#f472b6', '#fb923c', '#60a5fa', '#4ade80', '#fbbf24', '#f87171'];
+  // Draw points colored by label (re-assign to nearest centroid if user dragged)
+  if (cl.labels && points.length) {
+    points.forEach((p, i) => {
+      // Find nearest centroid (so dragging updates colors live)
+      let nearest = 0, minDist = Infinity;
+      centroids.forEach((c, ci) => {
+        const dx = (p[0] || 0) - c[0], dy = (p[1] || 0) - c[1];
+        const d = dx*dx + dy*dy;
+        if (d < minDist) { minDist = d; nearest = ci; }
+      });
+      ctx.fillStyle = colors[nearest % colors.length] + '88';
+      ctx.beginPath(); ctx.arc(toX(p[0]), toY(p[1]), 3, 0, Math.PI * 2); ctx.fill();
+      nodePositions.push({sx: toX(p[0]), sy: toY(p[1]), layer: 0, idx: i, label: 'pt' + i + ' (c' + nearest + ')'});
+    });
+  }
+  // Draw centroids as larger stars (draggable)
+  centroids.forEach((c, i) => {
+    const x = toX(c[0]), y = toY(c[1]);
+    const isDragging = STATE.draggingCentroid === i;
+    // Glow on hover/drag
+    if (isDragging) {
+      ctx.shadowColor = colors[i % colors.length];
+      ctx.shadowBlur = 16;
+    }
+    ctx.fillStyle = colors[i % colors.length];
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+    drawStar(ctx, x, y, isDragging ? 11 : 8, 5);
+    ctx.fill(); ctx.stroke();
+    ctx.shadowBlur = 0;
+    // Label
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 11px sans-serif';
+    ctx.fillText('c' + i, x + 12, y - 8);
+    // Re-assign points counter
+    if (cl.labels && points.length) {
+      const count = points.filter(p => {
+        let nearest = 0, minDist = Infinity;
+        centroids.forEach((c, ci) => {
+          const d = (p[0]-c[0])**2 + (p[1]-c[1])**2;
+          if (d < minDist) { minDist = d; nearest = ci; }
+        });
+        return nearest === i;
+      }).length;
+      ctx.fillStyle = colors[i % colors.length]; ctx.font = '9px monospace';
+      ctx.fillText(`${count} pts`, x + 12, y + 6);
+    }
+    // Store drag info on nodePositions
+    nodePositions.push({
+      sx: x, sy: y, layer: 1, idx: i, label: 'centroid ' + i,
+      isCentroid: true, centroidIdx: i,
+    });
+  });
+  // Title + interaction hint
+  ctx.fillStyle = getCss('--text-3'); ctx.font = '9px sans-serif';
+  ctx.fillText(`KMEANS — ${nClusters} clusters, ${points.length} points`, 30, 25);
+  ctx.fillStyle = getCss('--accent'); ctx.font = '9px monospace';
+  ctx.fillText('💡 drag any centroid to reassign points', 30, 40);
+}
+
+function drawStar(ctx, cx, cy, r, spikes) {
+  ctx.beginPath();
+  for (let i = 0; i < spikes * 2; i++) {
+    const angle = (i * Math.PI) / spikes - Math.PI / 2;
+    const rad = i % 2 === 0 ? r : r * 0.5;
+    const x = cx + Math.cos(angle) * rad;
+    const y = cy + Math.sin(angle) * rad;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+}
+
+// ---- SVM with decision boundary -----------------------------------------
+function drawSVM(W, H) {
+  const svm = STATE.typeData?.svm;
+  if (!svm) { drawMLP(W, H); return; }
+  // Use contour mesh if present
+  if (svm.contour) {
+    const xx = svm.contour.xx, yy = svm.contour.yy, Z = svm.contour.Z;
+    const rows = xx.length, cols = xx[0].length;
+    const xMin = Math.min(...xx[0]), xMax = Math.max(...xx[0]);
+    const yMin = Math.min(...yy.map(r => r[0])), yMax = Math.max(...yy.map(r => r[0]));
+    const pad = 30;
+    const cellW = (W - 2*pad) / cols, cellH = (H - 2*pad) / rows;
+    const classes = [...new Set(Z.flat())].sort();
+    const colors = ['#5eead4', '#c084fc', '#fb923c', '#60a5fa', '#4ade80'];
+    for (let i = 0; i < rows; i++) {
+      for (let j = 0; j < cols; j++) {
+        const v = Z[i][j];
+        const idx = classes.indexOf(v);
+        ctx.fillStyle = colors[idx % colors.length] + '33';
+        ctx.fillRect(pad + j * cellW, pad + i * cellH, cellW + 1, cellH + 1);
+      }
+    }
+  }
+  // Draw support vectors
+  const svs = svm.support_vectors || [];
+  const pad = 30;
+  svs.forEach((sv, i) => {
+    const x = pad + (sv[0] || 0) * 30 + W / 4;
+    const y = pad + (sv[1] || 0) * 30 + H / 4;
+    ctx.fillStyle = 'rgba(244, 114, 182, 0.7)';
+    ctx.strokeStyle = getCss('--pink'); ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    nodePositions.push({sx: x, sy: y, layer: 0, idx: i, label: 'SV' + i});
+  });
+  ctx.fillStyle = getCss('--text-3'); ctx.font = '9px sans-serif';
+  ctx.fillText(`SVM — ${svm.n_support} support vectors`, 30, 25);
+}
+
+// ---- Naive Bayes per-class distributions --------------------------------
+function drawNaiveBayes(W, H) {
+  const nb = STATE.typeData?.naive_bayes;
+  if (!nb) { drawMLP(W, H); return; }
+  const classes = nb.classes || [0, 1, 2];
+  const theta = nb.theta_ || [];
+  const colors = ['#5eead4', '#c084fc', '#fb923c'];
+  ctx.fillStyle = getCss('--text-3'); ctx.font = '9px sans-serif';
+  ctx.fillText('NAIVE BAYES — per-class feature means', 30, 25);
+  // Grouped bar chart
+  const nFeatures = theta[0]?.length || 4;
+  const nClasses = classes.length;
+  const chartH = H - 100, chartW = W - 80;
+  const groupW = chartW / nFeatures;
+  const barW = groupW / (nClasses + 1);
+  for (let f = 0; f < nFeatures; f++) {
+    for (let c = 0; c < nClasses; c++) {
+      const val = theta[c]?.[f] || 0;
+      const barH = Math.abs(val) * 30;
+      const x = 40 + f * groupW + c * barW;
+      const y = H - 60 - barH;
+      ctx.fillStyle = colors[c % colors.length];
+      ctx.fillRect(x, y, barW - 2, barH);
+    }
+    ctx.fillStyle = getCss('--text-3'); ctx.font = '9px monospace';
+    ctx.fillText('f' + f, 40 + f * groupW + 8, H - 45);
+  }
+  // Legend
+  classes.forEach((cls, i) => {
+    ctx.fillStyle = colors[i % colors.length];
+    ctx.fillRect(W - 100, 40 + i * 18, 12, 12);
+    ctx.fillStyle = getCss('--text');
+    ctx.font = '10px monospace';
+    ctx.fillText('class ' + cls, W - 84, 50 + i * 18);
+  });
+}
+
+// ---- PCA — projected point cloud ----------------------------------------
+function drawPCA(W, H) {
+  const pca = STATE.typeData?.pca;
+  if (!pca) { drawMLP(W, H); return; }
+  const proj = pca.projected || [];
+  const evr = pca.explained_variance_ratio_ || [];
+  const colors = ['#5eead4', '#c084fc', '#fb923c'];
+  ctx.fillStyle = getCss('--text-3'); ctx.font = '9px sans-serif';
+  ctx.fillText(`PCA — ${proj.length} points, top 3 components`, 30, 25);
+  // 3 sub-charts: PC1 vs PC2, PC1 vs PC3, PC2 vs PC3
+  const pairs = [[0,1], [0,2], [1,2]];
+  const subW = (W - 80) / 3;
+  pairs.forEach((pair, idx) => {
+    const x0 = 40 + idx * subW, y0 = 50;
+    const subH = H - 100;
+    // Box
+    ctx.strokeStyle = 'rgba(94, 234, 212, 0.2)'; ctx.lineWidth = 1;
+    ctx.strokeRect(x0, y0, subW - 10, subH);
+    // Labels
+    ctx.fillStyle = getCss('--text-3'); ctx.font = '8px monospace';
+    ctx.fillText(`PC${pair[0]+1} vs PC${pair[1]+1} (${((evr[pair[0]] || 0) * 100).toFixed(1)}% / ${((evr[pair[1]] || 0) * 100).toFixed(1)}%)`, x0 + 5, y0 + 12);
+    // Points
+    if (proj.length) {
+      const xs = proj.map(p => p[pair[0]] || 0);
+      const ys = proj.map(p => p[pair[1]] || 0);
+      const xMin = Math.min(...xs), xMax = Math.max(...xs);
+      const yMin = Math.min(...ys), yMax = Math.max(...ys);
+      const toX = v => x0 + 15 + (v - xMin) / Math.max(0.001, xMax - xMin) * (subW - 40);
+      const toY = v => y0 + subH - 15 - (v - yMin) / Math.max(0.001, yMax - yMin) * (subH - 30);
+      proj.forEach((p, i) => {
+        ctx.fillStyle = colors[i % colors.length] + 'aa';
+        ctx.beginPath(); ctx.arc(toX(p[pair[0]]), toY(p[pair[1]]), 2, 0, Math.PI * 2); ctx.fill();
+      });
+    }
+  });
+}
+
+// ---- CNN feature map tiles ----------------------------------------------
+function drawCNN(W, H) {
+  const cnn = STATE.typeData?.cnn;
+  if (!cnn) { drawMLP(W, H); return; }
+  const layers = cnn.conv_layers || [];
+  ctx.fillStyle = getCss('--text-3'); ctx.font = '9px sans-serif';
+  ctx.fillText(`CNN — ${layers.length} conv layers`, 30, 25);
+  const colW = (W - 60) / layers.length;
+  layers.forEach((L, i) => {
+    const x0 = 30 + i * colW;
+    const channels = L.channels || 8;
+    const size = L.size || 14;
+    const acts = L.activations || [];
+    // Draw channel tiles
+    const tileW = 16, tileH = 16;
+    const gridCols = Math.min(Math.ceil(Math.sqrt(channels)), 8);
+    for (let c = 0; c < Math.min(channels, 32); c++) {
+      const col = c % gridCols, row = Math.floor(c / gridCols);
+      const v = acts[c % acts.length] || 0;
+      const x = x0 + 20 + col * (tileW + 2);
+      const y = 60 + row * (tileH + 2);
+      ctx.fillStyle = `rgba(94, 234, 212, ${v})`;
+      ctx.fillRect(x, y, tileW, tileH);
+      ctx.strokeStyle = 'rgba(94, 234, 212, 0.2)';
+      ctx.strokeRect(x, y, tileW, tileH);
+    }
+    // Label
+    ctx.fillStyle = getCss('--text-3'); ctx.font = '9px monospace';
+    ctx.fillText(L.name, x0 + 20, 50);
+    ctx.fillText(`${channels}ch × ${size}`, x0 + 20, H - 30);
+  });
+}
+
+// ---- Autoencoder (encoder → bottleneck → decoder) -----------------------
+function drawAutoencoder(W, H) {
+  const ae = STATE.typeData?.autoencoder;
+  if (!ae) { drawMLP(W, H); return; }
+  const encDims = ae.encoder_dims || [4, 8, 16, 8];
+  const decDims = ae.decoder_dims || [8, 16, 8, 4];
+  const allDims = [...encDims, ...decDims.slice(1)];
+  const pad = 30;
+  const colW = (W - 2*pad) / allDims.length;
+  const colors = ['#60a5fa', '#5eead4', '#c084fc', '#fb923c'];
+  allDims.forEach((dim, i) => {
+    const x = pad + i * colW + colW/2;
+    const isBottleneck = i === encDims.length - 1;
+    const nNodes = Math.min(dim, 12);
+    for (let n = 0; n < nNodes; n++) {
+      const y = H/2 - (nNodes * 18) / 2 + n * 18 + 9;
+      const r = isBottleneck ? 7 : 5;
+      ctx.fillStyle = isBottleneck ? getCss('--accent') : colors[i % colors.length];
+      ctx.globalAlpha = 0.6 + Math.random() * 0.4;
+      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+      nodePositions.push({sx: x, sy: y, layer: i, idx: n, label: `L${i}[${n}]`});
+    }
+    ctx.globalAlpha = 1;
+    // Label
+    ctx.fillStyle = isBottleneck ? getCss('--accent') : getCss('--text-3');
+    ctx.font = isBottleneck ? 'bold 10px monospace' : '9px monospace';
+    ctx.fillText(`d${i}: ${dim}`, x - 20, H - 20);
+    if (isBottleneck) {
+      ctx.fillStyle = getCss('--accent');
+      ctx.fillText('BOTTLENECK', x - 35, 30);
+    }
+    // Edges
+    if (i > 0) {
+      const prevN = Math.min(allDims[i-1], 8);
+      const curN = Math.min(dim, 8);
+      for (let e = 0; e < 20; e++) {
+        const a = e % prevN, b = e % curN;
+        const x1 = pad + (i-1) * colW + colW/2;
+        const x2 = x;
+        const y1 = H/2 - (prevN * 18) / 2 + a * 18 + 9;
+        const y2 = H/2 - (curN * 18) / 2 + b * 18 + 9;
+        ctx.strokeStyle = `rgba(94, 234, 212, ${0.1 + Math.random() * 0.2})`;
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+        ctx.stroke();
+      }
+    }
+  });
+  ctx.fillStyle = getCss('--text-3'); ctx.font = '9px sans-serif';
+  ctx.fillText(`AUTOENCODER — bottleneck dim ${ae.bottleneck_dim}`, 30, 15);
+}
+
+// ---- RL environment + Q-value bars --------------------------------------
+function drawRL(W, H) {
+  const rl = STATE.typeData?.rl;
+  if (!rl) { drawMLP(W, H); return; }
+  const qTable = rl.q_table || [];
+  const nStates = rl.n_states || qTable.length || 16;
+  const nActions = rl.n_actions || qTable[0]?.length || 4;
+  // Left: environment grid
+  const gridSize = Math.ceil(Math.sqrt(nStates));
+  const gridPx = Math.min(H - 80, 300);
+  const cellPx = gridPx / gridSize;
+  ctx.fillStyle = getCss('--text-3'); ctx.font = '9px sans-serif';
+  ctx.fillText('ENVIRONMENT', 30, 25);
+  for (let s = 0; s < nStates; s++) {
+    const r = Math.floor(s / gridSize), c = s % gridSize;
+    const x = 30 + c * cellPx, y = 40 + r * cellPx;
+    const qvals = qTable[s] || [];
+    const maxQ = Math.max(...qvals);
+    ctx.fillStyle = maxQ > 0 ? `rgba(94, 234, 212, ${maxQ})` :
+                    maxQ < 0 ? `rgba(248, 113, 113, ${-maxQ})` : 'rgba(255,255,255,0.05)';
+    ctx.fillRect(x, y, cellPx - 1, cellPx - 1);
+    ctx.strokeStyle = 'rgba(94, 234, 212, 0.2)';
+    ctx.strokeRect(x, y, cellPx - 1, cellPx - 1);
+  }
+  // Right: Q-value bars for selected state
+  const qX = 30 + gridPx + 30;
+  ctx.fillStyle = getCss('--text-3'); ctx.font = '9px sans-serif';
+  ctx.fillText('Q-VALUES (state 0)', qX, 25);
+  const sampleQ = qTable[0] || Array(nActions).fill(0);
+  const maxQ = Math.max(...sampleQ.map(Math.abs));
+  const barH = (H - 80) / nActions;
+  sampleQ.forEach((q, a) => {
+    const y = 40 + a * barH;
+    const w = (q / Math.max(0.001, maxQ)) * 120;
+    ctx.fillStyle = q > 0 ? getCss('--good') : getCss('--danger');
+    if (w > 0) ctx.fillRect(qX, y, w, barH - 4);
+    else ctx.fillRect(qX + w, y, -w, barH - 4);
+    ctx.fillStyle = getCss('--text'); ctx.font = '10px monospace';
+    ctx.fillText(`a${a}: ${q.toFixed(3)}`, qX + 130, y + barH/2 + 4);
+  });
+}
+
+// ---- MoE: router heatmap + expert tiles --------------------------------
+function drawMoE(W, H) {
+  const moe = STATE.typeData?.moe;
+  if (!moe) { drawMLP(W, H); return; }
+  const experts = moe.experts || [];
+  const routing = moe.routing || [];
+  ctx.fillStyle = getCss('--text-3'); ctx.font = '9px sans-serif';
+  ctx.fillText(`MIXTURE OF EXPERTS — ${experts.length} experts, top-${moe.top_k || 2}`, 30, 25);
+  // Expert tiles in a grid
+  const cols = 4;
+  const rows = Math.ceil(experts.length / cols);
+  const tileW = (W - 80) / cols, tileH = (H - 80) / rows;
+  experts.forEach((ex, i) => {
+    const col = i % cols, row = Math.floor(i / cols);
+    const x = 40 + col * tileW, y = 50 + row * tileH;
+    const util = ex.utilization || routing[i] || 0;
+    // Tile background colored by utilization
+    ctx.fillStyle = `rgba(94, 234, 212, ${util * 0.8 + 0.1})`;
+    ctx.strokeStyle = util > 0.15 ? getCss('--accent') : 'rgba(94, 234, 212, 0.2)';
+    ctx.lineWidth = 1.5;
+    roundRect(ctx, x + 5, y + 5, tileW - 15, tileH - 15, 8);
+    ctx.fill(); ctx.stroke();
+    // Expert info
+    ctx.fillStyle = util > 0.15 ? getCss('--bg-0') : getCss('--text');
+    ctx.font = 'bold 11px monospace';
+    ctx.fillText(ex.name || 'expert_' + i, x + 15, y + 22);
+    ctx.font = '9px monospace';
+    ctx.fillStyle = util > 0.15 ? getCss('--bg-0') : getCss('--text-3');
+    ctx.fillText(`util: ${(util * 100).toFixed(1)}%`, x + 15, y + 38);
+    ctx.fillText(`params: ${ex.params_m?.toFixed(1) || '?'}M`, x + 15, y + 52);
+    // Util bar
+    ctx.fillStyle = util > 0.15 ? 'rgba(0,0,0,0.3)' : 'rgba(94, 234, 212, 0.3)';
+    ctx.fillRect(x + 15, y + tileH - 25, (tileW - 50) * util, 4);
+  });
+}
+
+// ---- Mini-map (overall view) --------------------------------------------
+function drawMinimap() {
+  if (!minimapCtx) return;
+  const W = minimapCanvas.clientWidth, H = minimapCanvas.clientHeight;
+  minimapCtx.clearRect(0, 0, W, H);
+  minimapCtx.fillStyle = 'rgba(94, 234, 212, 0.1)';
+  minimapCtx.fillRect(0, 0, W, H);
+  // Draw simplified node positions
+  nodePositions.forEach(n => {
+    minimapCtx.fillStyle = 'rgba(94, 234, 212, 0.7)';
+    minimapCtx.fillRect(n.sx / canvas.clientWidth * W - 1, n.sy / canvas.clientHeight * H - 1, 2, 2);
+  });
+  // Draw viewport indicator
+  const vw = (canvas.clientWidth / STATE.zoom) / canvas.clientWidth * W;
+  const vh = (canvas.clientHeight / STATE.zoom) / canvas.clientHeight * H;
+  const vx = -STATE.pan.x / canvas.clientWidth * W;
+  const vy = -STATE.pan.y / canvas.clientHeight * H;
+  minimapCtx.strokeStyle = getCss('--accent');
+  minimapCtx.lineWidth = 1;
+  minimapCtx.strokeRect(vx, vy, vw, vh);
+}
+
+// ============================================================================
+// Input panel
+// ============================================================================
+async function sendInput() {
+  const inp = document.getElementById('chatInput');
+  const val = inp.value.trim();
+  if (!val) return;
+  document.getElementById('sendBtn').disabled = true;
+  appendChat('user', 'input: ' + val);
+  STATE.tokensIn += val.length;
+  let result;
+  if (STATE.mode === 'live') {
+    result = await API.post('/api/predict', {input: val});
+    if (result?.type_data) STATE.typeData = result.type_data;
+  } else {
+    result = demoPredict(val);
+  }
+  STATE.lastOutput = result;
+  renderOutput(result, val);
+  document.getElementById('chatInput').value = '';
+  document.getElementById('sendBtn').disabled = false;
+  STATE.animating = true;
+  document.getElementById('animBtn').textContent = '⏸';
+  animateForwardPass();
+}
+
+function sendExample(val) {
+  document.getElementById('chatInput').value = val;
+  sendInput();
+}
+
+function sendRandom() {
+  const arr = Array.from({length: 4}, () => +(Math.random() * 10).toFixed(2));
+  sendExample('[' + arr.join(', ') + ']');
+}
+
+function appendChat(kind, text) {
+  const div = document.createElement('div');
+  div.className = 'chat-msg ' + kind;
+  div.innerHTML = '<div class="lbl">' + (kind === 'user' ? 'You' : 'Model') + '</div>' + escapeHtml(text);
+  const hist = document.getElementById('chatHistory');
+  hist.appendChild(div);
+  hist.scrollTop = hist.scrollHeight;
+}
+
+function clearChat() {
+  document.getElementById('chatHistory').innerHTML = '<div class="chat-msg pred"><div class="lbl">Welcome</div>History cleared.</div>';
+  showToast('success', 'Chat history cleared');
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+
+function demoPredict(input) {
+  const seed = input.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+  const r = (seed * 9301 + 49297) % 233280 / 233280;
+  const classes = ['setosa', 'versicolor', 'virginica'];
+  const idx = Math.floor(r * 3);
+  const conf = 0.6 + r * 0.39;
+  return {
+    prediction: idx, classes: classes,
+    proba: classes.map((_, i) => i === idx ? conf : (1 - conf) / 2),
+    confidence: conf, latency_ms: 4 + r * 8,
+    type_data: {renderer: STATE.typeInfo?.renderer || 'mlp'},
+  };
+}
+
+// ============================================================================
+// Output panel
+// ============================================================================
+function setOutputTab(name, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  ['prediction', 'explanation', 'health'].forEach(n => {
+    const el = document.getElementById('output' + n.charAt(0).toUpperCase() + n.slice(1));
+    if (el) el.style.display = n === name ? 'block' : 'none';
+  });
+}
+
+function renderOutput(result, input) {
+  if (!result) return;
+  const pred = result.prediction;
+  const className = (result.classes && typeof pred === 'number') ? result.classes[pred] : pred;
+  document.getElementById('predictionValue').textContent = className !== undefined ? className : '—';
+  document.getElementById('predictionLabel').textContent = 'input: ' + (input || '').slice(0, 60);
+  const conf = result.confidence || 0;
+  document.getElementById('confBar').style.width = (conf * 100) + '%';
+  document.getElementById('confVal').textContent = (conf * 100).toFixed(1) + '%';
+  document.getElementById('mLatency').innerHTML = (result.latency_ms || 0).toFixed(1) + '<span class="unit">ms</span>';
+  document.getElementById('mTps').textContent = (1000 / Math.max(1, result.latency_ms || 1)).toFixed(0);
+  document.getElementById('mActive').textContent = STATE.model.n_params ? Math.floor(STATE.model.n_params * conf) + ' / ' + STATE.model.n_params : '—';
+  document.getElementById('mSurprise').textContent = (Math.abs(0.5 - conf) * 2).toFixed(2);
+  STATE.tokensOut = String(className || '').length;
+  document.getElementById('sTokens').textContent = STATE.tokensIn + ' in / ' + STATE.tokensOut + ' out';
+  document.getElementById('sLatency').textContent = (result.latency_ms || 0).toFixed(1) + 'ms';
+  document.getElementById('sConf').textContent = (conf * 100).toFixed(1) + '%';
+  document.getElementById('sActive').textContent = (STATE.model.n_params ? Math.floor(STATE.model.n_params * conf) : '—') + ' / ' + (STATE.model.n_params || '—');
+  renderExplanation(result, input);
+}
+
+function renderExplanation(result, input) {
+  const el = document.getElementById('explanationList');
+  if (!STATE.layers.length) {
+    el.innerHTML = '<div style="color:var(--text-3);font-size:11px">No weight data available.</div>';
+    return;
+  }
+  const L0 = STATE.layers[0];
+  const inN = L0.shape[0];
+  const rows = [];
+  for (let i = 0; i < Math.min(inN, 6); i++) {
+    let max = 0;
+    const start = i * L0.shape[1];
+    for (let j = 0; j < L0.shape[1]; j++) {
+      const v = Math.abs(L0.weights[start + j] || 0);
+      if (v > max) max = v;
+    }
+    rows.push({name: 'feature_' + i, val: max});
+  }
+  rows.sort((a, b) => b.val - a.val);
+  const maxVal = rows[0] ? rows[0].val : 1;
+  el.innerHTML = rows.map(r => {
+    const color = r.val > 0 ? '#60a5fa' : '#f472b6';
+    return `<div class="explanation-row">
+      <span class="name">${r.name}</span>
+      <span class="bar"><span class="fill" style="width:${(r.val / maxVal * 100)}%; background:${color}"></span></span>
+      <span class="val">${r.val.toFixed(3)}</span>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================================
+// Weight inspector
+// ============================================================================
+function setInspectorTab(name, el) {
+  document.querySelectorAll('.inspector-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  ['Heatmap', 'Sliders', 'Sensitivity', 'History'].forEach(n => {
+    const el = document.getElementById('inspector' + n);
+    if (el) el.classList.toggle('active', n.toLowerCase() === name);
+  });
+  if (name === 'heatmap') drawHeatmap();
+  if (name === 'sliders') drawSliders();
+}
+
+function drawHeatmap() {
+  const container = document.getElementById('heatmapContainer');
+  const L = STATE.layers[STATE.selectedLayer] || STATE.layers[0];
+  if (!L) { container.innerHTML = '<div style="color:var(--text-3);font-size:11px">No layer selected</div>'; return; }
+  const w = L.weights || [];
+  const n = Math.min(w.length, 256);
+  const cols = Math.ceil(Math.sqrt(n));
+  const cells = [];
+  for (let i = 0; i < n; i++) {
+    const c = colorForWeight(w[i], L.min, L.max);
+    cells.push(`<div class="heatmap-cell" style="background:${c}" onclick="selectWeight(${i})" title="${L.name}[${i}] = ${w[i] ? w[i].toFixed(4) : 0}"></div>`);
+  }
+  container.innerHTML = `<div style="font-size:11px;color:var(--text-3);margin-bottom:6px">${L.name} — ${n} of ${L.n_params} weights</div><div class="heatmap" style="grid-template-columns:repeat(${cols}, 11px)">${cells.join('')}</div>`;
+}
+
+function selectWeight(idx) {
+  STATE.selectedWeight = idx;
+  setInspectorTab('sliders', document.querySelectorAll('.inspector-tab')[1]);
+}
+
+async function editWeight(layerIdx, flatIdx, newVal) {
+  if (STATE.mode === 'live') {
+    await API.post('/api/weights/edit', {layer_idx: layerIdx, flat_idx: flatIdx, new_value: newVal});
+  }
+  const list = document.getElementById('historyList');
+  const now = new Date();
+  const ts = now.toLocaleTimeString();
+  const L = STATE.layers[layerIdx];
+  if (L) {
+    const oldVal = L.weights[flatIdx] || 0;
+    L.weights[flatIdx] = newVal;
+    list.innerHTML = `<div class="history-row"><span class="ts">${ts}</span><span class="name">${L.name}[${flatIdx}]</span><span class="old">${oldVal.toFixed(3)}</span><span class="new">${newVal.toFixed(3)}</span></div>` + list.innerHTML;
+  }
+  drawHeatmap(); drawSliders();
+  showToast('success', `Weight edited: ${newVal.toFixed(3)}`);
+}
+
+function drawSliders() {
+  const container = document.getElementById('slidersContainer');
+  if (!STATE.layers.length) {
+    container.innerHTML = '<div style="color:var(--text-3);font-size:11px">No weights</div>';
+    return;
+  }
+  const L = STATE.layers[STATE.selectedLayer] || STATE.layers[0];
+  const w = L.weights || [];
+  const idxs = w.map((v, i) => ({v: Math.abs(v), i})).sort((a, b) => b.v - a.v).slice(0, 12);
+  const range = Math.max(0.1, L.max - L.min);
+  container.innerHTML = `<div style="font-size:11px;color:var(--text-3);margin-bottom:8px">Top-12 by |weight| in <b style="color:var(--accent)">${L.name}</b></div>` +
+    idxs.map(({i}) => {
+      const v = w[i] || 0;
+      return `<div class="slider-row">
+        <span class="name">${L.name}[${i}]</span>
+        <input type="range" min="${L.min}" max="${L.max}" step="${(range / 100).toFixed(4)}" value="${v}" oninput="document.getElementById('sv_${i}').textContent=parseFloat(this.value).toFixed(3)" onchange="editWeight(${STATE.selectedLayer}, ${i}, parseFloat(this.value))">
+        <span class="val" id="sv_${i}">${v.toFixed(3)}</span>
+      </div>`;
+    }).join('');
+}
+
+async function resetWeights() {
+  if (STATE.mode === 'live') await API.post('/api/weights/reset', {});
+  document.getElementById('historyList').innerHTML = '<div style="color:var(--text-3);font-size:11px">No weight edits yet.</div>';
+  await loadLayers();
+  drawHeatmap(); drawSliders();
+  showToast('info', 'Weight edit history cleared');
+}
+
+// ============================================================================
+// Compare / Adversarial
+// ============================================================================
+function openCompare() { document.getElementById('compareOverlay').classList.add('active'); }
+function closeCompare() { document.getElementById('compareOverlay').classList.remove('active'); }
+async function runCompare() {
+  const a = document.getElementById('compareA').value;
+  const b = document.getElementById('compareB').value;
+  let result;
+  if (STATE.mode === 'live') result = await API.post('/api/compare', {a, b});
+  else {
+    const pa = demoPredict(a), pb = demoPredict(b);
+    result = {a: pa, b: pb, max_diff: Math.abs(pa.prediction - pb.prediction)};
+  }
+  document.getElementById('compareResult').style.display = 'grid';
+  document.getElementById('predA').textContent = result.a.prediction;
+  document.getElementById('predB').textContent = result.b.prediction;
+  document.getElementById('compareDiff').style.display = 'block';
+  document.getElementById('compareDiff').textContent = 'max diff: ' + (result.max_diff || 0).toFixed(4);
+}
+
+async function runAdversarial() {
+  const inp = document.getElementById('chatInput').value || '[5.1, 3.5, 1.4, 0.2]';
+  appendChat('user', 'adversarial probe: ' + inp);
+  let r;
+  if (STATE.mode === 'live') r = await API.post('/api/adversarial', {input: inp, epsilon: 0.05});
+  else r = {n_trials: 20, n_flips: 4, flip_rate: 0.2, worst_diff: 0.31, epsilon: 0.05};
+  appendChat('pred', `Adversarial probe: ${r.n_flips}/${r.n_trials} predictions flipped (${(r.flip_rate * 100).toFixed(0)}%). Worst perturbation moved output by ${r.worst_diff.toFixed(3)}.`);
+  showToast(r.flip_rate > 0.1 ? 'error' : 'success', `${r.n_flips}/${r.n_trials} flips`);
+}
+
+// ============================================================================
+// Counterfactual Explorer
+// ============================================================================
+function openCounterfactual() {
+  document.getElementById('cfOverlay').classList.add('active');
+  // Pre-fill with last input if any
+  if (STATE.lastOutput && STATE.lastOutput.input) {
+    document.getElementById('cfInput').value = STATE.lastOutput.input;
+  }
+}
+function closeCF() { document.getElementById('cfOverlay').classList.remove('active'); }
+
+async function runCounterfactual() {
+  const inp = document.getElementById('cfInput').value;
+  const tgt = document.getElementById('cfTarget').value;
+  const target = tgt === '' ? null : parseInt(tgt);
+  showToast('info', 'Searching for counterfactual…');
+  let r;
+  if (STATE.mode === 'live') {
+    r = await API.post('/api/counterfactual', {
+      input: inp, target_class: target, max_steps: 50, step_size: 0.05,
+    });
+  } else {
+    // Synthetic counterfactual
+    r = syntheticCounterfactual(inp, target);
+  }
+  if (!r || r.error) { showToast('error', r?.error || 'counterfactual failed'); return; }
+  renderCFResult(r);
+  if (r.flipped) showToast('success', `Flipped in ${r.n_steps} steps`);
+  else showToast('warn', `Could not flip in ${r.n_steps} steps`);
+}
+
+function syntheticCounterfactual(inp, target) {
+  const arr = JSON.parse(inp);
+  const orig = arr[0] || 0;
+  const cf = [...arr];
+  cf[0] = cf[0] + 1.5;  // simple synthetic perturbation
+  return {
+    original_input: arr,
+    original_prediction: 0,
+    original_confidence: 0.92,
+    target_class: target ?? 1,
+    counterfactual_input: cf,
+    counterfactual_prediction: 1,
+    counterfactual_confidence: 0.78,
+    feature_diff: cf.map((v, i) => v - arr[i]),
+    n_steps: 8,
+    history: Array.from({length: 8}, (_, i) => ({
+      step: i, prediction: i < 4 ? 0 : 1,
+      confidence: 0.9 - i * 0.05 + (i >= 4 ? 0.3 : 0),
+      input: cf,
+    })),
+    flipped: true,
+  };
+}
+
+function renderCFResult(r) {
+  document.getElementById('cfResult').style.display = 'block';
+  // Step progress bar
+  const badge = r.flipped
+    ? '<span class="flipped-badge">FLIPPED</span>'
+    : '<span class="not-flipped-badge">NOT FLIPPED</span>';
+  document.getElementById('cfStepProgress').innerHTML = `
+    <span class="step-num">${r.n_steps}</span>
+    <span class="step-info">steps · prediction ${r.original_prediction} → <b style="color:var(--accent)">${r.counterfactual_prediction}</b> · confidence ${(r.original_confidence*100).toFixed(1)}% → ${(r.counterfactual_confidence*100).toFixed(1)}%</span>
+    ${badge}
+  `;
+  // Diff grid (3 cells per feature: original / new / delta)
+  const origInput = r.original_input;
+  const cfInput = r.counterfactual_input;
+  const diff = r.feature_diff;
+  const nFeat = Math.min(origInput.length, 8);
+  let html = '';
+  for (let i = 0; i < nFeat; i++) {
+    const changed = Math.abs(diff[i] || 0) > 1e-6;
+    html += `<div class="cf-diff-cell ${changed ? 'changed' : ''}">
+      <div class="label">feature_${i}</div>
+      <div class="value">${origInput[i].toFixed(3)} → ${cfInput[i].toFixed(3)}</div>
+      <div class="label" style="margin-top:4px">Δ</div>
+      <div class="value">${(diff[i] || 0).toFixed(3)}</div>
+    </div>`;
+  }
+  document.getElementById('cfDiffGrid').innerHTML = html;
+  // History chart
+  drawCFHistoryChart(r.history);
+}
+
+function drawCFHistoryChart(history) {
+  const c = document.getElementById('cfHistoryChart');
+  const cx = c.getContext('2d');
+  const W = c.clientWidth, H = c.clientHeight;
+  cx.clearRect(0, 0, W, H);
+  if (!history.length) return;
+  const confs = history.map(h => h.confidence || 0);
+  const maxC = Math.max(...confs, 1);
+  // Grid
+  cx.strokeStyle = 'rgba(94, 234, 212, 0.1)';
+  cx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    cx.beginPath();
+    cx.moveTo(0, H * i / 4);
+    cx.lineTo(W, H * i / 4);
+    cx.stroke();
+  }
+  // Confidence line (gradient)
+  const grad = cx.createLinearGradient(0, 0, W, 0);
+  grad.addColorStop(0, '#f472b6');
+  grad.addColorStop(1, '#5eead4');
+  cx.strokeStyle = grad;
+  cx.lineWidth = 2;
+  cx.beginPath();
+  history.forEach((h, i) => {
+    const x = i / Math.max(1, history.length - 1) * W;
+    const y = H - (h.confidence || 0) / maxC * H;
+    if (i === 0) cx.moveTo(x, y);
+    else cx.lineTo(x, y);
+  });
+  cx.stroke();
+  // Mark flip point
+  const flipIdx = history.findIndex(h => h.prediction !== history[0].prediction);
+  if (flipIdx > 0) {
+    const x = flipIdx / Math.max(1, history.length - 1) * W;
+    cx.fillStyle = '#4ade80';
+    cx.beginPath(); cx.arc(x, H - history[flipIdx].confidence / maxC * H, 5, 0, Math.PI * 2); cx.fill();
+    cx.fillStyle = '#4ade80'; cx.font = '9px monospace';
+    cx.fillText('flip', x + 8, H - history[flipIdx].confidence / maxC * H - 4);
+  }
+}
+
+// ============================================================================
+// Training Replay
+// ============================================================================
+let trainingHistory = [];
+let trainingReplayActive = false;
+let trainingReplayTimer = null;
+
+async function toggleTrainingReplay() {
+  const slider = document.getElementById('trainingReplay');
+  const chart = document.getElementById('trainingChartOverlay');
+  if (slider.classList.contains('active')) {
+    slider.classList.remove('active');
+    chart.classList.remove('active');
+    stopTrainingReplay();
+  } else {
+    if (!trainingHistory.length) {
+      showToast('info', 'Loading training history…');
+      if (STATE.mode === 'live') {
+        const data = await API.get('/api/training_history');
+        trainingHistory = data?.history || [];
+      } else {
+        trainingHistory = syntheticTrainingHistory();
+      }
+    }
+    if (!trainingHistory.length) {
+      showToast('error', 'No training history available');
+      return;
+    }
+    slider.classList.add('active');
+    chart.classList.add('active');
+    document.getElementById('trSlider').max = trainingHistory.length;
+    document.getElementById('trSlider').value = 1;
+    drawTrainingChart();
+    showToast('success', `Loaded ${trainingHistory.length} epochs`);
+  }
+}
+
+function closeTrainingChart() {
+  document.getElementById('trainingChartOverlay').classList.remove('active');
+  document.getElementById('trainingReplay').classList.remove('active');
+  stopTrainingReplay();
+}
+
+function syntheticTrainingHistory() {
+  return Array.from({length: 50}, (_, e) => {
+    const progress = e / 49;
+    const loss = 1.5 * Math.exp(-3 * progress) + 0.05 + (Math.random() - 0.5) * 0.04;
+    const acc = Math.min(0.99, Math.max(0.1, 1.0 - loss + (Math.random() - 0.5) * 0.04));
+    return {epoch: e + 1, loss: +loss.toFixed(4), accuracy: +acc.toFixed(4), lr: +(0.01 * Math.pow(0.95, e)).toFixed(6)};
+  });
+}
+
+function scrubTrainingReplay(epochStr) {
+  const epoch = parseInt(epochStr);
+  document.getElementById('trEpoch').textContent = epoch;
+  if (!trainingHistory.length) return;
+  const e = trainingHistory[epoch - 1];
+  if (!e) return;
+  // Update metrics display with the selected epoch's values
+  document.getElementById('mSurprise').textContent = (e.loss || 0).toFixed(2);
+  // Update chart marker
+  drawTrainingChart(epoch);
+}
+
+function playTrainingReplay() {
+  if (trainingReplayActive) {
+    stopTrainingReplay();
+  } else {
+    trainingReplayActive = true;
+    document.getElementById('trPlayBtn').textContent = '⏸';
+    let epoch = parseInt(document.getElementById('trSlider').value);
+    const max = trainingHistory.length;
+    trainingReplayTimer = setInterval(() => {
+      epoch++;
+      if (epoch > max) { epoch = 1; }
+      document.getElementById('trSlider').value = epoch;
+      scrubTrainingReplay(epoch);
+    }, 200);
+  }
+}
+
+function stopTrainingReplay() {
+  trainingReplayActive = false;
+  document.getElementById('trPlayBtn').textContent = '▶';
+  if (trainingReplayTimer) { clearInterval(trainingReplayTimer); trainingReplayTimer = null; }
+}
+
+function drawTrainingChart(highlightEpoch) {
+  const c = document.getElementById('trainingChartCanvas');
+  if (!c) return;
+  const cx = c.getContext('2d');
+  const W = c.clientWidth, H = c.clientHeight;
+  cx.clearRect(0, 0, W, H);
+  if (!trainingHistory.length) return;
+  const losses = trainingHistory.map(h => h.loss || 0);
+  const accs = trainingHistory.map(h => h.accuracy || 0);
+  const lrs = trainingHistory.map(h => h.lr || 0);
+  const n = trainingHistory.length;
+  const maxLoss = Math.max(...losses, 1);
+  const maxLr = Math.max(...lrs, 0.001);
+  // Grid
+  cx.strokeStyle = 'rgba(94, 234, 212, 0.08)';
+  cx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    cx.beginPath();
+    cx.moveTo(0, H * i / 4);
+    cx.lineTo(W, H * i / 4);
+    cx.stroke();
+  }
+  // Loss line
+  cx.strokeStyle = '#f87171'; cx.lineWidth = 2;
+  cx.beginPath();
+  losses.forEach((v, i) => {
+    const x = i / Math.max(1, n - 1) * W;
+    const y = H - v / maxLoss * H * 0.9;
+    if (i === 0) cx.moveTo(x, y);
+    else cx.lineTo(x, y);
+  });
+  cx.stroke();
+  // Accuracy line
+  cx.strokeStyle = '#4ade80'; cx.lineWidth = 2;
+  cx.beginPath();
+  accs.forEach((v, i) => {
+    const x = i / Math.max(1, n - 1) * W;
+    const y = H - v * H * 0.9;
+    if (i === 0) cx.moveTo(x, y);
+    else cx.lineTo(x, y);
+  });
+  cx.stroke();
+  // LR line (scaled)
+  cx.strokeStyle = '#60a5fa'; cx.lineWidth = 1.5;
+  cx.setLineDash([3, 3]);
+  cx.beginPath();
+  lrs.forEach((v, i) => {
+    const x = i / Math.max(1, n - 1) * W;
+    const y = H - v / maxLr * H * 0.5;
+    if (i === 0) cx.moveTo(x, y);
+    else cx.lineTo(x, y);
+  });
+  cx.stroke();
+  cx.setLineDash([]);
+  // Highlight current epoch
+  if (highlightEpoch) {
+    const i = highlightEpoch - 1;
+    const x = i / Math.max(1, n - 1) * W;
+    cx.strokeStyle = 'rgba(94, 234, 212, 0.5)';
+    cx.lineWidth = 1;
+    cx.beginPath();
+    cx.moveTo(x, 0); cx.lineTo(x, H);
+    cx.stroke();
+    // Dot
+    cx.fillStyle = '#5eead4';
+    cx.beginPath();
+    cx.arc(x, H - losses[i] / maxLoss * H * 0.9, 4, 0, Math.PI * 2);
+    cx.fill();
+  }
+  // Stats
+  document.getElementById('trainingStats').textContent =
+    `${n} epochs · final loss: ${losses[n-1].toFixed(4)} · final acc: ${(accs[n-1]*100).toFixed(1)}%`;
+}
+
+// ============================================================================
+// Voice Mode (Web Speech API)
+// ============================================================================
+let voiceModeActive = false;
+let recognition = null;
+let synth = window.speechSynthesis || null;
+
+function toggleVoiceMode() {
+  if (voiceModeActive) {
+    disableVoiceMode();
+  } else {
+    enableVoiceMode();
+  }
+}
+
+function enableVoiceMode() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    showToast('error', 'Speech recognition not supported in this browser. Try Chrome.');
+    return;
+  }
+  recognition = new SR();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.lang = 'en-US';
+  recognition.onresult = (event) => {
+    let final = '';
+    let interim = '';
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      const t = event.results[i][0].transcript;
+      if (event.results[i].isFinal) final += t;
+      else interim += t;
+    }
+    if (interim) document.getElementById('voiceTranscript').textContent = interim + '…';
+    if (final) {
+      document.getElementById('voiceTranscript').textContent = final;
+      // Auto-send if user says "send" or input looks complete
+      if (final.toLowerCase().endsWith('send') || final.toLowerCase().endsWith('go')) {
+        const cleaned = final.replace(/\s*(send|go)\s*$/i, '');
+        document.getElementById('chatInput').value = cleaned;
+        setTimeout(() => sendInput(), 200);
+      } else {
+        document.getElementById('chatInput').value = final;
+      }
+    }
+  };
+  recognition.onerror = (e) => {
+    showToast('error', 'Voice error: ' + e.error);
+    disableVoiceMode();
+  };
+  recognition.onend = () => {
+    if (voiceModeActive) {
+      try { recognition.start(); } catch (e) {}
+    }
+  };
+  try {
+    recognition.start();
+    voiceModeActive = true;
+    document.getElementById('voiceIndicator').classList.add('active');
+    document.getElementById('voiceBtn').style.background = 'var(--accent)';
+    document.getElementById('voiceBtn').style.color = 'var(--bg-0)';
+    showToast('success', 'Voice mode on — speak, then say "send"');
+  } catch (e) {
+    showToast('error', 'Could not start voice mode: ' + e.message);
+  }
+}
+
+function disableVoiceMode() {
+  if (recognition) {
+    try { recognition.stop(); } catch (e) {}
+    recognition = null;
+  }
+  voiceModeActive = false;
+  document.getElementById('voiceIndicator').classList.remove('active');
+  document.getElementById('voiceBtn').style.background = '';
+  document.getElementById('voiceBtn').style.color = '';
+  showToast('info', 'Voice mode off');
+}
+
+function speak(text) {
+  if (!synth || !voiceModeActive) return;
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.rate = 1.0; utter.pitch = 1.0;
+  synth.speak(utter);
+}
+
+// Override showStoryStep to also speak the text
+const _origShowStoryStep = showStoryStep;
+showStoryStep = function() {
+  _origShowStoryStep();
+  if (voiceModeActive) speak(document.getElementById('storyText').textContent);
+};
+
+// ============================================================================
+// Story mode
+// ============================================================================
+function toggleStoryMode() {
+  STATE.storyStep = 0;
+  document.getElementById('storyTour').classList.add('active');
+  showStoryStep();
+}
+function showStoryStep() {
+  document.getElementById('storyStep').textContent = STATE.storyStep + 1;
+  document.getElementById('storyTotal').textContent = STATE.storySteps.length;
+  document.getElementById('storyText').textContent = STATE.storySteps[STATE.storyStep];
+  document.getElementById('storyProgress').style.width = ((STATE.storyStep + 1) / STATE.storySteps.length * 100) + '%';
+  document.getElementById('storyNextBtn').textContent = STATE.storyStep === STATE.storySteps.length - 1 ? 'Finish' : 'Next';
+}
+function nextStoryStep() {
+  if (STATE.storyStep < STATE.storySteps.length - 1) { STATE.storyStep++; showStoryStep(); }
+  else closeStory();
+}
+function prevStoryStep() { if (STATE.storyStep > 0) { STATE.storyStep--; showStoryStep(); } }
+function closeStory() { document.getElementById('storyTour').classList.remove('active'); }
+
+// ============================================================================
+// Export story
+// ============================================================================
+async function exportStory() {
+  let data;
+  if (STATE.mode === 'live') data = await API.get('/api/export');
+  else data = {model: STATE.model, layers: STATE.layers, type: STATE.typeInfo, type_data: STATE.typeData, exported_at: Date.now() / 1000};
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'qai_story_' + Date.now() + '.json'; a.click();
+  URL.revokeObjectURL(url);
+  showToast('success', 'Story exported as JSON');
+}
+
+// ============================================================================
+// File drop
+// ============================================================================
+function setupFileDrop() {
+  const drop = document.getElementById('fileDrop');
+  drop.addEventListener('click', () => {
+    const inp = document.createElement('input');
+    inp.type = 'file';
+    inp.onchange = () => {
+      if (inp.files[0]) {
+        const r = new FileReader();
+        r.onload = () => {
+          document.getElementById('chatInput').value = r.result.slice(0, 200);
+          sendInput();
+        };
+        r.readAsText(inp.files[0]);
+      }
+    };
+    inp.click();
+  });
+  drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('dragover'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('dragover'));
+  drop.addEventListener('drop', (e) => {
+    e.preventDefault();
+    drop.classList.remove('dragover');
+    if (e.dataTransfer.files[0]) {
+      const r = new FileReader();
+      r.onload = () => {
+        document.getElementById('chatInput').value = r.result.slice(0, 200);
+        sendInput();
+      };
+      r.readAsText(e.dataTransfer.files[0]);
+    }
+  });
+}
+
+// ============================================================================
+// Command palette (Cmd+K)
+// ============================================================================
+const CMD_GROUPS = [
+  { group: 'Actions', items: [
+    { label: 'Send prediction', icon: '▶', action: () => sendInput(), keywords: 'predict send input' },
+    { label: 'Story mode (guided tour)', icon: '📖', action: () => toggleStoryMode(), keywords: 'story tour guide' },
+    { label: 'Compare two inputs', icon: '⚖', action: () => openCompare(), keywords: 'compare diff' },
+    { label: 'Adversarial probe', icon: '🛡', action: () => runAdversarial(), keywords: 'adversarial noise attack' },
+    { label: 'Reset weight edits', icon: '↺', action: () => resetWeights(), keywords: 'reset weights undo' },
+    { label: 'Counterfactual Explorer', icon: '🔀', action: () => openCounterfactual(), keywords: 'counterfactual flip perturb' },
+    { label: 'Training Replay', icon: '📈', action: () => toggleTrainingReplay(), keywords: 'training replay epoch history' },
+    { label: 'Voice mode (accessibility)', icon: '🎤', action: () => toggleVoiceMode(), keywords: 'voice speech accessibility mic' },
+    { label: 'Cycle theme (dark/light/auto)', icon: '🌓', action: () => cycleTheme(), keywords: 'theme dark light auto mode' },
+    { label: 'Export story as JSON', icon: '📁', action: () => exportStory(), keywords: 'export save story' },
+    { label: 'Clear chat history', icon: '🗑', action: () => clearChat(), keywords: 'clear chat' },
+  ]},
+  { group: 'View', items: [
+    { label: 'Toggle 2D / 3D mode', icon: '◐', action: () => setMode(STATE.viewMode === '2d' ? '3d' : '2d'), keywords: '2d 3d toggle mode' },
+    { label: 'Render mode: Full', icon: '▤', action: () => setRenderMode('full'), keywords: 'render full mode' },
+    { label: 'Render mode: Summary', icon: '▥', action: () => setRenderMode('summary'), keywords: 'render summary mode' },
+    { label: 'Render mode: Block', icon: '▦', action: () => setRenderMode('block'), keywords: 'render block mode' },
+    { label: 'Zoom in', icon: '+', action: () => zoomBy(1.2), keywords: 'zoom in' },
+    { label: 'Zoom out', icon: '−', action: () => zoomBy(0.8), keywords: 'zoom out' },
+    { label: 'Reset view', icon: '⟲', action: () => resetView(), keywords: 'reset view zoom' },
+  ]},
+  { group: 'Inspector', items: [
+    { label: 'Show heatmap', icon: '▦', action: () => setInspectorTab('heatmap', document.querySelectorAll('.inspector-tab')[0]), keywords: 'heatmap weights' },
+    { label: 'Show sliders', icon: '−', action: () => setInspectorTab('sliders', document.querySelectorAll('.inspector-tab')[1]), keywords: 'sliders weights' },
+    { label: 'Show sensitivity', icon: '∿', action: () => setInspectorTab('sensitivity', document.querySelectorAll('.inspector-tab')[2]), keywords: 'sensitivity sweep' },
+    { label: 'Show history', icon: '⌚', action: () => setInspectorTab('history', document.querySelectorAll('.inspector-tab')[3]), keywords: 'history edits' },
+  ]},
+  { group: 'Examples', items: [
+    { label: 'Try iris setosa [5.1, 3.5, 1.4, 0.2]', icon: '🌸', action: () => sendExample('[5.1, 3.5, 1.4, 0.2]'), keywords: 'iris setosa example' },
+    { label: 'Try iris versicolor [6.2, 2.9, 4.3, 1.3]', icon: '🌸', action: () => sendExample('[6.2, 2.9, 4.3, 1.3]'), keywords: 'iris versicolor example' },
+    { label: 'Try iris virginica [7.7, 3.8, 6.7, 2.2]', icon: '🌸', action: () => sendExample('[7.7, 3.8, 6.7, 2.2]'), keywords: 'iris virginica example' },
+    { label: 'Send random input', icon: '🎲', action: () => sendRandom(), keywords: 'random example' },
+  ]},
+];
+
+function buildCmdPalette() {
+  STATE.cmdItems = [];
+  CMD_GROUPS.forEach(g => g.items.forEach(item => STATE.cmdItems.push({...item, group: g.group})));
+}
+
+function openCmdPalette() {
+  document.getElementById('cmdPaletteOverlay').classList.add('active');
+  document.getElementById('cmdInput').value = '';
+  document.getElementById('cmdInput').focus();
+  filterCmd();
+}
+
+function closeCmdPalette() {
+  document.getElementById('cmdPaletteOverlay').classList.remove('active');
+}
+
+function filterCmd() {
+  const q = document.getElementById('cmdInput').value.toLowerCase().trim();
+  const filtered = STATE.cmdItems.filter(item =>
+    !q || item.label.toLowerCase().includes(q) || item.keywords?.includes(q)
+  );
+  STATE.cmdSelectedIdx = 0;
+  const listEl = document.getElementById('cmdList');
+  let html = '';
+  let lastGroup = '';
+  filtered.forEach((item, i) => {
+    if (item.group !== lastGroup) {
+      html += `<div class="cmd-group">${item.group}</div>`;
+      lastGroup = item.group;
+    }
+    html += `<div class="cmd-item ${i === 0 ? 'selected' : ''}" onclick="runCmdItem(${i})" data-idx="${i}">
+      <span class="icon">${item.icon}</span>
+      <span class="label">${item.label}</span>
+    </div>`;
+  });
+  if (!filtered.length) html = '<div style="padding:20px;text-align:center;color:var(--text-4);font-size:12px">No matches found</div>';
+  listEl.innerHTML = html;
+  STATE.cmdFiltered = filtered;
+}
+
+function runCmdItem(idx) {
+  const item = STATE.cmdFiltered?.[idx];
+  if (item) {
+    closeCmdPalette();
+    setTimeout(() => item.action(), 50);
+  }
+}
+
+function handleCmdKeydown(e) {
+  const filtered = STATE.cmdFiltered || [];
+  if (e.key === 'Escape') { closeCmdPalette(); return; }
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    STATE.cmdSelectedIdx = (STATE.cmdSelectedIdx + 1) % filtered.length;
+    updateCmdSelection();
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    STATE.cmdSelectedIdx = (STATE.cmdSelectedIdx - 1 + filtered.length) % filtered.length;
+    updateCmdSelection();
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    runCmdItem(STATE.cmdSelectedIdx);
+  }
+}
+
+function updateCmdSelection() {
+  document.querySelectorAll('.cmd-item').forEach((el, i) => {
+    el.classList.toggle('selected', i === STATE.cmdSelectedIdx);
+    if (i === STATE.cmdSelectedIdx) el.scrollIntoView({block: 'nearest'});
+  });
+}
+
+// ============================================================================
+// Keyboard shortcuts
+// ============================================================================
+function setupKeyboard() {
+  document.addEventListener('keydown', (e) => {
+    // Cmd+K / Ctrl+K — command palette
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      e.preventDefault();
+      const overlay = document.getElementById('cmdPaletteOverlay');
+      if (overlay.classList.contains('active')) closeCmdPalette();
+      else openCmdPalette();
+      return;
+    }
+    // Escape — close overlays
+    if (e.key === 'Escape') {
+      closeCmdPalette(); closeCompare(); closeStory();
+      return;
+    }
+    // Don't intercept shortcuts when typing in inputs
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    // / — focus chat input
+    if (e.key === '/') {
+      e.preventDefault();
+      document.getElementById('chatInput').focus();
+    }
+    // p — play animation
+    if (e.key === 'p') toggleAnim();
+    // r — reset view
+    if (e.key === 'r') resetView();
+    // + / - — zoom
+    if (e.key === '+' || e.key === '=') zoomBy(1.2);
+    if (e.key === '-' || e.key === '_') zoomBy(0.8);
+    // 1/2/3 — output tabs
+    if (e.key === '1') setOutputTab('prediction', document.querySelectorAll('.tab')[0]);
+    if (e.key === '2') setOutputTab('explanation', document.querySelectorAll('.tab')[1]);
+    if (e.key === '3') setOutputTab('health', document.querySelectorAll('.tab')[2]);
+  });
+}
+
+// ============================================================================
+// Mobile tab switching
+// ============================================================================
+function setMobileTab(tab) {
+  ['input', 'canvas', 'output'].forEach(t => {
+    document.getElementById('col' + t.charAt(0).toUpperCase() + t.slice(1)).classList.remove('mobile-active');
+    document.getElementById('mt' + t.charAt(0).toUpperCase() + t.slice(1)).classList.remove('active');
+  });
+  document.getElementById('col' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('mobile-active');
+  document.getElementById('mt' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+}
+
+// ============================================================================
+// Toast notifications
+// ============================================================================
+function showToast(kind, msg) {
+  const div = document.createElement('div');
+  div.className = 'toast ' + kind;
+  const icon = kind === 'success' ? '✓' : kind === 'error' ? '✕' : 'ℹ';
+  div.innerHTML = `<span class="icon">${icon}</span><span>${msg}</span>`;
+  document.getElementById('toastContainer').appendChild(div);
+  setTimeout(() => {
+    div.style.animation = 'toastIn 0.3s reverse';
+    setTimeout(() => div.remove(), 300);
+  }, 3000);
+}
+
+// ============================================================================
+// 3D mode (Three.js — lazy-loaded from CDN)
+// ============================================================================
+let THREE = null;
+
+async function loadThree() {
+  if (THREE) return THREE;
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+    script.onload = () => { THREE = window.THREE; resolve(THREE); };
+    script.onerror = () => reject(new Error('Failed to load Three.js from CDN'));
+    document.head.appendChild(script);
+  });
+}
+
+async function initThree() {
+  try {
+    await loadThree();
+  } catch (e) {
+    showToast('error', 'Could not load Three.js — falling back to 2D');
+    setMode('2d');
+    return;
+  }
+  const canvas3d = document.getElementById('threeCanvas');
+  const W = canvas3d.clientWidth, H = canvas3d.clientHeight;
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0a0e1a);
+  const camera = new THREE.PerspectiveCamera(60, W / H, 0.1, 1000);
+  camera.position.set(0, 0, 30);
+  const renderer = new THREE.WebGLRenderer({canvas: canvas3d, antialias: true});
+  renderer.setSize(W, H);
+  renderer.setPixelRatio(window.devicePixelRatio);
+
+  // Lights
+  const amb = new THREE.AmbientLight(0x5eead4, 0.3);
+  scene.add(amb);
+  const point = new THREE.PointLight(0xc084fc, 1, 100);
+  point.position.set(20, 20, 20);
+  scene.add(point);
+
+  // Build model architecture in 3D
+  const layers = STATE.layers;
+  const layerSpacing = 6;
+  const group = new THREE.Group();
+  const allNodes = [];
+
+  layers.forEach((L, i) => {
+    const nIn = Math.min(L.shape[0], 10);
+    const nOut = Math.min(L.shape[1], 10);
+    // Nodes
+    for (let k = 0; k < nIn; k++) {
+      const geo = new THREE.SphereGeometry(0.3, 12, 12);
+      const mat = new THREE.MeshPhongMaterial({color: 0x5eead4, emissive: 0x2dd4bf, emissiveIntensity: 0.4});
+      const node = new THREE.Mesh(geo, mat);
+      node.position.set(
+        (k - nIn / 2) * 1.2,
+        (Math.random() - 0.5) * 2,
+        -i * layerSpacing
+      );
+      group.add(node);
+      allNodes.push({mesh: node, layer: i});
+    }
+    for (let k = 0; k < nOut; k++) {
+      const geo = new THREE.SphereGeometry(0.3, 12, 12);
+      const mat = new THREE.MeshPhongMaterial({color: 0xc084fc, emissive: 0x9333ea, emissiveIntensity: 0.4});
+      const node = new THREE.Mesh(geo, mat);
+      node.position.set(
+        (k - nOut / 2) * 1.2,
+        (Math.random() - 0.5) * 2,
+        -(i + 1) * layerSpacing
+      );
+      group.add(node);
+      allNodes.push({mesh: node, layer: i + 1});
+    }
+    // Edges (random sample)
+    for (let e = 0; e < 30; e++) {
+      const a = e % nIn, b = e % nOut;
+      const x1 = (a - nIn / 2) * 1.2, y1 = 0, z1 = -i * layerSpacing;
+      const x2 = (b - nOut / 2) * 1.2, y2 = 0, z2 = -(i + 1) * layerSpacing;
+      const geo = new THREE.CylinderGeometry(0.02, 0.02, Math.sqrt((x2-x1)**2 + (z2-z1)**2));
+      const mat = new THREE.MeshBasicMaterial({color: 0x5eead4, transparent: true, opacity: 0.3});
+      const cyl = new THREE.Mesh(geo, mat);
+      cyl.position.set((x1+x2)/2, 0, (z1+z2)/2);
+      cyl.lookAt(x2, 0, z2);
+      cyl.rotateX(Math.PI / 2);
+      group.add(cyl);
+    }
+  });
+
+  scene.add(group);
+
+  // Particle stars background
+  const starGeo = new THREE.BufferGeometry();
+  const starPositions = [];
+  for (let i = 0; i < 500; i++) {
+    starPositions.push((Math.random() - 0.5) * 200);
+    starPositions.push((Math.random() - 0.5) * 200);
+    starPositions.push((Math.random() - 0.5) * 200);
+  }
+  starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPositions, 3));
+  const starMat = new THREE.PointsMaterial({color: 0xffffff, size: 0.1, transparent: true, opacity: 0.6});
+  const stars = new THREE.Points(starGeo, starMat);
+  scene.add(stars);
+
+  // Mouse drag rotation
+  let isDragging = false, prevX = 0, prevY = 0;
+  canvas3d.addEventListener('mousedown', (e) => { isDragging = true; prevX = e.clientX; prevY = e.clientY; });
+  canvas3d.addEventListener('mouseup', () => { isDragging = false; });
+  canvas3d.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    const dx = e.clientX - prevX, dy = e.clientY - prevY;
+    group.rotation.y += dx * 0.01;
+    group.rotation.x += dy * 0.01;
+    prevX = e.clientX; prevY = e.clientY;
+  });
+  canvas3d.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    camera.position.z += e.deltaY * 0.05;
+    camera.position.z = Math.max(5, Math.min(80, camera.position.z));
+  }, { passive: false });
+
+  // Animation loop
+  let frame = 0;
+  function animate() {
+    STATE.threeScene._raf = requestAnimationFrame(animate);
+    frame++;
+    group.rotation.y += 0.003;
+    stars.rotation.y += 0.0005;
+    // Pulse nodes by layer
+    const activeLayer = STATE.activeLayerIdx;
+    allNodes.forEach(n => {
+      const isActive = n.layer === activeLayer;
+      n.mesh.material.emissiveIntensity = isActive ? 0.8 + Math.sin(frame * 0.1) * 0.2 : 0.3;
+      n.mesh.scale.setScalar(isActive ? 1.5 : 1.0);
+    });
+    renderer.render(scene, camera);
+  }
+  STATE.threeScene = { _raf: null, scene, camera, renderer, group };
+  animate();
+  showToast('success', '3D mode active — drag to rotate, scroll to zoom');
+}
+
+// ============================================================================
+// Re-render on resize / mode change
+// ============================================================================
+window.addEventListener('resize', () => {
+  resizeCanvas();
+  drawCanvas();
+  drawMinimap();
+});
+
+// ============================================================================
+// Theme system (dark / light / auto)
+// ============================================================================
+const THEMES = ['dark', 'light', 'auto'];
+const THEME_ICONS = {dark: '🌙', light: '☀', auto: '🌓'};
+const THEME_LABELS = {dark: 'Dark', light: 'Light', auto: 'Auto'};
+
+function initTheme() {
+  // Load from localStorage or default to 'auto'
+  const saved = localStorage.getItem('qai_theme') || 'auto';
+  setTheme(saved);
+  // Listen for system theme changes if in auto mode
+  if (window.matchMedia) {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+      if (STATE.theme === 'auto') applyTheme('auto');
+    });
+  }
+}
+
+function setTheme(theme) {
+  STATE.theme = theme;
+  localStorage.setItem('qai_theme', theme);
+  applyTheme(theme);
+  // Update button label
+  const btn = document.getElementById('themeBtn');
+  if (btn) {
+    btn.innerHTML = THEME_ICONS[theme] + ' <span class="label-text">' + THEME_LABELS[theme] + '</span>';
+  }
+}
+
+function applyTheme(theme) {
+  const body = document.body;
+  if (theme === 'auto') {
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    body.classList.toggle('light-theme', !prefersDark);
+  } else {
+    body.classList.toggle('light-theme', theme === 'light');
+  }
+}
+
+function cycleTheme() {
+  const idx = THEMES.indexOf(STATE.theme);
+  const next = THEMES[(idx + 1) % THEMES.length];
+  setTheme(next);
+  showToast('info', `Theme: ${THEME_LABELS[next]}`);
+}
+
+// Initialize theme on load
+window.addEventListener('DOMContentLoaded', initTheme);
+
+</script>
+<script>
+// ============================================================================
+// qai Collaborative Workspace Client
+// ============================================================================
+const COLLAB = {
+  peerId: null,
+  roomId: null,
+  peerColor: '#5eead4',
+  peerName: 'Anonymous',
+  connected: false,
+  peers: new Map(),  // peerId -> {color, name, cursor, lastSeen}
+  eventSource: null,
+  cursorEls: new Map(),  // peerId -> DOM element
+  lastBroadcast: 0,
+};
+
+function initCollab(roomId) {
+  COLLAB.roomId = roomId || 'default';
+  // Generate peer name from browser
+  COLLAB.peerName = 'User-' + Math.floor(Math.random() * 1000);
+  // Pick a random color
+  const colors = ['#5eead4', '#c084fc', '#f472b6', '#fb923c', '#60a5fa',
+                  '#4ade80', '#fbbf24', '#f87171', '#a78bfa', '#34d399'];
+  COLLAB.peerColor = colors[Math.floor(Math.random() * colors.length)];
+  // Connect via SSE (EventSource)
+  connectCollab();
+  // Set up cursor broadcast on mousemove (throttled)
+  document.addEventListener('mousemove', (e) => {
+    const now = Date.now();
+    if (now - COLLAB.lastBroadcast < 50) return;  // 20fps max
+    COLLAB.lastBroadcast = now;
+    broadcastCollab({
+      type: 'cursor',
+      x: e.clientX,
+      y: e.clientY,
+    });
+  });
+  // Set up name input
+  setTimeout(() => {
+    const name = prompt('Your name for this session:', COLLAB.peerName);
+    if (name) {
+      COLLAB.peerName = name;
+      broadcastCollab({type: 'join', name: COLLAB.peerName, color: COLLAB.peerColor});
+    }
+    showToast('success', `Connected to room: ${COLLAB.roomId}`);
+  }, 500);
+}
+
+function connectCollab() {
+  if (typeof EventSource === 'undefined') {
+    showToast('error', 'SSE not supported — collab disabled');
+    return;
+  }
+  // Open SSE stream
+  const url = `/collab/events?room=${encodeURIComponent(COLLAB.roomId)}`;
+  COLLAB.eventSource = new EventSource(url);
+  COLLAB.eventSource.onopen = () => {
+    COLLAB.connected = true;
+    // Send join message via POST
+    fetch('/collab/join', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        room: COLLAB.roomId,
+        name: COLLAB.peerName,
+        color: COLLAB.peerColor,
+      }),
+    }).then(r => r.json()).then(data => {
+      if (data.peer_id) {
+        COLLAB.peerId = data.peer_id;
+        console.log('[collab] joined as', COLLAB.peerId);
+      }
+    }).catch(e => console.error('[collab] join failed', e));
+  };
+  COLLAB.eventSource.onmessage = (event) => {
+    try {
+      const msg = JSON.parse(event.data);
+      handleCollabMessage(msg);
+    } catch (e) {
+      // ignore parse errors
+    }
+  };
+  COLLAB.eventSource.onerror = () => {
+    COLLAB.connected = false;
+    // Auto-reconnect after 3s (EventSource does this automatically, but update UI)
+    showToast('error', 'Collab connection lost — reconnecting…');
+  };
+}
+
+function broadcastCollab(message) {
+  if (!COLLAB.connected || !COLAB.peerId) return;
+  message.from = COLLAB.peerId;
+  message.name = COLLAB.peerName;
+  message.color = COLLAB.peerColor;
+  message.ts = Date.now();
+  // Send via POST (SSE is one-way from server)
+  fetch('/collab/broadcast', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({room: COLAB.roomId, message}),
+  }).catch(e => console.error('[collab] broadcast failed', e));
+}
+
+function handleCollabMessage(msg) {
+  if (msg.from === COLLAB.peerId) return;  // ignore own messages
+  switch (msg.type) {
+    case 'join':
+      COLLAB.peers.set(msg.from, {
+        color: msg.color || '#5eead4',
+        name: msg.name || 'Anonymous',
+        cursor: {x: 0, y: 0},
+        lastSeen: Date.now(),
+      });
+      showToast('info', `${msg.name} joined`);
+      updateCollabUI();
+      break;
+    case 'leave':
+      const peer = COLLAB.peers.get(msg.from);
+      if (peer) showToast('info', `${peer.name} left`);
+      COLLAB.peers.delete(msg.from);
+      const cursorEl = COLLAB.cursorEls.get(msg.from);
+      if (cursorEl) cursorEl.remove();
+      COLLAB.cursorEls.delete(msg.from);
+      updateCollabUI();
+      break;
+    case 'cursor':
+      let p = COLLAB.peers.get(msg.from);
+      if (!p) {
+        p = {color: msg.color || '#5eead4', name: msg.name || 'Anonymous', cursor: {x:0,y:0}, lastSeen: Date.now()};
+        COLLAB.peers.set(msg.from, p);
+      }
+      p.cursor = {x: msg.x, y: msg.y};
+      p.lastSeen = Date.now();
+      updatePeerCursor(msg.from, p);
+      break;
+    case 'chat':
+      appendChat('user', `[${msg.name}] ${msg.text}`);
+      break;
+    case 'weight_edit':
+      // Another peer edited a weight — update our local view
+      if (STATE.layers[msg.layer_idx]) {
+        STATE.layers[msg.layer_idx].weights[msg.flat_idx] = msg.value;
+        drawHeatmap();
+        drawSliders();
+      }
+      showToast('info', `${msg.name} edited weight ${msg.layer_idx}[${msg.flat_idx}]`);
+      break;
+    case 'predict':
+      // Another peer sent a prediction
+      appendChat('user', `[${msg.name}] predict: ${msg.input}`);
+      break;
+  }
+}
+
+function updatePeerCursor(peerId, peer) {
+  let el = COLLAB.cursorEls.get(peerId);
+  if (!el) {
+    el = document.createElement('div');
+    el.className = 'collab-cursor';
+    el.style.cssText = `
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      transition: transform 0.1s ease;
+      font-size: 10px;
+      font-family: var(--font-sans);
+      font-weight: 600;
+    `;
+    document.body.appendChild(el);
+    COLLAB.cursorEls.set(peerId, el);
+  }
+  el.innerHTML = `
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="${peer.color}" stroke="#fff" stroke-width="1.5">
+      <path d="M 2 2 L 8 18 L 10 10 L 18 8 Z"/>
+    </svg>
+    <span style="background:${peer.color};color:#fff;padding:2px 6px;border-radius:8px;margin-left:4px;">${peer.name}</span>
+  `;
+  el.style.left = peer.cursor.x + 'px';
+  el.style.top = peer.cursor.y + 'px';
+}
+
+function updateCollabUI() {
+  // Update peer count badge
+  const n = COLLAB.peers.size;
+  const statusEl = document.getElementById('collabStatus');
+  if (statusEl) {
+    statusEl.textContent = n === 0 ? 'collab: alone' : `collab: ${n + 1} peers`;
+    statusEl.style.color = n === 0 ? 'var(--text-4)' : 'var(--good)';
+  }
+}
+
+// Clean up stale cursors every 5s
+setInterval(() => {
+  const now = Date.now();
+  for (const [id, peer] of COLLAB.peers.entries()) {
+    if (now - peer.lastSeen > 10000) {
+      COLLAB.peers.delete(id);
+      const el = COLLAB.cursorEls.get(id);
+      if (el) el.remove();
+      COLLAB.cursorEls.delete(id);
+    }
+  }
+  updateCollabUI();
+}, 5000);
+
+// Hook into existing sendInput to broadcast predictions
+const _origSendInput = sendInput;
+sendInput = function() {
+  const val = document.getElementById('chatInput').value;
+  broadcastCollab({type: 'predict', input: val});
+  return _origSendInput.apply(this, arguments);
+};
+
+// Hook into editWeight to broadcast
+const _origEditWeight = editWeight;
+editWeight = function(layerIdx, flatIdx, newVal) {
+  broadcastCollab({type: 'weight_edit', layer_idx: layerIdx, flat_idx: flatIdx, value: newVal});
+  return _origEditWeight.apply(this, arguments);
+};
+
+// Leave on page unload
+window.addEventListener('beforeunload', () => {
+  if (COLLAB.peerId) {
+    navigator.sendBeacon('/collab/leave',
+      new Blob([JSON.stringify({room: COLLAB.roomId, peer_id: COLLAB.peerId})],
+                {type: 'application/json'}));
+  }
+});
+</script>
+
+<div id="collabStatus" style="
+  position: fixed; top: 70px; right: 20px;
+  background: var(--glass-strong);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 6px 12px;
+  font-size: 10px;
+  color: var(--text-4);
+  font-family: var(--font-mono);
+  z-index: 75;
+">collab: connecting…</div>
+
+
+<script>window.__QAI_BOOTSTRAP__ = {"mode": "story", "model": {"name": "neural_network", "type": "NeuralNetwork", "trained": true, "version": "0.0.0", "renderer": "mlp", "family": "neural_network", "supports_3d": true, "supports_attention": false, "supports_tree": false, "supports_clustering": false, "n_layers": 2, "n_params": 131, "layers": [{"name": "fc1", "shape": [16, 4], "n_params": 80}, {"name": "fc2", "shape": [3, 16], "n_params": 51}], "summary_text": "======================================================================\nModel Summary: neural_network (deep_learning) \u2014 trained\n======================================================================\nTotal parameters:              131\nTrainable parameters:          131\nNon-trainable:                   0\nMemory (float32):             0.00 MB\n----------------------------------------------------------------------\nLayer                                      Parameters Shape\n----------------------------------------------------------------------\n  net                                             131\n----------------------------------------------------------------------\nKey parameters (15 total):\n  hidden_dim: 16 (default: 16)\n  epochs: 50 (default: 50)\n  lr: 0.01 (default: 0.01)\n  task_type: classification (default: classification)\n  modern: False (default: False)\n  n_layers: 2 (default: 2)\n  dropout: 0.0 (default: 0.0)\n  activation: relu (default: relu)\n  weight_decay: 0.0 (default: 0.0)\n  mixup_alpha: 0.0 (default: 0.0)\n  ... and 5 more\n======================================================================"}, "layers": [{"name": "fc1", "shape": [16, 4], "weights": [0.2277022749185562, -0.2917076349258423, 0.7218207716941833, 0.8056451082229614, -0.1537061333656311, 0.04747450351715088, -0.1331636905670166, 0.04447674751281738, 0.4806324541568756, 0.13632069528102875, -0.3931249678134918, -0.7339528203010559, -0.1893782615661621, -0.10156053304672241, -0.48132026195526123, -0.383015513420105, -0.38058483600616455, 0.03756892681121826, -0.05279219150543213, -0.3801196217536926, 0.13223443925380707, 0.6949256062507629, -0.6920602321624756, -0.3259904384613037, 0.3584712743759155, -0.229376420378685, -0.07601173222064972, -0.08358758687973022, -0.20639535784721375, 0.29439854621887207, 0.1141882985830307, -0.0743040069937706, -0.16573774814605713, -0.3592061996459961, -0.38790959119796753, -0.1328718066215515, -0.4650328755378723, -0.12747234106063843, -0.20619070529937744, -0.055808305740356445, 0.33983495831489563, -0.17217987775802612, 0.03984466940164566, -0.6474266648292542, -0.03223452344536781, 0.059423599392175674, 0.27739763259887695, 0.5562440156936646, 0.33362293243408203, -0.5609726309776306, 0.5227662920951843, 0.16384650766849518, 0.5078815221786499, 0.4430158734321594, -0.4467707872390747, -0.38545456528663635, -0.019470542669296265, -0.31491875648498535, 0.8295617699623108, 0.3012007474899292, -0.153842031955719, -0.12205874919891357, 0.01133584976196289, -0.4221271872520447], "n_params": 80, "min": -0.7339528203010559, "max": 0.8295617699623108, "mean": -0.03215628303587437, "std": 0.3656778770989813}, {"name": "fc2", "shape": [3, 16], "weights": [-0.23278063535690308, -0.1732211709022522, 0.5221741795539856, 0.017130047082901, 0.09567812085151672, 0.45279866456985474, 0.24512606859207153, -0.029645886272192, -0.11932417750358582, 0.08983239531517029, -0.052922334522008896, -0.3200276792049408, -0.6048998236656189, 0.4142247140407562, -0.521344780921936, 0.23577290773391724, 0.09019346535205841, -0.2210085391998291, 0.435103178024292, 0.14769670367240906, 0.2022269368171692, -0.41873887181282043, -0.008137501776218414, -0.060595229268074036, -0.23046916723251343, -0.21935859322547913, 0.04299778863787651, -0.31732234358787537, 0.049184106290340424, 0.114298976957798, 0.1356453001499176, -0.05594673752784729, 0.26469263434410095, 0.016256898641586304, -0.378207802772522, -0.07176360487937927, -0.1341206431388855, -0.32693374156951904, 0.05310411751270294, -0.0562891811132431, 0.06597870588302612, 0.08211854100227356, -0.23329925537109375, 0.48888257145881653, 0.17545969784259796, -0.44792041182518005, 0.2320462465286255, 0.13267722725868225], "n_params": 51, "min": -0.6048998236656189, "max": 0.5221741795539856, "mean": -0.009020373302822312, "std": 0.26245823949971825}], "type": {"renderer": "mlp", "family": "neural_network", "supports_3d": true, "supports_attention": false, "supports_tree": false, "supports_clustering": false}, "type_data": {"renderer": "mlp"}};</script>
+<script>initCollab('DEMO');</script>
+</body>
+</html>

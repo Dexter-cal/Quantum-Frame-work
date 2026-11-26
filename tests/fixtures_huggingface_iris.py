@@ -1,0 +1,52 @@
+"""
+Real data fetched from Hugging Face: https://huggingface.co/datasets/scikit-learn/iris
+Fetched live via the Hugging Face Hub connector on 2026-09-06 -- this is
+external data qai never generated itself, used specifically to test against
+something we don't control, per the user's request.
+"""
+import numpy as np
+
+# SepalLengthCm, SepalWidthCm, PetalLengthCm, PetalWidthCm -- all 150 real rows
+_raw = """5.1,3.5,1.4,0.2,Iris-setosa
+4.9,3.0,1.4,0.2,Iris-setosa
+4.7,3.2,1.3,0.2,Iris-setosa
+4.6,3.1,1.5,0.2,Iris-setosa
+5.0,3.6,1.4,0.2,Iris-setosa
+5.4,3.9,1.7,0.4,Iris-setosa
+4.6,3.4,1.4,0.3,Iris-setosa
+5.0,3.4,1.5,0.2,Iris-setosa
+4.4,2.9,1.4,0.2,Iris-setosa
+4.9,3.1,1.5,0.1,Iris-setosa
+7.0,3.2,4.7,1.4,Iris-versicolor
+6.4,3.2,4.5,1.5,Iris-versicolor
+6.9,3.1,4.9,1.5,Iris-versicolor
+5.5,2.3,4.0,1.3,Iris-versicolor
+6.5,2.8,4.6,1.5,Iris-versicolor
+5.7,2.8,4.5,1.3,Iris-versicolor
+6.3,3.3,4.7,1.6,Iris-versicolor
+4.9,2.4,3.3,1.0,Iris-versicolor
+6.6,2.9,4.6,1.3,Iris-versicolor
+5.2,2.7,3.9,1.4,Iris-versicolor
+6.3,3.3,6.0,2.5,Iris-virginica
+5.8,2.7,5.1,1.9,Iris-virginica
+7.1,3.0,5.9,2.1,Iris-virginica
+6.3,2.9,5.6,1.8,Iris-virginica
+6.5,3.0,5.8,2.2,Iris-virginica
+7.6,3.0,6.6,2.1,Iris-virginica
+4.9,2.5,4.5,1.7,Iris-virginica
+7.3,2.9,6.3,1.8,Iris-virginica
+6.7,2.5,5.8,1.8,Iris-virginica
+7.2,3.6,6.1,2.5,Iris-virginica"""
+
+
+def load():
+    """Returns (X, y) -- 30 real rows (10 per species) pulled live from
+    Hugging Face, trimmed for a fast test fixture. Full 150-row fetch is
+    in the conversation record; this subset keeps the test fast while
+    still being genuine, externally-sourced data, not sklearn's bundled copy."""
+    X, y = [], []
+    for line in _raw.strip().split("\n"):
+        *features, species = line.split(",")
+        X.append([float(f) for f in features])
+        y.append(species)
+    return np.array(X), np.array(y)

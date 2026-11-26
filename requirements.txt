@@ -1,0 +1,21 @@
+# Core numerical and data tooling
+numpy
+pandas
+scikit-learn
+scipy
+
+# Framework features exercised by the test suite
+matplotlib
+Flask
+
+# Data export formats (qai.data.to_parquet / to_excel)
+pyarrow
+openpyxl
+
+# Read the bundled design specification PDF
+pypdf
+pdfplumber
+
+# Deep learning technique (qai.build(type="neural_network"))
+torch
+torchvision

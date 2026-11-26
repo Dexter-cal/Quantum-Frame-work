@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>compare_models - QAI Workflow</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 24px; color: #222; }
+  h1 { font-size: 20px; }
+  .meta { color: #666; font-size: 13px; margin-bottom: 12px; }
+  .mermaid { background: #fafafa; border: 1px solid #e0e0e0; border-radius: 6px; padding: 16px; }
+  pre.data { background: #f6f8fa; padding: 12px; border-radius: 6px; overflow: auto; font-size: 12px; }
+</style>
+</head>
+<body>
+<h1>QAI Workflow: compare_models</h1>
+<div class="meta">Nodes: 11 &middot; Edges: 13</div>
+<div class="mermaid">
+graph TD
+    load["load (load_dataset)"]
+    split["split (split_train_test)"]
+    build_0["build_0 (build_model)"]
+    train_0["train_0 (train_model)"]
+    eval_0["eval_0 (evaluate_model)"]
+    build_1["build_1 (build_model)"]
+    train_1["train_1 (train_model)"]
+    eval_1["eval_1 (evaluate_model)"]
+    build_2["build_2 (build_model)"]
+    train_2["train_2 (train_model)"]
+    eval_2["eval_2 (evaluate_model)"]
+    load -->|dataset -> dataset| split
+    split -->|train -> X| train_0
+    build_0 -->|model -> model| train_0
+    train_0 -->|trained_model -> model| eval_0
+    split -->|test -> X| eval_0
+    split -->|train -> X| train_1
+    build_1 -->|model -> model| train_1
+    train_1 -->|trained_model -> model| eval_1
+    split -->|test -> X| eval_1
+    split -->|train -> X| train_2
+    build_2 -->|model -> model| train_2
+    train_2 -->|trained_model -> model| eval_2
+    split -->|test -> X| eval_2
+</div>
+<h2>D3.js node-link data</h2>
+<pre class="data">{
+  "nodes": [
+    {
+      "id": "load",
+      "label": "load",
+      "op": "load_dataset",
+      "inputs": [],
+      "outputs": [
+        "dataset"
+      ],
+      "config": {
+        "dataset": "iris"
+      }
+    },
+    {
+      "id": "split",
+      "label": "split",
+      "op": "split_train_test",
+      "inputs": [
+        "dataset"
+      ],
+      "outputs": [
+        "train",
+        "test"
+      ],
+      "config": {
+        "test_size": 0.2
+      }
+    },
+    {
+      "id": "build_0",
+      "label": "build_0",
+      "op": "build_model",
+      "inputs": [],
+      "outputs": [
+        "model"
+      ],
+      "config": {
+        "technique": "neural_network"
+      }
+    },
+    {
+      "id": "train_0",
+      "label": "train_0",
+      "op": "train_model",
+      "inputs": [
+        "model",
+        "X",
+        "y"
+      ],
+      "outputs": [
+        "trained_model"
+      ],
+      "config": {}
+    },
+    {
+      "id": "eval_0",
+      "label": "eval_0",
+      "op": "evaluate_model",
+      "inputs": [
+        "model",
+        "X",
+        "y"
+      ],
+      "outputs": [
+        "metrics"
+      ],
+      "config": {}
+    },
+    {
+      "id": "build_1",
+      "label": "build_1",
+      "op": "build_model",
+      "inputs": [],
+      "outputs": [
+        "model"
+      ],
+      "config": {
+        "technique": "random_forest"
+      }
+    },
+    {
+      "id": "train_1",
+      "label": "train_1",
+      "op": "train_model",
+      "inputs": [
+        "model",
+        "X",
+        "y"
+      ],
+      "outputs": [
+        "trained_model"
+      ],
+      "config": {}
+    },
+    {
+      "id": "eval_1",
+      "label": "eval_1",
+      "op": "evaluate_model",
+      "inputs": [
+        "model",
+        "X",
+        "y"
+      ],
+      "outputs": [
+        "metrics"
+      ],
+      "config": {}
+    },
+    {
+      "id": "build_2",
+      "label": "build_2",
+      "op": "build_model",
+      "inputs": [],
+      "outputs": [
+        "model"
+      ],
+      "config": {
+        "technique": "svm"
+      }
+    },
+    {
+      "id": "train_2",
+      "label": "train_2",
+      "op": "train_model",
+      "inputs": [
+        "model",
+        "X",
+        "y"
+      ],
+      "outputs": [
+        "trained_model"
+      ],
+      "config": {}
+    },
+    {
+      "id": "eval_2",
+      "label": "eval_2",
+      "op": "evaluate_model",
+      "inputs": [
+        "model",
+        "X",
+        "y"
+      ],
+      "outputs": [
+        "metrics"
+      ],
+      "config": {}
+    }
+  ],
+  "links": [
+    {
+      "source": "load",
+      "target": "split",
+      "source_port": "dataset",
+      "target_port": "dataset"
+    },
+    {
+      "source": "split",
+      "target": "train_0",
+      "source_port": "train",
+      "target_port": "X"
+    },
+    {
+      "source": "build_0",
+      "target": "train_0",
+      "source_port": "model",
+      "target_port": "model"
+    },
+    {
+      "source": "train_0",
+      "target": "eval_0",
+      "source_port": "trained_model",
+      "target_port": "model"
+    },
+    {
+      "source": "split",
+      "target": "eval_0",
+      "source_port": "test",
+      "target_port": "X"
+    },
+    {
+      "source": "split",
+      "target": "train_1",
+      "source_port": "train",
+      "target_port": "X"
+    },
+    {
+      "source": "build_1",
+      "target": "train_1",
+      "source_port": "model",
+      "target_port": "model"
+    },
+    {
+      "source": "train_1",
+      "target": "eval_1",
+      "source_port": "trained_model",
+      "target_port": "model"
+    },
+    {
+      "source": "split",
+      "target": "eval_1",
+      "source_port": "test",
+      "target_port": "X"
+    },
+    {
+      "source": "split",
+      "target": "train_2",
+      "source_port": "train",
+      "target_port": "X"
+    },
+    {
+      "source": "build_2",
+      "target": "train_2",
+      "source_port": "model",
+      "target_port": "model"
+    },
+    {
+      "source": "train_2",
+      "target": "eval_2",
+      "source_port": "trained_model",
+      "target_port": "model"
+    },
+    {
+      "source": "split",
+      "target": "eval_2",
+      "source_port": "test",
+      "target_port": "X"
+    }
+  ],
+  "name": "compare_models"
+}</pre>
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, theme: 'default' });
+</script>
+</body>
+</html>

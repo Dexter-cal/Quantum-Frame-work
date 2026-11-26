@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Model Card: neural_network_model</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 0;
+    background: #0d1117;
+    color: #c9d1d9;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue",
+                 Arial, sans-serif;
+    font-size: 15px; line-height: 1.6;
+  }
+  .container {
+    max-width: 980px; margin: 0 auto; padding: 40px 24px 80px;
+  }
+  .header {
+    border-bottom: 1px solid #30363d;
+    padding-bottom: 24px; margin-bottom: 32px;
+  }
+  .header h1 {
+    margin: 0 0 8px 0; font-size: 32px; font-weight: 600;
+    color: #c9d1d9;
+  }
+  .header .subtitle {
+    color: #8b949e; font-size: 14px; margin-bottom: 12px;
+  }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .tag {
+    background: #1f6feb; color: #58a6ff;
+    padding: 3px 10px; border-radius: 12px; font-size: 12px;
+    font-weight: 500;
+  }
+  .badges {
+    display: flex; flex-wrap: wrap; gap: 12px; margin: 20px 0 32px 0;
+  }
+  .badge {
+    background: #161b22; border: 1px solid #30363d;
+    border-radius: 8px; padding: 12px 18px; min-width: 120px;
+    text-align: center;
+  }
+  .badge .value {
+    font-size: 22px; font-weight: 600; display: block;
+  }
+  .badge .label {
+    font-size: 11px; color: #8b949e; text-transform: uppercase;
+    letter-spacing: 0.5px; margin-top: 4px; display: block;
+  }
+  .badge.green .value { color: #3fb950; }
+  .badge.yellow .value { color: #d29922; }
+  .badge.red   .value { color: #f85149; }
+  .badge.accent .value { color: #58a6ff; }
+  .grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+  }
+  @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+  .section {
+    background: #161b22; border: 1px solid #30363d;
+    border-radius: 8px; padding: 20px 24px; margin-bottom: 20px;
+  }
+  .section h2 {
+    margin: 0 0 14px 0; font-size: 18px; font-weight: 600;
+    color: #c9d1d9; border-bottom: 1px solid #30363d;
+    padding-bottom: 8px;
+  }
+  .section ul { margin: 8px 0; padding-left: 22px; }
+  .section li { margin: 4px 0; }
+  .section p { margin: 8px 0; }
+  .kv { display: grid; grid-template-columns: 180px 1fr; gap: 6px 12px; }
+  .kv .k { color: #8b949e; font-weight: 500; }
+  .kv .v { color: #c9d1d9; word-break: break-word; }
+  .sub-kv { padding-left: 16px; border-left: 2px solid #30363d; margin: 6px 0; }
+  table {
+    width: 100%; border-collapse: collapse; margin-top: 12px;
+    font-size: 13px;
+  }
+  th, td {
+    text-align: left; padding: 8px 10px;
+    border-bottom: 1px solid #30363d;
+  }
+  th { color: #8b949e; font-weight: 500; text-transform: uppercase;
+       font-size: 11px; letter-spacing: 0.5px; }
+  code {
+    background: #0d1117; border: 1px solid #30363d;
+    padding: 1px 6px; border-radius: 4px; font-size: 13px;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  }
+  pre.citation {
+    background: #0d1117; border: 1px solid #30363d;
+    border-radius: 6px; padding: 14px 16px;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 12.5px; overflow-x: auto; white-space: pre-wrap;
+    color: #c9d1d9;
+  }
+  .footer {
+    color: #8b949e; font-size: 12px; text-align: center;
+    margin-top: 40px; padding-top: 20px; border-top: 1px solid #30363d;
+  }
+  .pill {
+    display: inline-block; padding: 1px 8px; border-radius: 10px;
+    font-size: 11px; font-weight: 600;
+  }
+  .pill.green { background: rgba(63,185,80,0.15); color: #3fb950; }
+  .pill.yellow { background: rgba(210,153,34,0.15); color: #d29922; }
+  .pill.red { background: rgba(248,81,73,0.15); color: #f85149; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Model Card: neural_network_model</h1>
+    <div class="subtitle">classification | v1.0.0 | 2026-11-19</div>
+    <div class="tags"><span class='tag'>qai</span><span class='tag'>neural_network</span><span class='tag'>classification</span><span class='tag'>deep_learning</span></div>
+  </div>
+
+  <div class='badges'><div class='badge yellow'><span class='value'>67.33%</span><span class='label'>Accuracy</span></div><div class='badge red'><span class='value'>0.5701</span><span class='label'>F1 (macro)</span></div><div class='badge accent'><span class='value'>3</span><span class='label'>Classes</span></div><div class='badge accent'><span class='value'>0.003 ms</span><span class='label'>Latency</span></div><div class='badge accent'><span class='value'>376,426/s</span><span class='label'>Throughput</span></div></div>
+
+  <div class="grid">
+    <div class='section'><h2>Model Details</h2><div class='kv'><div class='k'>Model name</div><div class='v'>neural_network_model</div><div class='k'>Model type</div><div class='v'>classification</div><div class='k'>Version</div><div class='v'>1.0.0</div><div class='k'>Date</div><div class='v'>2026-11-19</div><div class='k'>License</div><div class='v'>unknown</div><div class='k'>Authors</div><div class='v'>qai Model Card Generator</div><div class='k'>Parameters</div><div class='v'>131</div><div class='k'>Layers</div><div class='v'>2</div><div class='k'>Framework</div><div class='v'>pytorch</div><div class='k'>Architecture type</div><div class='v'>mlp</div><div class='k'>Activations</div><div class='v'>ReLU</div></div></div>
+    <div class='section'><h2>Architecture</h2><div class='kv'><div class='k'>Framework</div><div class='v'>pytorch</div><div class='k'>Type</div><div class='v'>mlp</div><div class='k'>Total params</div><div class='v'>131</div></div><table><thead><tr><th>Layer</th><th>Type</th><th>Params</th></tr></thead><tbody><tr><td><code>fc1</code></td><td>Linear</td><td>80</td></tr><tr><td><code>act</code></td><td>ReLU</td><td>0</td></tr><tr><td><code>fc2</code></td><td>Linear</td><td>51</td></tr><tr><td><code>net</code></td><td>Sequential</td><td>131</td></tr></tbody></table></div>
+  </div>
+
+  <div class='section'><h2>Intended Use</h2><p>This model was trained for <strong>multi-class classification</strong> on tabular feature data. It assigns each input to one of the learned classes (technique: <code>neural_network</code>). Suitable for batch and online prediction tasks where probabilistic or hard labels are required. Intended for research, experimentation, and lower-stakes production use.</p></div>
+  <div class='section'><h2>Training Data</h2><div class='kv' style='grid-template-columns: 160px 1fr;'><div class='k'>n_samples</div><div class='v'>150</div><div class='k'>n_features</div><div class='v'>4</div><div class='k'>shape</div><div class='v sub-kv'><ul><li>150</li><li>4</li></ul></div><div class='k'>dtype</div><div class='v'>float32</div><div class='k'>feature_stats</div><div class='v sub-kv'><div class='kv' style='grid-template-columns: 160px 1fr;'><div class='k'>mean</div><div class='v'>3.4645</div><div class='k'>std</div><div class='v'>1.9738</div><div class='k'>min</div><div class='v'>0.1</div><div class='k'>max</div><div class='v'>7.9</div></div></div><div class='k'>n_target_classes</div><div class='v'>3</div><div class='k'>target_dtype</div><div class='v'>int64</div><div class='k'>training_info</div><div class='v sub-kv'><div class='kv' style='grid-template-columns: 160px 1fr;'><div class='k'>optimizer</div><div class='v'>Adam</div><div class='k'>lr</div><div class='v'>0.01</div><div class='k'>epochs</div><div class='v'>50</div><div class='k'>weight_decay</div><div class='v'>0</div><div class='k'>dropout</div><div class='v'>0</div><div class='k'>n_layers</div><div class='v'>2</div><div class='k'>activation</div><div class='v'>relu</div><div class='k'>hidden_dim</div><div class='v'>16</div></div></div></div></div>
+  <div class='section'><h2>Evaluation Results</h2><div style='margin-bottom: 12px;'><span class='pill yellow'>accuracy: 0.6733</span> <span class='pill red'>f1_macro: 0.5701</span> <span class='pill yellow'>precision_macro: 0.8350</span> <span class='pill yellow'>recall_macro: 0.6733</span> <span class='pill yellow'>balanced_accuracy: 0.6733</span> <span class='pill red'>cohen_kappa: 0.5100</span> <span class='pill accent'>latency_ms: 0.0027</span> <span class='pill accent'>throughput_per_s: 376426.3000</span> </div><div class='kv' style='grid-template-columns: 160px 1fr;'><div class='k'>accuracy</div><div class='v'>0.673333</div><div class='k'>n_classes</div><div class='v'>3</div><div class='k'>precision_macro</div><div class='v'>0.835</div><div class='k'>recall_macro</div><div class='v'>0.6733</div><div class='k'>f1_macro</div><div class='v'>0.5701</div><div class='k'>per_class</div><div class='v sub-kv'><div class='kv' style='grid-template-columns: 160px 1fr;'><div class='k'>0</div><div class='v sub-kv'><div class='kv' style='grid-template-columns: 160px 1fr;'><div class='k'>precision</div><div class='v'>1</div><div class='k'>recall</div><div class='v'>1</div><div class='k'>f1</div><div class='v'>1</div><div class='k'>support</div><div class='v'>50</div></div></div><div class='k'>1</div><div class='v sub-kv'><div class='kv' style='grid-template-columns: 160px 1fr;'><div class='k'>precision</div><div class='v'>1</div><div class='k'>recall</div><div class='v'>0.02</div><div class='k'>f1</div><div class='v'>0.0392</div><div class='k'>support</div><div class='v'>50</div></div></div><div class='k'>2</div><div class='v sub-kv'><div class='kv' style='grid-template-columns: 160px 1fr;'><div class='k'>precision</div><div class='v'>0.5051</div><div class='k'>recall</div><div class='v'>1</div><div class='k'>f1</div><div class='v'>0.6711</div><div class='k'>support</div><div class='v'>50</div></div></div></div></div><div class='k'>confusion_matrix</div><div class='v sub-kv'><ul><li>50, 0, 0</li><li>0, 1, 49</li><li>0, 0, 50</li></ul></div><div class='k'>classes</div><div class='v sub-kv'><ul><li>0</li><li>1</li><li>2</li></ul></div><div class='k'>balanced_accuracy</div><div class='v'>0.6733</div><div class='k'>cohen_kappa</div><div class='v'>0.51</div><div class='k'>latency_ms</div><div class='v'>0.0027</div><div class='k'>throughput_per_s</div><div class='v'>376426</div><div class='k'>n_samples</div><div class='v'>150</div><div class='k'>fairness</div><div class='v sub-kv'><div class='kv' style='grid-template-columns: 160px 1fr;'><div class='k'>sensitive_features_provided</div><div class='v'>false</div><div class='k'>note</div><div class='v'>No sensitive features provided; full fairness audit not performed.</div></div></div></div></div>
+
+  <div class="grid">
+    <div class='section'><h2>Ethical Considerations</h2><ul><li>The model may encode biases present in the training data. Run a fairness audit (with sensitive features) before deploying to populations the model was not evaluated on.</li><li>Predictions should not be used as the sole basis for high-stakes decisions affecting individuals (hiring, lending, healthcare, criminal justice, etc.) without human review.</li><li>If the model was trained on personal data, ensure compliance with applicable privacy regulations (GDPR, CCPA). Consider differential privacy or federated learning for sensitive deployments.</li><li>Classification models can be repurposed for surveillance or discriminatory profiling. Document downstream uses and enforce acceptable-use policies.</li><li>Small training set (150 samples) increases the risk that the model under-represents minority groups in the data.</li><li>Consider the impact of false positives and false negatives in the specific deployment context.</li></ul></div>
+    <div class='section'><h2>Limitations</h2><ul><li>Trained on a small dataset (150 samples) -- generalization to unseen data is uncertain and should be verified on a held-out test set.</li><li>Neural networks can be sensitive to input scaling -- ensure inputs are preprocessed identically at training and inference time.</li><li>Model performance is bounded by the quality and representativeness of the training data; it should not be the sole basis for high-stakes decisions.</li><li>The model may not generalize to data distributions significantly different from training -- monitor for data drift post-deployment.</li></ul></div>
+  </div>
+
+  <div class='section'><h2>Citation</h2><pre class='citation'>@misc{neural_network_model_2026,
+  title={Model Card: neural_network_model},
+  author={qai Model Card Generator},
+  year={2026},
+  howpublished={qai Model Card Generator},
+  note={Auto-generated model card}
+}</pre></div>
+
+  <div class="footer">
+    Auto-generated by <code>qai.ModelCardGenerator</code> on 2026-11-19.
+  </div>
+</div>
+</body>
+</html>

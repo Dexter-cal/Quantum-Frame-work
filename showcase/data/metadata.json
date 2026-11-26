@@ -1,0 +1,62 @@
+{
+  "feature_names": [
+    "hrv_ms",
+    "sleep_last_night_h",
+    "screen_time_min",
+    "deep_work_min",
+    "time_of_day_h",
+    "last_break_min_ago",
+    "caffeine_mg"
+  ],
+  "state_names": [
+    "focus",
+    "flow",
+    "stress",
+    "fatigued",
+    "scattered"
+  ],
+  "state_to_idx": {
+    "focus": 0,
+    "flow": 1,
+    "stress": 2,
+    "fatigued": 3,
+    "scattered": 4
+  },
+  "splits": {
+    "train": {
+      "n": 1500,
+      "path": "/home/z/my-project/download/Quantum-Frame-work-fixed/showcase/pulse/../data/pulse_train.npz",
+      "class_distribution": {
+        "focus": 987,
+        "flow": 195,
+        "stress": 61,
+        "fatigued": 99,
+        "scattered": 158
+      }
+    },
+    "val": {
+      "n": 400,
+      "path": "/home/z/my-project/download/Quantum-Frame-work-fixed/showcase/pulse/../data/pulse_val.npz",
+      "class_distribution": {
+        "focus": 274,
+        "flow": 47,
+        "stress": 13,
+        "fatigued": 28,
+        "scattered": 38
+      }
+    },
+    "test": {
+      "n": 400,
+      "path": "/home/z/my-project/download/Quantum-Frame-work-fixed/showcase/pulse/../data/pulse_test.npz",
+      "class_distribution": {
+        "focus": 268,
+        "flow": 47,
+        "stress": 16,
+        "fatigued": 25,
+        "scattered": 44
+      }
+    }
+  },
+  "rng_seed": 42,
+  "description": "generate_dataset.py\n===================\nSynthetic dataset generator for the Pulse cognitive-state AI."
+}

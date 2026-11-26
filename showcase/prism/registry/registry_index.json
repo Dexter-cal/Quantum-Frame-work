@@ -1,0 +1,37 @@
+{
+  "prism_sentiment": {
+    "1.0.0": {
+      "name": "prism_sentiment",
+      "version": "1.0.0",
+      "description": "PRISM sentiment classifier v1",
+      "tags": [
+        "classification",
+        "sentiment",
+        "text",
+        "starter-model"
+      ],
+      "technique": "classifier",
+      "created_at": "2026-10-27T12:53:35Z",
+      "file_path": "/home/z/my-project/download/Quantum-Frame-work-fixed/showcase/prism/registry/prism_sentiment_1.0.0.qmodel",
+      "file_size": 1890,
+      "file_hash": "78746972822bfebc7af0ace59a1b1716cdf6357024a11a3b3a28b455b0b6615b",
+      "metadata": {}
+    },
+    "1.0.1": {
+      "name": "prism_sentiment",
+      "version": "1.0.1",
+      "description": "PRISM sentiment classifier (patch)",
+      "tags": [
+        "classification",
+        "sentiment",
+        "text"
+      ],
+      "technique": "classifier",
+      "created_at": "2026-10-27T12:53:35Z",
+      "file_path": "/home/z/my-project/download/Quantum-Frame-work-fixed/showcase/prism/registry/prism_sentiment_1.0.1.qmodel",
+      "file_size": 1899,
+      "file_hash": "9390185ab53ea24f7afff5ecebc313399f90729b5dc4d727b5abbaf003b50925",
+      "metadata": {}
+    }
+  }
+}

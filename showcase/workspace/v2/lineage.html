@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Model Lineage</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif; margin: 24px; background: #fafafa;
+          color: #333; }
+  h1 { margin-top: 0; }
+  .stats { background: white; padding: 14px 18px; border-radius: 8px;
+           display: inline-block; margin-bottom: 16px;
+           box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  .stats span { margin-right: 18px; color: #555; }
+  .stats b { color: #222; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+  .legend-item { display: inline-flex; align-items: center;
+                 padding: 4px 10px; border-radius: 12px;
+                 color: white; font-size: 12px; font-weight: bold; }
+  #graph { background: white; padding: 24px; border-radius: 8px;
+           box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: auto; }
+  table { width: 100%; border-collapse: collapse; margin-top: 16px;
+          background: white; border-radius: 8px; overflow: hidden;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  th, td { text-align: left; padding: 8px 12px;
+           border-bottom: 1px solid #eee; font-size: 13px; }
+  th { background: #f5f5f5; font-weight: 600; }
+  code { background: #f0f0f0; padding: 2px 6px; border-radius: 3px;
+         font-size: 12px; }
+  .mermaid { text-align: center; }
+</style>
+</head>
+<body>
+<h1>Model Lineage</h1>
+<div class="stats">
+  <span><b>Nodes:</b> 6</span>
+  <span><b>Edges:</b> 6</span>
+  <span><b>Roots:</b> 1</span>
+  <span><b>Leaves:</b> 2</span>
+  <span><b>Max depth:</b> 4</span>
+  <span><b>Avg branching:</b> 1.0</span>
+</div>
+<div class="legend">  <span class="legend-item" style="background:#2196F3">create</span>
+  <span class="legend-item" style="background:#4CAF50">train</span>
+  <span class="legend-item" style="background:#009688">finetune</span>
+  <span class="legend-item" style="background:#FF9800">quantize</span>
+  <span class="legend-item" style="background:#9C27B0">distill</span>
+  <span class="legend-item" style="background:#E91E63">merge</span></div>
+<div id="graph">
+<pre class="mermaid">
+flowchart TD
+    classDef createStyle fill:#2196F3,stroke:#333,color:white,stroke-width:2px
+    classDef trainStyle fill:#4CAF50,stroke:#333,color:white,stroke-width:2px
+    classDef finetuneStyle fill:#009688,stroke:#333,color:white,stroke-width:2px
+    classDef quantizeStyle fill:#FF9800,stroke:#333,color:white,stroke-width:2px
+    classDef pruneStyle fill:#F44336,stroke:#333,color:white,stroke-width:2px
+    classDef distillStyle fill:#9C27B0,stroke:#333,color:white,stroke-width:2px
+    classDef convertStyle fill:#9E9E9E,stroke:#333,color:white,stroke-width:2px
+    classDef mergeStyle fill:#E91E63,stroke:#333,color:white,stroke-width:2px
+    classDef cloneStyle fill:#00BCD4,stroke:#333,color:white,stroke-width:2px
+    classDef deployStyle fill:#FFC107,stroke:#333,color:white,stroke-width:2px
+    m1["base_v1 [create]"]:::createStyle
+    m1_v2["m1_v2 [train]"]:::trainStyle
+    m1_v3["m1_v3 [finetune]"]:::finetuneStyle
+    m1_int8["m1_int8 [quantize]"]:::quantizeStyle
+    m2["m2 [distill]"]:::distillStyle
+    m3["m3 [merge]"]:::mergeStyle
+    m1 -->|train| m1_v2
+    m1_v2 -->|finetune| m1_v3
+    m1_v3 -->|quantize| m1_int8
+    m1_v2 -->|distill| m2
+    m1_v3 -->|merge| m3
+    m2 -->|merge| m3
+</pre>
+</div>
+<h2>Nodes</h2>
+<table>
+<thead><tr><th>model_id</th><th>name</th><th>operation</th>
+<th>parent_id</th><th>timestamp</th></tr></thead>
+<tbody>
+<tr><td>m1</td><td>base_v1</td><td><span class="legend-item" style="background:#2196F3">create</span></td><td>-</td><td>2026-11-16T06:38:31Z</td></tr>
+<tr><td>m1_v2</td><td>m1_v2</td><td><span class="legend-item" style="background:#4CAF50">train</span></td><td>m1</td><td>2026-11-16T06:38:31Z</td></tr>
+<tr><td>m1_v3</td><td>m1_v3</td><td><span class="legend-item" style="background:#009688">finetune</span></td><td>m1_v2</td><td>2026-11-16T06:38:31Z</td></tr>
+<tr><td>m1_int8</td><td>m1_int8</td><td><span class="legend-item" style="background:#FF9800">quantize</span></td><td>m1_v3</td><td>2026-11-16T06:38:31Z</td></tr>
+<tr><td>m2</td><td>m2</td><td><span class="legend-item" style="background:#9C27B0">distill</span></td><td>m1_v2</td><td>2026-11-16T06:38:31Z</td></tr>
+<tr><td>m3</td><td>m3</td><td><span class="legend-item" style="background:#E91E63">merge</span></td><td>-</td><td>2026-11-16T06:38:31Z</td></tr>
+</tbody>
+</table>
+<script>
+  mermaid.initialize({ startOnLoad: true, securityLevel: 'loose',
+                       theme: 'default', flowchart: { useMaxWidth: true } });
+</script>
+</body>
+</html>

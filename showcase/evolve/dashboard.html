@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>EVOLVE — Self-Improving Digital Organism</title>
+<style>
+/* =====================================================================
+   EVOLVE dashboard — dark AI-aesthetic, single-file, no external deps.
+   ===================================================================== */
+:root {
+  --bg-0: #0a0e1a;
+  --bg-1: #0f1424;
+  --bg-2: #161c30;
+  --bg-3: #1e2540;
+  --border: #2a3354;
+  --text-0: #e8ecf5;
+  --text-1: #a0aac4;
+  --text-2: #6b7494;
+  --accent: #00ff9d;
+  --accent-dim: #00b870;
+  --warning: #ffb547;
+  --error: #ff5470;
+  --info: #5ec8ff;
+  --purple: #c084fc;
+  --pink: #ff79c6;
+  --font-mono: 'SF Mono', 'Monaco', 'Cascadia Code', 'Consolas', monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg-0);
+  color: var(--text-0);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-x: hidden;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(0,255,157,0.04) 0%, transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(192,132,252,0.04) 0%, transparent 40%);
+}
+
+.app {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 24px;
+  display: grid;
+  gap: 20px;
+}
+
+/* === Header === */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, var(--bg-1), var(--bg-2));
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+}
+.header::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: 0.5;
+}
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.logo {
+  width: 48px; height: 48px;
+  border-radius: 12px;
+  background: radial-gradient(circle, var(--accent) 0%, var(--accent-dim) 60%, transparent 100%);
+  position: relative;
+  box-shadow: 0 0 24px rgba(0,255,157,0.4);
+  animation: pulse 2.4s ease-in-out infinite;
+}
+.logo::after {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border-radius: 8px;
+  background: var(--bg-1);
+}
+.logo::before {
+  content: 'E';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 22px;
+  color: var(--accent);
+  z-index: 1;
+}
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 24px rgba(0,255,157,0.4); }
+  50% { box-shadow: 0 0 40px rgba(0,255,157,0.7); }
+}
+.header-title h1 {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--text-0);
+}
+.header-title p {
+  font-size: 12px;
+  color: var(--text-2);
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+}
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.badge {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  color: var(--text-1);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.badge.live {
+  border-color: var(--accent-dim);
+  color: var(--accent);
+}
+.badge-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+  animation: blink 1.2s ease-in-out infinite;
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+.badge.idle .badge-dot {
+  background: var(--text-2);
+  box-shadow: none;
+  animation: none;
+}
+.badge.signed {
+  border-color: var(--info);
+  color: var(--info);
+}
+
+/* === Hero stats === */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+.stat-card {
+  background: linear-gradient(135deg, var(--bg-1), var(--bg-2));
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s, transform 0.2s;
+}
+.stat-card:hover {
+  border-color: var(--accent-dim);
+  transform: translateY(-2px);
+}
+.stat-card::before {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: 0.6;
+}
+.stat-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-2);
+  margin-bottom: 8px;
+}
+.stat-value {
+  font-family: var(--font-mono);
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text-0);
+  letter-spacing: -1px;
+}
+.stat-delta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-2);
+  margin-top: 4px;
+}
+.stat-delta.positive { color: var(--accent); }
+.stat-delta.negative { color: var(--error); }
+.stat-card.flash {
+  animation: cardflash 0.6s ease;
+}
+@keyframes cardflash {
+  0% { background: linear-gradient(135deg, var(--bg-1), var(--bg-2)); }
+  50% { background: linear-gradient(135deg, var(--bg-2), rgba(0,255,157,0.1)); }
+  100% { background: linear-gradient(135deg, var(--bg-1), var(--bg-2)); }
+}
+
+/* === Main grid: skills + trajectory + agent monologue === */
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
+.panel {
+  background: linear-gradient(135deg, var(--bg-1), var(--bg-2));
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  min-height: 320px;
+}
+.panel-title {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-1);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.panel-title::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 14px;
+  background: var(--accent);
+  margin-right: 10px;
+  vertical-align: middle;
+  border-radius: 2px;
+}
+.panel-title span:first-child { display: flex; align-items: center; }
+
+/* Skill bars */
+.skill-row {
+  margin-bottom: 14px;
+}
+.skill-row:last-child { margin-bottom: 0; }
+.skill-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+.skill-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-0);
+}
+.skill-chip {
+  width: 8px; height: 8px;
+  border-radius: 2px;
+}
+.skill-chip.maze { background: var(--warning); }
+.skill-chip.sequence { background: var(--info); }
+.skill-chip.resource { background: var(--accent); }
+.skill-chip.avoid { background: var(--purple); }
+.skill-value {
+  font-weight: 700;
+  color: var(--text-0);
+}
+.skill-value.positive { color: var(--accent); }
+.skill-value.negative { color: var(--error); }
+.skill-bar-track {
+  height: 8px;
+  background: var(--bg-3);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+.skill-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+.skill-bar-fill.maze { background: linear-gradient(90deg, var(--warning), #ffd089); }
+.skill-bar-fill.sequence { background: linear-gradient(90deg, var(--info), #a8e0ff); }
+.skill-bar-fill.resource { background: linear-gradient(90deg, var(--accent), #80ffd0); }
+.skill-bar-fill.avoid { background: linear-gradient(90deg, var(--purple), #e0b8ff); }
+.skill-verdict {
+  font-size: 10px;
+  color: var(--text-2);
+  margin-top: 4px;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Trajectory chart */
+.chart-container {
+  flex: 1;
+  position: relative;
+  min-height: 220px;
+}
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Hyperparameter gauges */
+.hparams {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 8px;
+}
+.gauge {
+  text-align: center;
+}
+.gauge-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+.gauge-value {
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+.gauge-track {
+  height: 6px;
+  background: var(--bg-3);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.gauge-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-dim), var(--accent));
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+.gauge-range {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-2);
+  margin-top: 4px;
+}
+
+/* Agent monologue */
+.monologue {
+  background: var(--bg-0);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  color: var(--text-0);
+  flex: 1;
+  overflow-y: auto;
+  max-height: 280px;
+  position: relative;
+}
+.monologue::before {
+  content: '> ';
+  color: var(--accent);
+  font-weight: 700;
+}
+.monologue-meta {
+  font-size: 10px;
+  color: var(--text-2);
+  margin-top: 8px;
+  font-family: var(--font-mono);
+}
+
+/* === Lower row: critique + episodes + controls === */
+.lower-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr 1fr;
+  gap: 16px;
+}
+.critique {
+  background: var(--bg-0);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  color: var(--text-1);
+  flex: 1;
+  overflow-y: auto;
+  max-height: 240px;
+}
+
+.episodes-list {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 240px;
+  background: var(--bg-0);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+}
+.episode-row {
+  display: grid;
+  grid-template-columns: 32px 24px 1fr 80px 60px;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  border-bottom: 1px solid var(--bg-2);
+}
+.episode-row:last-child { border-bottom: none; }
+.episode-row:hover { background: var(--bg-2); }
+.episode-idx { color: var(--text-2); text-align: right; }
+.episode-solved { color: var(--accent); }
+.episode-solved.x { color: var(--error); }
+.episode-puzzle {
+  display: flex; align-items: center; gap: 6px;
+  color: var(--text-1);
+}
+.episode-puzzle .skill-chip { width: 6px; height: 6px; }
+.episode-reward { text-align: right; color: var(--text-0); font-weight: 700; }
+.episode-reward.positive { color: var(--accent); }
+.episode-reward.negative { color: var(--error); }
+.episode-steps { text-align: right; color: var(--text-2); }
+
+/* Controls */
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.control-row {
+  display: flex;
+  gap: 8px;
+}
+.btn {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-3);
+  color: var(--text-0);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.btn:hover:not(:disabled) {
+  border-color: var(--accent-dim);
+  background: var(--bg-2);
+  color: var(--accent);
+}
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.btn.primary {
+  background: linear-gradient(135deg, var(--accent-dim), var(--accent));
+  border-color: var(--accent);
+  color: var(--bg-0);
+}
+.btn.primary:hover:not(:disabled) {
+  filter: brightness(1.15);
+  color: var(--bg-0);
+}
+.btn.danger {
+  border-color: var(--error);
+  color: var(--error);
+}
+.btn.danger:hover:not(:disabled) {
+  background: rgba(255,84,112,0.1);
+  color: var(--error);
+}
+.select {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-3);
+  color: var(--text-0);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  cursor: pointer;
+}
+.select:focus, .btn:focus { outline: 2px solid var(--accent-dim); outline-offset: 2px; }
+.control-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 4px;
+}
+
+/* Toast */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 1000;
+}
+.toast {
+  padding: 12px 18px;
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-0);
+  max-width: 360px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  animation: slideIn 0.3s ease;
+}
+.toast.error { border-left-color: var(--error); }
+.toast.info { border-left-color: var(--info); }
+@keyframes slideIn {
+  from { transform: translateX(20px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-2);
+  padding: 12px;
+  letter-spacing: 1px;
+}
+.footer a { color: var(--accent-dim); text-decoration: none; }
+
+/* Loading overlay */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10,14,26,0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  font-family: var(--font-mono);
+  color: var(--accent);
+  font-size: 14px;
+  letter-spacing: 2px;
+}
+.loading-overlay.hidden { display: none; }
+.loading-overlay .spinner {
+  display: inline-block;
+  width: 16px; height: 16px;
+  border: 2px solid var(--accent-dim);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-right: 12px;
+  vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .main-grid, .lower-grid { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- === Header === -->
+  <div class="header">
+    <div class="header-left">
+      <div class="logo"></div>
+      <div class="header-title">
+        <h1>EVOLVE</h1>
+        <p>SELF-IMPROVING DIGITAL ORGANISM · QAI FRAMEWORK</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="badge live" id="status-badge">
+        <span class="badge-dot"></span>
+        <span id="status-text">LIVE</span>
+      </div>
+      <div class="badge" id="persistence-badge" title="Knowledge accumulated across sessions">
+        <span class="badge-dot" style="background:var(--purple); box-shadow:0 0 8px var(--purple); animation:none;"></span>
+        <span id="persistence-text">SESSION 1</span>
+      </div>
+      <div class="badge signed" id="signed-badge">SIGNED</div>
+      <div class="badge" id="version-badge">v1.0</div>
+    </div>
+  </div>
+
+  <!-- === Hero stats === -->
+  <div class="stats-grid">
+    <div class="stat-card" id="card-episodes">
+      <div class="stat-label">Episodes Completed</div>
+      <div class="stat-value" id="stat-episodes">0</div>
+      <div class="stat-delta" id="delta-episodes">+0 this session</div>
+    </div>
+    <div class="stat-card" id="card-solved">
+      <div class="stat-label">Puzzles Solved</div>
+      <div class="stat-value" id="stat-solved">0</div>
+      <div class="stat-delta" id="delta-solved">+0 this session</div>
+    </div>
+    <div class="stat-card" id="card-reward">
+      <div class="stat-label">Total Reward</div>
+      <div class="stat-value" id="stat-reward">0.0</div>
+      <div class="stat-delta" id="delta-reward">+0.0 this session</div>
+    </div>
+    <div class="stat-card" id="card-qtable">
+      <div class="stat-label">Q-Table Size</div>
+      <div class="stat-value" id="stat-qtable">0</div>
+      <div class="stat-delta" id="delta-qtable">0 distinct states</div>
+    </div>
+  </div>
+
+  <!-- === Main grid === -->
+  <div class="main-grid">
+
+    <!-- Skills by puzzle -->
+    <div class="panel">
+      <div class="panel-title">
+        <span>SKILL BY PUZZLE</span>
+        <span style="font-size:10px; color:var(--text-2); text-transform:none; letter-spacing:0;">
+          avg recent reward
+        </span>
+      </div>
+      <div id="skills-container">
+        <div class="skill-row">
+          <div class="skill-header">
+            <div class="skill-name"><span class="skill-chip maze"></span>maze</div>
+            <div class="skill-value" id="skill-maze">0.00</div>
+          </div>
+          <div class="skill-bar-track">
+            <div class="skill-bar-fill maze" id="bar-maze" style="width:0%"></div>
+          </div>
+          <div class="skill-verdict" id="verdict-maze">—</div>
+        </div>
+        <div class="skill-row">
+          <div class="skill-header">
+            <div class="skill-name"><span class="skill-chip sequence"></span>sequence</div>
+            <div class="skill-value" id="skill-sequence">0.00</div>
+          </div>
+          <div class="skill-bar-track">
+            <div class="skill-bar-fill sequence" id="bar-sequence" style="width:0%"></div>
+          </div>
+          <div class="skill-verdict" id="verdict-sequence">—</div>
+        </div>
+        <div class="skill-row">
+          <div class="skill-header">
+            <div class="skill-name"><span class="skill-chip resource"></span>resource</div>
+            <div class="skill-value" id="skill-resource">0.00</div>
+          </div>
+          <div class="skill-bar-track">
+            <div class="skill-bar-fill resource" id="bar-resource" style="width:0%"></div>
+          </div>
+          <div class="skill-verdict" id="verdict-resource">—</div>
+        </div>
+        <div class="skill-row">
+          <div class="skill-header">
+            <div class="skill-name"><span class="skill-chip avoid"></span>avoid</div>
+            <div class="skill-value" id="skill-avoid">0.00</div>
+          </div>
+          <div class="skill-bar-track">
+            <div class="skill-bar-fill avoid" id="bar-avoid" style="width:0%"></div>
+          </div>
+          <div class="skill-verdict" id="verdict-avoid">—</div>
+        </div>
+      </div>
+
+      <!-- Hyperparameter gauges -->
+      <div style="margin-top: 24px;">
+        <div class="panel-title" style="margin-bottom: 12px;">
+          <span>SELF-TUNED HYPERPARAMETERS</span>
+        </div>
+        <div class="hparams">
+          <div class="gauge">
+            <div class="gauge-label">EXPLORATION (ε)</div>
+            <div class="gauge-value" id="gauge-epsilon">0.000</div>
+            <div class="gauge-track">
+              <div class="gauge-fill" id="gauge-epsilon-fill" style="width:0%"></div>
+            </div>
+            <div class="gauge-range">
+              <span>0.05</span>
+              <span>0.70</span>
+            </div>
+          </div>
+          <div class="gauge">
+            <div class="gauge-label">LEARNING RATE</div>
+            <div class="gauge-value" id="gauge-lr">0.000</div>
+            <div class="gauge-track">
+              <div class="gauge-fill" id="gauge-lr-fill" style="width:0%"></div>
+            </div>
+            <div class="gauge-range">
+              <span>0.02</span>
+              <span>0.40</span>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top: 12px; font-family: var(--font-mono); font-size: 11px; color: var(--text-1); text-align: center;">
+          Performance slope: <span id="perf-slope" style="color:var(--accent); font-weight:700;">+0.000</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reward trajectory chart -->
+    <div class="panel">
+      <div class="panel-title">
+        <span>REWARD TRAJECTORY</span>
+        <span style="font-size:10px; color:var(--text-2); text-transform:none; letter-spacing:0;">
+          last 30 episodes
+        </span>
+      </div>
+      <div class="chart-container">
+        <canvas id="trajectory-chart"></canvas>
+      </div>
+      <div style="margin-top: 12px; font-family: var(--font-mono); font-size: 11px; color: var(--text-1); display:flex; justify-content:space-between;">
+        <span>Avg: <span id="traj-avg" style="color:var(--accent); font-weight:700;">0.00</span></span>
+        <span>Max: <span id="traj-max" style="color:var(--accent); font-weight:700;">0.00</span></span>
+        <span>Min: <span id="traj-min" style="color:var(--error); font-weight:700;">0.00</span></span>
+      </div>
+    </div>
+
+    <!-- Agent monologue -->
+    <div class="panel">
+      <div class="panel-title">
+        <span>AGENT MONOLOGUE</span>
+        <span style="font-size:10px; color:var(--text-2); text-transform:none; letter-spacing:0;" id="monologue-time">
+          —
+        </span>
+      </div>
+      <div class="monologue" id="monologue">Loading agent's self-explanation...</div>
+      <div class="monologue-meta" id="monologue-meta">explain_self() · last refresh: —</div>
+    </div>
+  </div>
+
+  <!-- === Lower grid === -->
+  <div class="lower-grid">
+
+    <!-- Self-critique -->
+    <div class="panel">
+      <div class="panel-title"><span>SELF-CRITIQUE</span></div>
+      <div class="critique" id="critique">Loading critique...</div>
+    </div>
+
+    <!-- Recent episodes -->
+    <div class="panel">
+      <div class="panel-title">
+        <span>RECENT EPISODES</span>
+        <span style="font-size:10px; color:var(--text-2); text-transform:none; letter-spacing:0;">
+          live · scroll for history
+        </span>
+      </div>
+      <div class="episodes-list" id="episodes-list">
+        <div style="padding: 24px; text-align: center; color: var(--text-2); font-family: var(--font-mono); font-size: 11px;">
+          No episodes yet. Click RUN to start learning.
+        </div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="panel">
+      <div class="panel-title"><span>CONTROLS</span></div>
+      <div class="controls">
+        <div>
+          <div class="control-label">PUZZLE TYPE</div>
+          <select class="select" id="puzzle-select">
+            <option value="random">🎲 Random (all 4 puzzles)</option>
+            <option value="maze">🧩 Maze</option>
+            <option value="sequence">🔢 Sequence</option>
+            <option value="resource">🌾 Resource</option>
+            <option value="avoid">⚡ Avoid</option>
+          </select>
+        </div>
+        <div>
+          <div class="control-label">RUN EPISODES (agent learns + auto-saves)</div>
+          <div class="control-row">
+            <button class="btn" data-n="1">1</button>
+            <button class="btn primary" data-n="10">10</button>
+            <button class="btn" data-n="25">25</button>
+            <button class="btn" data-n="50">50</button>
+          </div>
+        </div>
+        <div>
+          <div class="control-label">AGENT ACTIONS</div>
+          <div class="control-row">
+            <button class="btn" id="btn-explain">Explain</button>
+            <button class="btn" id="btn-critique">Critique</button>
+          </div>
+        </div>
+        <div>
+          <div class="control-label">PERSISTENT MEMORY</div>
+          <div class="control-row">
+            <button class="btn" id="btn-save">Save Brain Now</button>
+            <button class="btn" id="btn-reset-mem">Clear Working Mem</button>
+          </div>
+          <div style="font-family: var(--font-mono); font-size: 10px; color: var(--text-2); margin-top: 4px; line-height: 1.4;">
+            <span id="persistence-detail">—</span>
+          </div>
+        </div>
+        <div>
+          <div class="control-label">DANGER ZONE</div>
+          <div class="control-row">
+            <button class="btn danger" id="btn-reset">Factory Reset (delete brain)</button>
+          </div>
+          <div style="font-family: var(--font-mono); font-size: 10px; color: var(--text-2); margin-top: 4px;">
+            Deletes the sidecar file. Next launch starts from the frozen bundle.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    EVOLVE · QAI Framework · Self-contained bundle ·
+    <span id="bundle-info">—</span>
+  </div>
+</div>
+
+<div class="toast-container" id="toasts"></div>
+
+<div class="loading-overlay" id="loading-overlay">
+  <div><span class="spinner"></span>Loading EVOLVE bundle...</div>
+</div>
+
+<script>
+// =====================================================================
+// EVOLVE dashboard client — talks to the local launcher's JSON API.
+// =====================================================================
+const API_BASE = '';  // same origin
+
+// Track session deltas (since the dashboard was opened)
+let sessionStart = { episodes: 0, solved: 0, reward: 0 };
+let rewardHistory = [];  // last N episode rewards for the trajectory chart
+let isRunning = false;
+
+// === Toast helper ===
+function toast(msg, kind = 'info', ttl = 3000) {
+  const el = document.createElement('div');
+  el.className = 'toast ' + kind;
+  el.textContent = msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateX(20px)';
+    setTimeout(() => el.remove(), 300);
+  }, ttl);
+}
+
+// === API helpers ===
+async function apiGet(path) {
+  const r = await fetch(API_BASE + path);
+  if (!r.ok) throw new Error(`GET ${path} -> ${r.status}`);
+  return r.json();
+}
+async function apiPost(path, body) {
+  const r = await fetch(API_BASE + path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body || {}),
+  });
+  if (!r.ok) throw new Error(`POST ${path} -> ${r.status}`);
+  return r.json();
+}
+
+// === Render functions ===
+function flashCard(id) {
+  const el = document.getElementById(id);
+  el.classList.remove('flash');
+  void el.offsetWidth;  // force reflow
+  el.classList.add('flash');
+}
+
+function fmtDelta(now, start, suffix = '') {
+  const d = now - start;
+  const sign = d > 0 ? '+' : '';
+  return `${sign}${d.toFixed(1)}${suffix} this session`;
+}
+
+function setStat(id, value, cardId, deltaId, deltaVal, deltaClass) {
+  document.getElementById(id).textContent = value;
+  if (cardId) flashCard(cardId);
+  if (deltaId) {
+    const el = document.getElementById(deltaId);
+    el.textContent = deltaVal;
+    el.classList.remove('positive', 'negative');
+    if (deltaClass) el.classList.add(deltaClass);
+  }
+}
+
+function renderStatus(status) {
+  // Hero stats
+  setStat('stat-episodes', status.episodes_completed, 'card-episodes',
+          'delta-episodes', fmtDelta(status.episodes_completed, sessionStart.episodes),
+          status.episodes_completed > sessionStart.episodes ? 'positive' : '');
+  setStat('stat-solved', status.puzzles_solved, 'card-solved',
+          'delta-solved', fmtDelta(status.puzzles_solved, sessionStart.solved),
+          status.puzzles_solved > sessionStart.solved ? 'positive' : '');
+  setStat('stat-reward', status.total_reward.toFixed(1), 'card-reward',
+          'delta-reward', fmtDelta(status.total_reward, sessionStart.reward),
+          status.total_reward > sessionStart.reward ? 'positive' : 'negative');
+  setStat('stat-qtable', status.q_table_size, 'card-qtable',
+          'delta-qtable', `${status.states_seen} distinct states`);
+
+  // Skills
+  const puzzles = ['maze', 'sequence', 'resource', 'avoid'];
+  const maxAbs = 30;  // for bar scaling
+  for (const p of puzzles) {
+    const val = status.skill_by_puzzle[p] || 0;
+    const valEl = document.getElementById('skill-' + p);
+    valEl.textContent = (val >= 0 ? '+' : '') + val.toFixed(2);
+    valEl.classList.remove('positive', 'negative');
+    valEl.classList.add(val >= 0 ? 'positive' : 'negative');
+    // Bar: scale from [-maxAbs, +maxAbs] -> [0, 100]%
+    const pct = Math.max(0, Math.min(100, ((val + maxAbs) / (2 * maxAbs)) * 100));
+    document.getElementById('bar-' + p).style.width = pct + '%';
+    // Verdict
+    const verdict = val > 10 ? 'MASTERED' : val > 0 ? 'LEARNING' : 'STRUGGLING';
+    document.getElementById('verdict-' + p).textContent = verdict;
+  }
+
+  // Hyperparameter gauges
+  const eps = status.current_epsilon;
+  document.getElementById('gauge-epsilon').textContent = eps.toFixed(3);
+  const epsPct = ((eps - 0.05) / (0.70 - 0.05)) * 100;
+  document.getElementById('gauge-epsilon-fill').style.width = Math.max(0, Math.min(100, epsPct)) + '%';
+
+  const lr = status.current_lr;
+  document.getElementById('gauge-lr').textContent = lr.toFixed(3);
+  const lrPct = ((lr - 0.02) / (0.40 - 0.02)) * 100;
+  document.getElementById('gauge-lr-fill').style.width = Math.max(0, Math.min(100, lrPct)) + '%';
+
+  // Performance slope
+  const slope = status.performance_slope;
+  const slopeEl = document.getElementById('perf-slope');
+  slopeEl.textContent = (slope >= 0 ? '+' : '') + slope.toFixed(4);
+  slopeEl.style.color = slope > 0.1 ? 'var(--accent)' :
+                       slope < -0.1 ? 'var(--error)' : 'var(--warning)';
+
+  // Status badge
+  const badge = document.getElementById('status-badge');
+  const text = document.getElementById('status-text');
+  if (isRunning) {
+    badge.classList.remove('idle'); badge.classList.add('live');
+    text.textContent = 'LEARNING';
+  } else {
+    badge.classList.remove('live'); badge.classList.add('idle');
+    text.textContent = 'IDLE';
+  }
+}
+
+function renderEpisodes(eps) {
+  const list = document.getElementById('episodes-list');
+  if (!eps || eps.length === 0) {
+    list.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--text-2); font-family: var(--font-mono); font-size: 11px;">No episodes yet. Click RUN to start learning.</div>';
+    return;
+  }
+  // Show most recent first
+  const recent = eps.slice().reverse();
+  list.innerHTML = recent.map((e, i) => {
+    const idx = eps.length - i;  // original index
+    const solvedSym = e.solved ? '✓' : '✗';
+    const rewardClass = e.total_reward >= 0 ? 'positive' : 'negative';
+    const rewardStr = (e.total_reward >= 0 ? '+' : '') + e.total_reward.toFixed(2);
+    return `
+      <div class="episode-row">
+        <div class="episode-idx">#${idx}</div>
+        <div class="episode-solved ${e.solved ? '' : 'x'}">${solvedSym}</div>
+        <div class="episode-puzzle">
+          <span class="skill-chip ${e.puzzle}"></span>${e.puzzle}
+        </div>
+        <div class="episode-reward ${rewardClass}">${rewardStr}</div>
+        <div class="episode-steps">${e.steps} steps</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderTrajectoryChart() {
+  const canvas = document.getElementById('trajectory-chart');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.clientWidth * dpr;
+  const h = canvas.clientHeight * dpr;
+  canvas.width = w; canvas.height = h;
+  ctx.scale(dpr, dpr);
+  const W = canvas.clientWidth, H = canvas.clientHeight;
+
+  // Background grid
+  ctx.fillStyle = 'transparent';
+  ctx.clearRect(0, 0, W, H);
+
+  // Determine y-range
+  let yMin = -15, yMax = 30;
+  if (rewardHistory.length > 0) {
+    const dataMin = Math.min(...rewardHistory);
+    const dataMax = Math.max(...rewardHistory);
+    yMin = Math.min(yMin, dataMin - 2);
+    yMax = Math.max(yMax, dataMax + 2);
+  }
+  const yRange = yMax - yMin;
+
+  // Draw zero line
+  const zeroY = H - ((0 - yMin) / yRange) * H;
+  ctx.strokeStyle = 'rgba(160,170,196,0.2)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(0, zeroY); ctx.lineTo(W, zeroY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Draw y axis labels
+  ctx.fillStyle = 'rgba(160,170,196,0.6)';
+  ctx.font = '10px monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText(yMax.toFixed(0), 4, 12);
+  ctx.fillText('0', 4, zeroY - 4);
+  ctx.fillText(yMin.toFixed(0), 4, H - 4);
+
+  if (rewardHistory.length < 2) {
+    ctx.fillStyle = 'rgba(160,170,196,0.5)';
+    ctx.font = '11px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('Run episodes to see trajectory', W / 2, H / 2);
+    return;
+  }
+
+  // Draw the trajectory line
+  const n = rewardHistory.length;
+  const xStep = W / Math.max(n - 1, 1);
+  const points = rewardHistory.map((r, i) => ({
+    x: i * xStep,
+    y: H - ((r - yMin) / yRange) * H,
+    r: r,
+  }));
+
+  // Filled area under the curve
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, zeroY);
+  for (const p of points) ctx.lineTo(p.x, p.y);
+  ctx.lineTo(points[n-1].x, zeroY);
+  ctx.closePath();
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, 'rgba(0,255,157,0.3)');
+  grad.addColorStop(1, 'rgba(0,255,157,0.0)');
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Line
+  ctx.strokeStyle = '#00ff9d';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+  for (const p of points) ctx.lineTo(p.x, p.y);
+  ctx.stroke();
+
+  // Points
+  for (const p of points) {
+    ctx.fillStyle = p.r >= 0 ? '#00ff9d' : '#ff5470';
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Stats
+  const avg = rewardHistory.reduce((a, b) => a + b, 0) / n;
+  document.getElementById('traj-avg').textContent = avg.toFixed(2);
+  document.getElementById('traj-max').textContent = Math.max(...rewardHistory).toFixed(2);
+  document.getElementById('traj-min').textContent = Math.min(...rewardHistory).toFixed(2);
+}
+
+async function refreshMonologue() {
+  try {
+    const r = await apiGet('/api/explain');
+    document.getElementById('monologue').textContent = r.text;
+    const ts = new Date().toLocaleTimeString();
+    document.getElementById('monologue-meta').textContent =
+      `explain_self() · last refresh: ${ts}`;
+    document.getElementById('monologue-time').textContent = ts;
+  } catch (e) {
+    document.getElementById('monologue').textContent = 'Error: ' + e.message;
+  }
+}
+
+async function refreshCritique() {
+  try {
+    const r = await apiGet('/api/critique');
+    document.getElementById('critique').textContent = r.text;
+  } catch (e) {
+    document.getElementById('critique').textContent = 'Error: ' + e.message;
+  }
+}
+
+async function refreshAll() {
+  try {
+    const s = await apiGet('/api/status');
+    renderStatus(s);
+    const recent = await apiGet('/api/recent_episodes?n=20');
+    renderEpisodes(recent.episodes);
+    // Update reward history (take last 30 from agent's full history)
+    const all = await apiGet('/api/recent_episodes?n=30');
+    rewardHistory = all.episodes.map(e => e.total_reward);
+    renderTrajectoryChart();
+    // Refresh persistence badge + detail
+    refreshPersistence();
+  } catch (e) {
+    toast('Refresh failed: ' + e.message, 'error');
+  }
+}
+
+async function refreshPersistence() {
+  try {
+    const p = await apiGet('/api/persistence');
+    if (!p.enabled) {
+      document.getElementById('persistence-text').textContent = 'NO BRAIN';
+      document.getElementById('persistence-detail').textContent = 'Persistent brain not configured.';
+      return;
+    }
+    // Header badge
+    const sessionN = p.current_session_id || 1;
+    const totalCheckpoints = p.n_checkpoints || 0;
+    document.getElementById('persistence-text').textContent =
+      `SESSION ${sessionN} · ${totalCheckpoints} SAVES`;
+    // Detail line in controls
+    let lastSavedStr = 'never';
+    if (p.last_saved_iso) {
+      const seconds = p.seconds_since_save;
+      if (seconds < 60) lastSavedStr = `${seconds.toFixed(0)}s ago`;
+      else if (seconds < 3600) lastSavedStr = `${(seconds/60).toFixed(0)} min ago`;
+      else lastSavedStr = `${(seconds/3600).toFixed(1)} hr ago`;
+    }
+    document.getElementById('persistence-detail').innerHTML =
+      `Last saved: <span style="color:var(--accent)">${lastSavedStr}</span>` +
+      (p.episodes_since_save > 0
+        ? ` · <span style="color:var(--warning)">${p.episodes_since_save} unsaved episodes</span>`
+        : ` · <span style="color:var(--text-2)">all saved</span>`) +
+      (p.bundle_matches === false
+        ? ` · <span style="color:var(--error)">⚠ bundle mismatch</span>`
+        : '');
+  } catch (e) {
+    // silent fail -- persistence is informational
+  }
+}
+
+// === Action handlers ===
+async function runEpisodes(n) {
+  if (isRunning) {
+    toast('Already running, please wait...', 'info');
+    return;
+  }
+  const puzzle = document.getElementById('puzzle-select').value;
+  isRunning = true;
+  document.querySelectorAll('.btn').forEach(b => b.disabled = true);
+  toast(`Running ${n} ${puzzle} episode${n > 1 ? 's' : ''}...`, 'info');
+  try {
+    const r = await apiPost('/api/run_episodes', { n, puzzle });
+    toast(`Done: ${r.summaries.length} episodes, ` +
+          `${r.summaries.filter(s => s.solved).length} solved, ` +
+          `total reward ${r.summaries.reduce((a, s) => a + s.total_reward, 0).toFixed(2)}`,
+          'success', 4000);
+    await refreshAll();
+    await refreshMonologue();
+    await refreshCritique();
+  } catch (e) {
+    toast('Run failed: ' + e.message, 'error');
+  } finally {
+    isRunning = false;
+    document.querySelectorAll('.btn').forEach(b => b.disabled = false);
+  }
+}
+
+async function saveBrainNow() {
+  try {
+    const r = await apiPost('/api/save', {});
+    if (r.saved) {
+      toast(`Brain saved! (${r.info.n_checkpoints} total checkpoints)`, 'success');
+      refreshPersistence();
+    } else {
+      toast(`Save skipped: ${r.reason}`, 'info');
+    }
+  } catch (e) {
+    toast('Save failed: ' + e.message, 'error');
+  }
+}
+
+async function clearWorkingMemory() {
+  if (!confirm('Clear the in-memory episode log? This does NOT delete the persistent brain -- ' +
+               'the agent keeps its Q-table and the next launch will still load accumulated state.')) return;
+  try {
+    const r = await apiPost('/api/reset', {});
+    toast('Working memory cleared. Q-table preserved.', 'info');
+    await refreshAll();
+    await refreshMonologue();
+  } catch (e) {
+    toast('Clear failed: ' + e.message, 'error');
+  }
+}
+
+async function factoryReset() {
+  if (!confirm('FACTORY RESET: This deletes the persistent brain sidecar file.\n\n' +
+               'All accumulated learning across all sessions will be LOST.\n' +
+               'The next launch will start from the frozen bundle (120 episodes).\n\n' +
+               'Are you sure?')) return;
+  try {
+    await apiPost('/api/reset_to_factory', {});
+    sessionStart = { episodes: 0, solved: 0, reward: 0 };
+    const s = await apiGet('/api/status');
+    sessionStart = { episodes: s.episodes_completed, solved: s.puzzles_solved, reward: s.total_reward };
+    toast('Factory reset complete. Brain deleted. Re-launch to start fresh.', 'info', 5000);
+    await refreshAll();
+    await refreshMonologue();
+    await refreshCritique();
+  } catch (e) {
+    toast('Factory reset failed: ' + e.message, 'error');
+  }
+}
+
+// === Wire up controls ===
+document.querySelectorAll('button[data-n]').forEach(btn => {
+  btn.addEventListener('click', () => runEpisodes(parseInt(btn.dataset.n)));
+});
+document.getElementById('btn-explain').addEventListener('click', refreshMonologue);
+document.getElementById('btn-critique').addEventListener('click', refreshCritique);
+document.getElementById('btn-save').addEventListener('click', saveBrainNow);
+document.getElementById('btn-reset-mem').addEventListener('click', clearWorkingMemory);
+document.getElementById('btn-reset').addEventListener('click', factoryReset);
+
+// === Init ===
+async function init() {
+  try {
+    const info = await apiGet('/api/info');
+    document.getElementById('bundle-info').textContent =
+      `${info.format_version} · ${info.agent_size_human} · ${info.logic_count} logic fns`;
+    document.getElementById('version-badge').textContent = 'v' + (info.format_version || '1.0').split('-').pop();
+    if (!info.signed) {
+      const sb = document.getElementById('signed-badge');
+      sb.textContent = 'UNSIGNED';
+      sb.classList.remove('signed');
+      sb.style.borderColor = 'var(--warning)';
+      sb.style.color = 'var(--warning)';
+    }
+    // Baseline sessionStart
+    const s = await apiGet('/api/status');
+    sessionStart = { episodes: s.episodes_completed, solved: s.puzzles_solved, reward: s.total_reward };
+    await refreshAll();
+    await refreshMonologue();
+    await refreshCritique();
+    document.getElementById('loading-overlay').classList.add('hidden');
+    toast('EVOLVE bundle loaded. Click RUN to watch the agent learn.', 'success', 5000);
+    // Auto-refresh every 10s when idle (in case agent state changes server-side)
+    setInterval(() => { if (!isRunning) refreshAll(); }, 10000);
+  } catch (e) {
+    document.getElementById('loading-overlay').innerHTML =
+      `<div style="color:var(--error);"><span class="spinner" style="border-color:var(--error); border-top-color:var(--error);"></span>Failed to load: ${e.message}</div>`;
+  }
+}
+
+init();
+</script>
+</body>
+</html>

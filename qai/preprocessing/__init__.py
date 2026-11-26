@@ -1,0 +1,515 @@
+"""
+Data preprocessing, scaling, encoding, missing-value handling, and automated cleaning utilities for qai.
+"""
+
+from __future__ import annotations
+import numpy as np
+import pandas as pd
+from typing import Tuple, Optional, Any, Callable, List, Dict, Union
+
+class StandardScaler:
+    """Scales features by removing the mean and scaling to unit variance."""
+    def __init__(self):
+        self.mean_ = None
+        self.scale_ = None
+
+    def fit(self, X, y=None):
+        # `y` accepted (and ignored) for sklearn-pipeline compatibility
+        X = np.asarray(X, dtype=float)
+        self.mean_ = np.mean(X, axis=0)
+        self.scale_ = np.std(X, axis=0)
+        self.scale_[self.scale_ == 0.0] = 1.0
+        return self
+
+    def transform(self, X):
+        X = np.asarray(X, dtype=float)
+        if self.mean_ is None or self.scale_ is None:
+            raise RuntimeError("StandardScaler must be fitted before transforming data.")
+        return (X - self.mean_) / self.scale_
+
+    def fit_transform(self, X):
+        return self.fit(X).transform(X)
+
+
+class LabelEncoder:
+    """Encodes categorical labels into numeric integers and decodes them back."""
+    def __init__(self):
+        self.classes_ = None
+        self._mapping = {}
+        self._inverse = {}
+
+    def fit(self, y):
+        unique_labels = sorted(list(set(y)))
+        self.classes_ = unique_labels
+        self._mapping = {label: idx for idx, label in enumerate(unique_labels)}
+        self._inverse = {idx: label for idx, label in enumerate(unique_labels)}
+        return self
+
+    def transform(self, y):
+        if self.classes_ is None:
+            raise RuntimeError("LabelEncoder must be fitted before transforming labels.")
+        return np.array([self._mapping[item] for item in y])
+
+    def fit_transform(self, y):
+        return self.fit(y).transform(y)
+
+    def inverse_transform(self, y_encoded):
+        if self.classes_ is None:
+            raise RuntimeError("LabelEncoder must be fitted before inverse transforming.")
+        return [self._inverse[idx] for idx in y_encoded]
+
+
+class SimpleImputer:
+    """Imputes missing values (np.nan) with column mean or median strategies."""
+    def __init__(self, strategy="mean"):
+        if strategy not in ("mean", "median"):
+            raise ValueError("strategy must be either 'mean' or 'median'")
+        self.strategy = strategy
+        self.fill_values_ = None
+
+    def fit(self, X, y=None):
+        X = np.asarray(X, dtype=float)
+        fill_vals = []
+        for col_idx in range(X.shape[1]):
+            col = X[:, col_idx]
+            valid_vals = col[~np.isnan(col)]
+            if len(valid_vals) == 0:
+                fill_vals.append(0.0)
+            elif self.strategy == "mean":
+                fill_vals.append(np.mean(valid_vals))
+            else:
+                fill_vals.append(np.median(valid_vals))
+        self.fill_values_ = np.array(fill_vals)
+        return self
+
+    def transform(self, X):
+        X = np.array(X, dtype=float, copy=True)
+        if self.fill_values_ is None:
+            raise RuntimeError("SimpleImputer must be fitted before transform.")
+        for col_idx in range(X.shape[1]):
+            nan_mask = np.isnan(X[:, col_idx])
+            X[nan_mask, col_idx] = self.fill_values_[col_idx]
+        return X
+
+    def fit_transform(self, X):
+        return self.fit(X).transform(X)
+
+
+def clean_dataset(X, y=None, impute_strategy="mean", scale=True):
+    """Automated dataset cleaning: handles missing values, encodes labels, and scales features in one call."""
+    if not isinstance(X, (list, np.ndarray)):
+        raise TypeError("X must be a list or numpy array")
+
+    X_arr = np.asarray(X, dtype=float)
+    if np.isnan(X_arr).any():
+        imputer = SimpleImputer(strategy=impute_strategy)
+        X_arr = imputer.fit_transform(X_arr)
+
+    if scale:
+        scaler = StandardScaler()
+        X_arr = scaler.fit_transform(X_arr)
+
+    y_arr = None
+    if y is not None:
+        if isinstance(y[0], str):
+            encoder = LabelEncoder()
+            y_arr = encoder.fit_transform(y)
+        else:
+            y_arr = np.asarray(y)
+
+    return (X_arr, y_arr) if y is not None else X_arr
+
+
+class PolynomialFeatures:
+    """Generates polynomial and interaction feature combinations."""
+    def __init__(self, degree=2, include_bias=False):
+        from sklearn.preprocessing import PolynomialFeatures as SKPoly
+        self.degree = degree
+        self.include_bias = include_bias
+        self.model = SKPoly(degree=degree, include_bias=include_bias)
+
+    def fit_transform(self, X):
+        X_arr = np.asarray(X, dtype=float)
+        return self.model.fit_transform(X_arr)
+
+    def transform(self, X):
+        X_arr = np.asarray(X, dtype=float)
+        return self.model.transform(X_arr)
+
+
+class MinMaxScaler:
+    """Transforms features by scaling each feature to a given range [0, 1]."""
+    def __init__(self, feature_range=(0, 1)):
+        from sklearn.preprocessing import MinMaxScaler as SKMinMax
+        self.model = SKMinMax(feature_range=feature_range)
+
+    def fit_transform(self, X):
+        return self.model.fit_transform(np.asarray(X, dtype=float))
+
+    def transform(self, X):
+        return self.model.transform(np.asarray(X, dtype=float))
+
+
+class RobustScaler:
+    """Scales features using statistics that are robust to outliers."""
+    def __init__(self):
+        from sklearn.preprocessing import RobustScaler as SKRobust
+        self.model = SKRobust()
+
+    def fit_transform(self, X):
+        return self.model.fit_transform(np.asarray(X, dtype=float))
+
+    def transform(self, X):
+        return self.model.transform(np.asarray(X, dtype=float))
+
+
+class Normalizer:
+    """Normalizes samples individually to unit norm (L2 by default)."""
+    def __init__(self, norm="l2"):
+        from sklearn.preprocessing import Normalizer as SKNorm
+        self.model = SKNorm(norm=norm)
+
+    def fit_transform(self, X):
+        return self.model.fit_transform(np.asarray(X, dtype=float))
+
+    def transform(self, X):
+        return self.model.transform(np.asarray(X, dtype=float))
+
+
+class OneHotEncoder:
+    """Encodes categorical integer features as a one-hot numeric array."""
+    def __init__(self, sparse_output=False):
+        from sklearn.preprocessing import OneHotEncoder as SKOHE
+        self.model = SKOHE(sparse_output=sparse_output)
+
+    def fit_transform(self, X):
+        return self.model.fit_transform(np.asarray(X))
+
+    def transform(self, X):
+        return self.model.transform(np.asarray(X))
+
+
+class Binarizer:
+    """Binarizes data (set feature values to 0 or 1) according to a threshold."""
+    def __init__(self, threshold=0.0):
+        from sklearn.preprocessing import Binarizer as SKBin
+        self.model = SKBin(threshold=threshold)
+
+    def fit_transform(self, X):
+        return self.model.fit_transform(np.asarray(X, dtype=float))
+
+    def transform(self, X):
+        return self.model.transform(np.asarray(X, dtype=float))
+
+
+class VarianceThreshold:
+    """Feature selector that removes all low-variance features."""
+    def __init__(self, threshold: float = 0.0):
+        self.threshold = threshold
+        self.variances_ = None
+        self.selected_indices_ = None
+
+    def fit(self, X: Any, y: Any = None) -> "VarianceThreshold":
+        X_arr = np.array(X)
+        self.variances_ = np.var(X_arr, axis=0)
+        self.selected_indices_ = np.where(self.variances_ > self.threshold)[0]
+        return self
+
+    def transform(self, X: Any) -> np.ndarray:
+        X_arr = np.array(X)
+        if self.selected_indices_ is None:
+            raise RuntimeError("VarianceThreshold is not fitted yet.")
+        if len(self.selected_indices_) == 0:
+            return np.empty((X_arr.shape[0], 0))
+        return X_arr[:, self.selected_indices_]
+
+    def fit_transform(self, X: Any, y: Any = None) -> np.ndarray:
+        return self.fit(X, y).transform(X)
+
+
+class SelectKBest:
+    """Select features according to the k highest scores."""
+    def __init__(self, k: int = 10):
+        self.k = k
+        self.scores_ = None
+        self.selected_indices_ = None
+
+    def fit(self, X: Any, y: Any) -> "SelectKBest":
+        X_arr = np.array(X)
+        y_arr = np.array(y)
+        n_features = X_arr.shape[1]
+        scores = []
+        for col in range(n_features):
+            corr = np.corrcoef(X_arr[:, col], y_arr)[0, 1] if X_arr.shape[0] > 1 else 0.0
+            scores.append(abs(corr) if not np.isnan(corr) else 0.0)
+        self.scores_ = np.array(scores)
+        top_k = min(self.k, n_features)
+        self.selected_indices_ = np.argsort(self.scores_)[-top_k:]
+        return self
+
+    def transform(self, X: Any) -> np.ndarray:
+        X_arr = np.array(X)
+        if self.selected_indices_ is None:
+            raise RuntimeError("SelectKBest is not fitted yet.")
+        return X_arr[:, self.selected_indices_]
+
+    def fit_transform(self, X: Any, y: Any) -> np.ndarray:
+        return self.fit(X, y).transform(X)
+
+
+class MaxAbsScaler:
+    """Scale each feature by its maximum absolute value."""
+    def __init__(self):
+        self.max_abs_ = None
+
+    def fit(self, X: Any, y: Any = None) -> "MaxAbsScaler":
+        X_arr = np.array(X, dtype=float)
+        self.max_abs_ = np.max(np.abs(X_arr), axis=0)
+        self.max_abs_[self.max_abs_ == 0] = 1.0
+        return self
+
+    def transform(self, X: Any) -> np.ndarray:
+        if self.max_abs_ is None:
+            raise RuntimeError("MaxAbsScaler is not fitted.")
+        return np.array(X, dtype=float) / self.max_abs_
+
+    def fit_transform(self, X: Any, y: Any = None) -> np.ndarray:
+        return self.fit(X, y).transform(X)
+
+
+class OrdinalEncoder:
+    """Encode categorical features as integer arrays."""
+    def __init__(self):
+        self.categories_ = []
+
+    def fit(self, X: Any, y: Any = None) -> "OrdinalEncoder":
+        X_arr = np.array(X, dtype=object)
+        self.categories_ = [np.unique(X_arr[:, col]) for col in range(X_arr.shape[1])]
+        return self
+
+    def transform(self, X: Any) -> np.ndarray:
+        X_arr = np.array(X, dtype=object)
+        if not self.categories_:
+            raise RuntimeError("OrdinalEncoder is not fitted.")
+        out = np.zeros(X_arr.shape, dtype=int)
+        for col in range(X_arr.shape[1]):
+            mapping = {val: idx for idx, val in enumerate(self.categories_[col])}
+            out[:, col] = [mapping.get(val, 0) for val in X_arr[:, col]]
+        return out
+
+    def fit_transform(self, X: Any, y: Any = None) -> np.ndarray:
+        return self.fit(X, y).transform(X)
+
+
+class TargetEncoder:
+    """Target encoding for categorical features based on mean target value."""
+    def __init__(self, smooth: float = 1.0):
+        self.smooth = smooth
+        self.mappings_ = []
+
+    def fit(self, X: Any, y: Any) -> "TargetEncoder":
+        X_arr = np.array(X, dtype=object)
+        y_arr = np.array(y, dtype=float)
+        global_mean = np.mean(y_arr)
+        self.mappings_ = []
+
+        for col in range(X_arr.shape[1]):
+            mapping = {}
+            uniques, counts = np.unique(X_arr[:, col], return_counts=True)
+            for val, count in zip(uniques, counts):
+                cat_mean = np.mean(y_arr[X_arr[:, col] == val])
+                smoothed = (count * cat_mean + self.smooth * global_mean) / (count + self.smooth)
+                mapping[val] = smoothed
+            self.mappings_.append(mapping)
+        return self
+
+    def transform(self, X: Any) -> np.ndarray:
+        X_arr = np.array(X, dtype=object)
+        if not self.mappings_:
+            raise RuntimeError("TargetEncoder is not fitted.")
+        out = np.zeros(X_arr.shape, dtype=float)
+        for col in range(X_arr.shape[1]):
+            out[:, col] = [self.mappings_[col].get(val, 0.0) for val in X_arr[:, col]]
+        return out
+
+    def fit_transform(self, X: Any, y: Any) -> np.ndarray:
+        return self.fit(X, y).transform(X)
+
+
+class KBinsDiscretizer:
+    """Bin continuous data into k discrete intervals."""
+    def __init__(self, n_bins: int = 5):
+        self.n_bins = n_bins
+        self.bin_edges_ = []
+
+    def fit(self, X: Any, y: Any = None) -> "KBinsDiscretizer":
+        X_arr = np.array(X, dtype=float)
+        self.bin_edges_ = []
+        for col in range(X_arr.shape[1]):
+            edges = np.linspace(np.min(X_arr[:, col]), np.max(X_arr[:, col]), self.n_bins + 1)
+            self.bin_edges_.append(edges)
+        return self
+
+    def transform(self, X: Any) -> np.ndarray:
+        X_arr = np.array(X, dtype=float)
+        if not self.bin_edges_:
+            raise RuntimeError("KBinsDiscretizer is not fitted.")
+        out = np.zeros(X_arr.shape, dtype=int)
+        for col in range(X_arr.shape[1]):
+            out[:, col] = np.digitize(X_arr[:, col], self.bin_edges_[col][1:-1])
+        return out
+
+    def fit_transform(self, X: Any, y: Any = None) -> np.ndarray:
+        return self.fit(X, y).transform(X)
+
+
+class FunctionTransformer:
+    """Constructs a transformer from an arbitrary callable function."""
+    def __init__(self, func: Optional[Callable[[Any], Any]] = None):
+        self.func = func or (lambda x: x)
+
+    def fit(self, X: Any, y: Any = None) -> "FunctionTransformer":
+        return self
+
+    def transform(self, X: Any) -> np.ndarray:
+        return np.array(self.func(X))
+
+    def fit_transform(self, X: Any, y: Any = None) -> np.ndarray:
+        return self.transform(X)
+
+
+class ColumnTransformer:
+    """Applies transformers to specified column subsets."""
+    def __init__(self, transformers: List[Tuple[str, Any, List[Union[int, str]]]]):
+        self.transformers = transformers
+
+    def fit(self, X: Any, y: Any = None) -> "ColumnTransformer":
+        df = pd.DataFrame(X)
+        for name, trans, cols in self.transformers:
+            if hasattr(trans, "fit"):
+                trans.fit(df[cols].values, y)
+        return self
+
+    def transform(self, X: Any) -> np.ndarray:
+        df = pd.DataFrame(X)
+        parts = []
+        for name, trans, cols in self.transformers:
+            subset = df[cols].values
+            if hasattr(trans, "transform"):
+                part = trans.transform(subset)
+            else:
+                part = subset
+            parts.append(np.array(part))
+        return np.hstack(parts)
+
+    def fit_transform(self, X: Any, y: Any = None) -> np.ndarray:
+        return self.fit(X, y).transform(X)
+
+
+class QuantileTransformer:
+    """Non-linear transformation mapping data to uniform/normal distribution."""
+    def __init__(self, n_quantiles: int = 100, output_distribution: str = "uniform"):
+        self.n_quantiles = n_quantiles
+        self.output_distribution = output_distribution
+
+    def fit(self, X: Any, y: Any = None) -> "QuantileTransformer":
+        return self
+
+    def transform(self, X: Any) -> np.ndarray:
+        X_arr = np.array(X, dtype=float)
+        from scipy.stats import rankdata, norm
+        ranks = np.apply_along_axis(rankdata, 0, X_arr) / (X_arr.shape[0] + 1)
+        if self.output_distribution == "normal":
+            return norm.ppf(ranks)
+        return ranks
+
+    def fit_transform(self, X: Any, y: Any = None) -> np.ndarray:
+        return self.fit(X, y).transform(X)
+
+
+class PowerTransformer:
+    """Applies Box-Cox or Yeo-Johnson power transform to stabilize variance."""
+    def __init__(self, method: str = "yeo-johnson"):
+        self.method = method
+
+    def fit(self, X: Any, y: Any = None) -> "PowerTransformer":
+        return self
+
+    def transform(self, X: Any) -> np.ndarray:
+        X_arr = np.array(X, dtype=float)
+        if self.method == "box-cox" and np.any(X_arr <= 0):
+            raise ValueError("Box-Cox requires strictly positive values.")
+        from scipy.stats import boxcox, yeojohnson
+        out = np.zeros_like(X_arr)
+        for col in range(X_arr.shape[1]):
+            if self.method == "box-cox":
+                out[:, col], _ = boxcox(X_arr[:, col])
+            else:
+                out[:, col], _ = yeojohnson(X_arr[:, col])
+        return out
+
+    def fit_transform(self, X: Any, y: Any = None) -> np.ndarray:
+        return self.fit(X, y).transform(X)
+
+
+class RecursiveFeatureElimination:
+    """Selects features by recursively considering smaller and smaller sets of features."""
+    def __init__(self, estimator: Any, n_features_to_select: int = 2):
+        self.estimator = estimator
+        self.n_features_to_select = n_features_to_select
+        self.ranking_ = None
+        self.support_ = None
+
+    def fit(self, X: Any, y: Any) -> "RecursiveFeatureElimination":
+        X_arr = np.array(X)
+        y_arr = np.array(y)
+        n_features = X_arr.shape[1]
+        current_features = list(range(n_features))
+
+        while len(current_features) > self.n_features_to_select:
+            self.estimator.train(X_arr[:, current_features], y_arr)
+            from qai.core.explainability import feature_importance
+            try:
+                imps = list(feature_importance(self.estimator).values())
+                worst_idx = np.argmin(imps)
+                current_features.pop(worst_idx)
+            except Exception:
+                current_features.pop(-1)
+
+        self.support_ = np.zeros(n_features, dtype=bool)
+        self.support_[current_features] = True
+        return self
+
+    def transform(self, X: Any) -> np.ndarray:
+        if self.support_ is None:
+            raise RuntimeError("RecursiveFeatureElimination is not fitted.")
+        return np.array(X)[:, self.support_]
+
+    def fit_transform(self, X: Any, y: Any) -> np.ndarray:
+        return self.fit(X, y).transform(X)
+
+
+class SelectFromModel:
+    """Select features based on importance weights."""
+    def __init__(self, estimator: Any, threshold: str = "mean"):
+        self.estimator = estimator
+        self.threshold = threshold
+        self.support_ = None
+
+    def fit(self, X: Any, y: Any) -> "SelectFromModel":
+        X_arr = np.array(X)
+        y_arr = np.array(y)
+        self.estimator.train(X_arr, y_arr)
+        from qai.core.explainability import feature_importance
+        imps = np.array(list(feature_importance(self.estimator).values()))
+        thresh_val = np.mean(imps) if self.threshold == "mean" else float(self.threshold)
+        self.support_ = imps >= thresh_val
+        return self
+
+    def transform(self, X: Any) -> np.ndarray:
+        if self.support_ is None:
+            raise RuntimeError("SelectFromModel is not fitted.")
+        return np.array(X)[:, self.support_]
+
+    def fit_transform(self, X: Any, y: Any) -> np.ndarray:
+        return self.fit(X, y).transform(X)
