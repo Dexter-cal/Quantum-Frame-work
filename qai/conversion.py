@@ -549,12 +549,19 @@ class SafeTensorsExporter(_BaseExporter):
         path = self._ensure_path(path, _FORMAT_EXTENSIONS["safetensors"])
         try:
             from safetensors.numpy import save_file as np_save_file
-            from safetensors.torch import save_file as torch_save_file
         except ImportError:
             raise self._missing_dep(
                 "safetensors",
                 "needed for SafeTensors export. pip install safetensors"
             )
+        # safetensors.torch needs torch itself -- treat it as optional; the
+        # numpy backend below is fully functional without it (the old code
+        # imported both in one try/except, so torch-less environments got a
+        # misleading "safetensors not installed" error).
+        try:
+            from safetensors.torch import save_file as torch_save_file
+        except Exception:
+            torch_save_file = None
 
         weights = self._extract_weights(model)
         if not weights:
@@ -590,6 +597,12 @@ class SafeTensorsExporter(_BaseExporter):
     @staticmethod
     def _extract_weights(model: Any) -> Dict[str, Any]:
         """Pull a {name: tensor} state_dict out of any model."""
+        # Plain {name: tensor} dicts pass straight through (the old fallback
+        # scanned vars(model), which raises TypeError on dicts -- so every
+        # exporter crashed on plain weight dicts).
+        if isinstance(model, dict):
+            return {str(k): v for k, v in model.items()}
+
         # Unwrap qai.Bundle if we ever get one
         if hasattr(model, "model") and not hasattr(model, "state_dict") \
                 and not _is_qai_model(model):
@@ -968,17 +981,75 @@ class OpenVINOExporter(_BaseExporter):
 
 
 # ============================================================================
-# GGUF -- minimal writer using the `gguf` library (weights only)
+# GGUF -- THE one GGUF writer (metadata-aware) + THE one GGUF reader
 # ============================================================================
 
-class GGUFExporter(_BaseExporter):
-    """Export the model's weights to a GGUF (.gguf) file.
+def _add_metadata_kv(writer: Any, key: str, value: Any, vt: Any) -> None:
+    """Write one metadata key/value pair with the right GGUF value type.
 
-    NOTE: This writes the raw weight tensors using the `gguf` Python library.
-    Producing a fully runnable llama.cpp model requires running llama.cpp's
-    convert_hf_to_gguf.py on a HuggingFace checkpoint -- this exporter is the
-    first building block (you get a valid .gguf container with your weights
-    inside).
+    GGUF headers are typed key/value stores; python's bool is a subclass of
+    int, so bool MUST be tested before int or every True/False becomes 1/0.
+    """
+    if isinstance(value, bool):
+        writer.add_key_value(key, bool(value), vt.BOOL)
+    elif isinstance(value, int):
+        writer.add_key_value(key, int(value), vt.INT64)
+    elif isinstance(value, float):
+        writer.add_key_value(key, float(value), vt.FLOAT64)
+    elif isinstance(value, str):
+        writer.add_key_value(key, str(value), vt.STRING)
+    elif isinstance(value, (list, tuple)):
+        if not value:
+            raise ValueError(
+                "GGUF cannot store an empty array; drop the key or use a "
+                "placeholder string")
+        else:
+            first = value[0]
+            if isinstance(first, bool):
+                writer.add_key_value(
+                    key, [bool(v) for v in value], vt.ARRAY, sub_type=vt.BOOL)
+            elif isinstance(first, int):
+                writer.add_key_value(
+                    key, [int(v) for v in value], vt.ARRAY, sub_type=vt.INT64)
+            elif isinstance(first, float):
+                writer.add_key_value(
+                    key, [float(v) for v in value], vt.ARRAY, sub_type=vt.FLOAT64)
+            else:
+                writer.add_key_value(
+                    key, [str(v) for v in value], vt.ARRAY, sub_type=vt.STRING)
+    else:
+        writer.add_key_value(key, str(value), vt.STRING)
+
+
+class GGUFExporter(_BaseExporter):
+    """Export a model's weights to a GGUF (.gguf) file -- metadata-aware.
+
+    This is the ONE GGUF writer in qai (qai.formats.to_gguf and
+    qai.formats.convert(target=".gguf") are delegates to it).
+
+    What it writes:
+      * every extractable weight tensor, stored as float32 (GGUF needs
+        contiguous arrays),
+      * typed metadata: pass ``metadata={...}`` with str / int / float /
+        bool / list values and each pair lands in the GGUF header, readable
+        back by ``gguf.GGUFReader.get_field()`` (or any llama.cpp tooling),
+      * automatic metadata: ``general.name``, ``general.description``,
+        ``qai.tensor_count``, ``qai.exported_by``.
+
+    Backward-compatible kwargs:
+      * ``arch``        -- GGUF architecture string (default "qai-model")
+      * ``description`` -- general.description text
+      * ``block_type``  -- now recorded as metadata ``qai.block_type``
+        (the old writer called ``GGUFWriter.add_block_type``, a method that
+        no longer exists in the gguf package -- every export crashed)
+      * ``quantization``-- recorded as ``qai.quantization_requested`` plus an
+        honest ``qai.weights_stored_as`` note. Actual quantization (Q4_K_M
+        etc.) is llama.cpp's quantize step, not this container writer.
+
+    NOTE on scope: you get a valid .gguf container holding your weights and
+    metadata. A fully *runnable* llama.cpp LLM (tokenizer, chat template,
+    quantized tensors) still requires llama.cpp's convert_hf_to_gguf.py on a
+    HuggingFace checkpoint.
     """
     format_name = "gguf"
 
@@ -986,6 +1057,7 @@ class GGUFExporter(_BaseExporter):
         path = self._ensure_path(path, _FORMAT_EXTENSIONS["gguf"])
         try:
             import gguf
+            from gguf import GGUFValueType
         except ImportError:
             raise self._missing_dep(
                 "gguf",
@@ -1002,23 +1074,62 @@ class GGUFExporter(_BaseExporter):
             )
 
         writer = gguf.GGUFWriter(path, kwargs.get("arch", "qai-model"))
-        # General metadata
-        writer.add_block_type(kwargs.get("block_type", "qai"))
+
+        # ---- automatic metadata ----
+        model_name = kwargs.get("model_name")
+        if not model_name:
+            model_name = "qai-weights" if isinstance(model, dict) else type(model).__name__
         try:
-            writer.add_description(kwargs.get("description", "qai framework model"))
+            writer.add_name(str(model_name))
+        except Exception:
+            pass
+        try:
+            writer.add_description(kwargs.get(
+                "description",
+                "qai framework model (weights + metadata container)"))
         except Exception:
             pass
 
+        # ---- metadata: explicit dict wins, legacy kwargs fold into it ----
+        metadata = dict(kwargs.pop("metadata", None) or {})
+        block_type = kwargs.pop("block_type", None)
+        if block_type is not None:
+            metadata.setdefault("qai.block_type", str(block_type))
+        quantization = kwargs.pop("quantization", None)
+        want_f16 = bool(quantization) and str(quantization).lower() in (
+            "f16", "fp16", "half")
+        if quantization is not None:
+            metadata.setdefault("qai.quantization_requested", str(quantization))
+            if want_f16:
+                metadata.setdefault("qai.weights_stored_as", "float16")
+            else:
+                metadata.setdefault(
+                    "qai.weights_stored_as",
+                    "float32 (unquantized); producing " + str(quantization)
+                    + " weights is llama.cpp's quantize step")
+        metadata.setdefault("qai.tensor_count", len(weights))
+        metadata.setdefault("qai.exported_by", "qai.conversion.GGUFExporter")
+
+        for key, value in metadata.items():
+            try:
+                _add_metadata_kv(writer, key, value, GGUFValueType)
+            except Exception as e:
+                warnings.warn(
+                    f"[qai.conversion] GGUF: skipping metadata '{key}': {e}")
+
         # Add each tensor. gguf expects contiguous numpy arrays.
+        # (One GGUF writer here; no other module may import gguf to write.)
+        store_dtype = np.float16 if want_f16 else np.float32
         for name, tensor in weights.items():
             try:
                 import torch
                 if torch.is_tensor(tensor):
                     arr = tensor.detach().cpu().float().numpy()
+                    arr = arr.astype(store_dtype)
                 else:
-                    arr = np.asarray(tensor, dtype=np.float32)
+                    arr = np.asarray(tensor, dtype=store_dtype)
             except ImportError:
-                arr = np.asarray(tensor, dtype=np.float32)
+                arr = np.asarray(tensor, dtype=store_dtype)
 
             # gguf requires contiguous arrays
             arr = np.ascontiguousarray(arr)

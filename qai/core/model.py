@@ -773,16 +773,16 @@ class Model:
             return f"<Model: {self.technique_name}>"
 
     def save(self, path: str, format: str = "qmodel"):
-        """Save model to file."""
+        """Save model to file; returns the path written (or None on failure)."""
         from .persistence import save_model
         if format == "gguf":
             from ..quantization import save_gguf
-            save_gguf(self, path, quantization="q4_k_m")
+            return save_gguf(self, path, quantization="q4_k_m")
         elif format == "onnx":
             from .onnx import export_to_onnx
-            export_to_onnx(self, path)
+            return export_to_onnx(self, path)
         else:
-            save_model(self, path)
+            return save_model(self, path)
 
     @classmethod
     def load(cls, path: str) -> "Model":

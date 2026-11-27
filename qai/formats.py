@@ -296,7 +296,13 @@ class UniversalConverter:
             from .weights import load_weights
             return load_weights(path)
         elif ext == ".npy":
-            return np.load(path, allow_pickle=True)
+            data = np.load(path, allow_pickle=True)
+            if isinstance(data, np.lib.npyio.NpzFile):
+                # .npz is registered as an alias of .npy, so .npz files land
+                # here; return the dict-of-arrays, not the raw NpzFile zip
+                # handle (a downstream _save() needs real tensors).
+                return {k: data[k] for k in data.files}
+            return data
         elif ext == ".npz":
             data = np.load(path, allow_pickle=True)
             return {k: data[k] for k in data.files}
@@ -307,7 +313,11 @@ class UniversalConverter:
             except ImportError:
                 raise ImportError("onnx not installed; pip install onnx")
         elif ext == ".gguf":
-            raise NotImplementedError("GGUF loading requires llama.cpp; use convert_hf_to_gguf.py")
+            # ONE GGUF reader lives in qai.conversion.import_model; the
+            # formats surface delegates (it used to raise NotImplementedError
+            # while claiming GGUF needs llama.cpp just to READ a container).
+            from .conversion import import_model
+            return import_model(path, format="gguf")
         elif ext == ".bin":
             # HF legacy binary: try torch.load first
             try:
@@ -349,13 +359,31 @@ class UniversalConverter:
             return save_weights(model, path)
         elif ext == ".npy":
             weights = _get_weights_dict(model)
-            if len(weights) == 1:
-                np.save(path, list(weights.values())[0])
-            else:
-                np.save(path, weights, allow_pickle=True)
+            if path.endswith(".npz"):
+                # .npz is an alias of .npy in the registry, but numpy treats
+                # the two differently: np.save() would pickle the dict into a
+                # 0-d object array, so write a real zip-of-arrays instead and
+                # the file loads back as {name: array}.
+                np.savez(path, **weights)
+                return path
+            # np.save appends ".npy" to any path whose suffix isn't exactly
+            # ".npy", so hand it an open file and write at the path the
+            # caller actually asked for.
+            with open(path, "wb") as fh:
+                if len(weights) == 1:
+                    np.save(fh, list(weights.values())[0])
+                else:
+                    np.save(fh, weights, allow_pickle=True)
             return path
         elif ext == ".onnx":
             return UniversalConverter._save_onnx(model, path)
+        elif ext == ".gguf":
+            # ONE GGUF writer lives in qai.conversion.GGUFExporter; the
+            # formats surface delegates (this branch simply didn't exist,
+            # so convert(..., ".gguf") fell through to NotImplementedError
+            # even though the module docstring advertises it).
+            from .conversion import GGUFExporter
+            return GGUFExporter().export(model, path)
         elif ext == ".bin":
             # save as torch binary
             import torch
@@ -492,26 +520,22 @@ def to_safetensors(model: Any, path: str) -> str:
 
 
 def to_gguf(model: Any, path: str, quantization: str = "Q4_K_M") -> str:
-    """Convert model to GGUF format (requires llama.cpp).
+    """Save model weights as a GGUF (.gguf) container.
 
-    Note: This is a stub — actual conversion requires llama.cpp's
-    convert_hf_to_gguf.py script.
+    ONE GGUF writer exists -- ``qai.conversion.GGUFExporter`` -- and this
+    function delegates to it (it used to save a side .safetensors file and
+    then raise NotImplementedError pointing at llama.cpp's
+    convert_hf_to_gguf.py). You get a valid .gguf file holding the
+    model's weights (float32) plus metadata.
+
+    The requested ``quantization`` (default "Q4_K_M") is recorded as
+    ``qai.quantization_requested`` metadata; actually producing quantized
+    weights is llama.cpp's quantize step, applied to this container.
     """
     if not path.endswith(".gguf"):
         path += ".gguf"
-    # save as safetensors first (GGUF conversion reads from HF format)
-    st_path = path.replace(".gguf", ".safetensors")
-    to_safetensors(model, st_path)
-    # would call: python convert_hf_to_gguf.py --input {st_path} --output {path}
-    # would call: ./quantize {path} {path} {quantization}
-    raise NotImplementedError(
-        "GGUF conversion requires llama.cpp. Steps:\n"
-        "1. pip install safetensors\n"
-        f"2. We saved weights to {st_path}\n"
-        "3. git clone https://github.com/ggml-org/llama.cpp\n"
-        "4. cd llama.cpp && python convert_hf_to_gguf.py --input <model_dir> --output " + path + "\n"
-        f"5. ./quantize {path} {path} {quantization}"
-    )
+    from .conversion import GGUFExporter
+    return GGUFExporter().export(model, path, quantization=quantization)
 
 
 def to_tflite(model: Any, path: str) -> str:

@@ -5,6 +5,114 @@ Versions follow semantic versioning: MAJOR.MINOR.PATCH.
 
 See also: [README](README.md) · [Task Guides](docs/guides/README.md) · [Tutorial](docs/TUTORIAL.md) · [Roadmap](docs/ROADMAP.md) · [Module Registry](docs/MODULE_REGISTRY.md) · [Focus List](docs/UNBUILT_FEATURES.md)
 
+## v1.8.9 (2026-11-27) — "One GGUF Surface"
+
+Focus-list item 5 resolved, same consolidation pattern as v1.8.5–v1.8.8:
+one feature, one implementation, one entry point. GGUF handling was
+scattered and dishonest: the formats surface refused to even try, while
+the canonical conversion module had the real reader and a writer that
+crashed on every export.
+
+### Fixed — GGUF end to end in `qai.formats`
+- **`.gguf` loading** (the focus list said `ModelIO.load`, but the real
+  class is `UniversalConverter`): `_load(".gguf")` raised
+  NotImplementedError claiming GGUF needs llama.cpp — while
+  `qai.conversion.import_model()` could read real GGUF tensors all along.
+  It now delegates to that canonical reader.
+- **`_save(".gguf")` branch added**: `convert(anything, "x.gguf")` fell
+  through to a generic NotImplementedError even though the module
+  docstring advertises `convert("model.qmodel", "model.gguf")`. It now
+  delegates to the canonical writer.
+- **`to_gguf()` no longer a stub**: it used to save a side `.safetensors`
+  file and THEN raise NotImplementedError with llama.cpp instructions.
+  It now writes a real `.gguf` and returns the path. The requested
+  quantization is recorded as `qai.quantization_requested` metadata plus
+  an honest `qai.weights_stored_as` note (quantizing itself is llama.cpp's
+  quantize step).
+
+### Fixed — the canonical writer was broken twice over
+- **`GGUFExporter` crashed on every export**: it called
+  `GGUFWriter.add_block_type`, a method that no longer exists in the gguf
+  package. `block_type` now travels as `qai.block_type` metadata (the
+  kwarg stays backward compatible).
+- **`_extract_weights` had no dict fast path** and `vars()`-scanned the
+  model — a TypeError on plain `{name: tensor}` dicts, so EVERY exporter
+  (safetensors included) crashed on dict models. Dicts now pass straight
+  through.
+- **`SafeTensorsExporter` needed torch unnecessarily**:
+  `safetensors.torch` (which imports torch) sat in the same try/except as
+  `safetensors.numpy`, so torch-less environments got a misleading
+  "safetensors not installed" error. Imports are split; the numpy backend
+  is fully functional without torch.
+
+### Added — metadata-aware GGUF writer
+- `GGUFExporter(..., metadata={...})` writes typed key/value pairs
+  (str / int / float / bool / list) into the GGUF header, readable back
+  with `gguf.GGUFReader.get_field()` (or any llama.cpp tooling). Python
+  bools are written as BOOL, not 1/0 (bool subclasses int, so the type
+  dispatch must test bool first). Empty lists are rejected with an honest
+  warning — GGUF cannot represent them.
+- Automatic metadata: `general.name`, `general.description`,
+  `qai.tensor_count`, `qai.exported_by`.
+
+### Fixed — adjacent `formats.py` loader bugs found by the round-trip tests
+- `.npz` is registered as an alias of `.npy`, so npz files hit the `.npy`
+  loader, which returned the raw `NpzFile` zip handle —
+  `convert("x.npz", anything)` was broken for every target format. The
+  `.npy` loader now returns the dict-of-arrays when numpy hands back an
+  NpzFile.
+- Saving TO `.npz` hit `np.save`, which pickles a dict into a 0-d object
+  array and appends ".npy" to the path — `convert(x, "back.npz")` wrote
+  `back.npz.npy` while claiming to return `back.npz`. The `.npy` branch
+  now writes a real `np.savez` archive for `.npz` paths and uses an open
+  file handle for `.npy` paths so numpy cannot rename the file.
+
+### Fixed — the fifth GGUF writer was a counterfeit, now a delegate
+- **`qai.quantization.save_gguf()` (exported as `qai.save_gguf`, used by
+  `Model.save(format="gguf")`) wrote a COUNTERFEIT format**: a made-up
+  struct-packed binary layout that started with real GGUF magic bytes —
+  llama.cpp / Ollama / LM Studio could not read it, its own "f16/q4_k_m
+  quantization" was a crude uniform int8 rescale, and it crashed with
+  `NameError: torch` in torch-less environments (violating the framework's
+  own no-torch guarantee). It now delegates to the canonical writer.
+- **`qai.quantization.load_gguf()` (exported as `qai.load_gguf`) could only
+  parse the counterfeit layout.** It now delegates to the canonical reader,
+  so it reads REAL GGUF files including ones written by other tools.
+  Files produced by the old saver are honestly rejected by the real parser
+  ("file appears to be version 1 which we cannot handle") — re-export
+  them with `save_gguf()`.
+- **`qai.quantization.save_exl2()` routed to the same counterfeit writer** —
+  a file with GGUF magic bytes under an EXL2 name that exllamav2 (or
+  anything else) cannot read. It now refuses to fake it: ImportError
+  without exllamav2 (pointing at `save_gguf()` as the working
+  alternative), honest NotImplementedError with it. This residual gap is
+  recorded as focus-list item 11.
+- **`Model.save(format="gguf")` and `Model.save(format="onnx")` now return
+  the written path** (every branch returned None before), so the documented
+  `m.save("model.gguf", format="gguf")` guide examples round-trip.
+- **GGUFExporter honors "f16"**: `quantization="f16"` stores genuine
+  float16 tensors; every other level is recorded as
+  `qai.quantization_requested` metadata with an honest
+  `qai.weights_stored_as` note (f32 storage; K-quants are llama.cpp's
+  quantize step).
+
+### Tests
+- New `tests/test_gguf_formats.py` (29 passing): magic bytes, no side
+  files, tensor round trips, `npz → gguf → npz` end to end via
+  `convert()`, typed metadata round trip, automatic metadata, honest
+  quantization recording, `block_type` backward compat, int→float32
+  weights, empty-weights rejection, dict models through the safetensors
+  exporter, honest missing-package errors on both reader and writer,
+  source-level checks that formats.py carries no gguf code of its own and
+  conversion.py constructs exactly one `GGUFWriter`, the
+  `qai.save_gguf`/`qai.load_gguf` delegation (f16 stored natively, K-quant
+  names recorded honestly, counterfeit legacy files rejected),
+  `save_exl2` refusing to fake, and the documented
+  `Model.save(format="gguf")` path producing a real container.
+- Full regression suite: failure list byte-identical to clean v1.8.8
+  (196 pre-existing items — torch-absent environment plus known
+  documented bugs); zero new failures.
+
 ## v1.8.8 (2026-11-27) — "Real conv2d, No Torch Needed"
 
 Focus-list item 4 resolved. Without PyTorch, ``qai.gpu.conv2d()`` returned

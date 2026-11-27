@@ -51,8 +51,18 @@ can verify every claim yourself.
 > **v1.8.8 update (2026-11-27):** Focus-list item 4 (GPU `conv2d` numpy
 > fallback) is resolved — without PyTorch, `qai.gpu.conv2d()` now computes
 > a real vectorized cross-correlation (`sliding_window_view` + `einsum`)
-> instead of returning the input unchanged. 6 items below remain the
-> genuine "not yet implemented" list.
+> instead of returning the input unchanged.
+>
+> **v1.8.9 update (2026-11-27):** Focus-list item 5 (GGUF in `qai.formats`)
+> is resolved — both dishonest paths now delegate to the ONE canonical
+> GGUF reader/writer in `qai.conversion`, and the canonical writer (which
+> crashed on every export) is fixed and made metadata-aware. The same
+> sweep found a FIFTH GGUF writer — `qai.quantization.save_gguf` (aka
+> `qai.save_gguf`, used by `Model.save(format="gguf")`) — writing a
+> counterfeit binary format with real GGUF magic bytes that no tool could
+> read; it and `qai.load_gguf` now delegate to the canonical pair too.
+> Its counterfeit twin `save_exl2` refuses to fake it (new item 11). 6
+> items below remain the genuine "not yet implemented" list.
 
 ---
 
@@ -108,16 +118,30 @@ can verify every claim yourself.
   automatically when torch is installed, and honest [WHAT]/[WHY]/[FIX]
   errors for channel mismatch / oversized kernels / bad ndims.
 
-### 5. GGUF model loading — `qai.formats`
-- **Gap**: `ModelIO.load(".gguf")` raises `NotImplementedError` and defers to
-  llama.cpp's external `convert_hf_to_gguf.py`; GGUF *saving* is likewise a
-  stub that shells out.
-- **Works today**: `qai.conversion.import_model(".gguf")` already reads real
-  GGUF tensors via the `gguf` pip package (name → ndarray map), and
-  safetensors / onnx / torchscript / coreml load paths all work.
-- **To build**: reuse the `gguf`-package reader inside `qai.formats.ModelIO`
-  (and a metadata-aware writer) so one import surface handles GGUF end to end.
-- **Evidence**: `qai/formats.py` — `.gguf` branch in `_load()` and `_save()`.
+### 5. ~~GGUF model loading — `qai.formats`~~ — FIXED in v1.8.9
+- **Resolved** (and renamed: this item said `ModelIO.load`, but the real
+  class is `qai.formats.UniversalConverter`). The `.gguf` branches of
+  `_load()` and `_save()` now delegate to the ONE canonical GGUF reader
+  (`qai.conversion.import_model`) and writer
+  (`qai.conversion.GGUFExporter`); `to_gguf()` writes a real container
+  instead of raising. The writer is metadata-aware (typed
+  str/int/float/bool/list key-value pairs, readable by any GGUF tooling)
+  and honestly records the requested quantization without pretending it
+  quantizes. Fixing the round trip also exposed and repaired three
+  adjacent bugs: the canonical writer crashed on every export (a
+  `GGUFWriter.add_block_type` call for a method that no longer exists),
+  `_extract_weights` crashed on plain dict models for EVERY exporter, and
+  the `.npz`/`.npy` alias made npz loads return a raw zip handle and npz
+  saves write `x.npz.npy`. Enforced by `tests/test_gguf_formats.py`.
+  The same sweep consolidated the FIFTH GGUF writer —
+  `qai.quantization.save_gguf` (`qai.save_gguf`, behind
+  `Model.save(format="gguf")`) — which wrote a counterfeit binary layout
+  with real GGUF magic bytes (unreadable by llama.cpp/Ollama/LM Studio,
+  fake int8 "quantization", `NameError` without torch); `save_gguf` and
+  `load_gguf` are now delegates of the canonical reader/writer, `f16` is
+  stored natively, and legacy counterfeit files are honestly rejected.
+  Full suite: `tests/test_gguf_formats.py` (29 tests, including
+  source-level "one writer" checks).
 
 ### 6. `import_model` for tflite / openvino / tensorrt — `qai.conversion`
 - **Gap**: *exporting* to tflite / openvino / tensorrt works, but
@@ -173,6 +197,22 @@ can verify every claim yourself.
   (lazy import, same pattern as `WhisperASR` / `Wav2Vec2` / `HuBERT` in
   `qai.techniques.modern`, which already do real HF loading).
 - **Evidence**: `qai/advanced_metrics.py` — placeholder comment.
+
+### 11. EXL2 export — `qai.quantization.save_exl2`
+- **Gap**: qai has NO native EXL2 writer. Until v1.8.9 the function
+  "worked" by routing to the counterfeit GGUF writer — a file with GGUF
+  magic bytes under an EXL2 name that exllamav2 cannot read. Since v1.8.9
+  it honestly raises ImportError without `exllamav2` (pointing at
+  `save_gguf()` as the working alternative) and NotImplementedError with
+  it.
+- **Works today**: `qai.save_gguf()` writes a real GGUF container
+  (readable by llama.cpp tooling); genuine EXL2 needs the exllamav2
+  library's own pipeline.
+- **To build**: an optional exllamav2-backed writer behind the same
+  signature (lazy import, same pattern as the CLIP item above), or declare
+  GGUF as the supported local-LLM export surface and remove `save_exl2`
+  from the docs.
+- **Evidence**: `qai/quantization.py` — `save_exl2()`.
 
 ---
 

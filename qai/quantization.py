@@ -340,169 +340,84 @@ def model_size_mb(model) -> float:
 
 
 def save_gguf(model, path: str, quantization: str = "q4_k_m"):
-    """Save a model in GGUF format (for llama.cpp / Ollama / LM Studio).
+    """Save a model as a REAL GGUF container (for llama.cpp / Ollama / LM Studio).
 
-    GGUF is the standard format for running LLMs locally on CPU/GPU.
-    Supports multiple quantization levels from f16 (no quantization) to
-    q2_k (heaviest compression).
+    This is a thin delegate: qai has ONE GGUF writer
+    (``qai.conversion.GGUFExporter``) and ONE GGUF reader
+    (``qai.conversion.import_model``); qai.formats.to_gguf and this function
+    both delegate to them. The output is a valid GGUF file -- real GGUF
+    tooling can list its tensors and metadata.
+
+    Quantization honesty: weights are stored float32 (float16 for
+    quantization="f16"). The requested level (q4_k_m, q8_0, ...) is recorded
+    as ``qai.quantization_requested`` metadata; turning f32 weights into
+    true K-quant tensors is llama.cpp's quantize step. The old
+    implementation here wrote a counterfeit binary format that carried GGUF
+    magic bytes but a made-up layout no tool could read, and crashed with
+    NameError without torch.
 
     Args:
-        model: a qai.Model
-        path: output file path (.gguf)
-        quantization: one of:
-            "f32"   — 32-bit float (no quantization, largest)
-            "f16"   — 16-bit float (half precision)
-            "q8_0"  — 8-bit quantization (~half size of f16)
-            "q4_k_m" — 4-bit K-quant medium (recommended balance)
-            "q4_k_s" — 4-bit K-quant small (slightly smaller)
-            "q5_k_m" — 5-bit K-quant medium
-            "q2_k"  — 2-bit quantization (smallest, most quality loss)
+        model: anything with extractable weights (qai.Model, torch module,
+            or a plain {name: tensor} dict)
+        path: output file path (.gguf appended if missing)
+        quantization: "f32" / "f16" (stored natively) or a GGUF K-quant name
+            (q8_0, q4_k_m, q4_k_s, q5_k_m, q2_k) -- recorded as metadata.
 
-    Requires: llama-cpp-python (pip install llama-cpp-python)
-
-    Note: Real GGUF requires a HuggingFace model with a proper tokenizer
-    and model architecture. For qai's built-in models, this saves a
-    simplified GGUF-like format that preserves weights.
+    Returns:
+        The path of the written file.
     """
-    try:
-        import llama_cpp
-    except ImportError:
-        # Fall back to saving weights in a GGUF-like binary format
-        _save_gguf_fallback(model, path, quantization)
-        return path
-    # If llama-cpp-python is available, use it
-    # (This path would require converting to a HF model first)
-    _save_gguf_fallback(model, path, quantization)
-    return path
-
-
-def _save_gguf_fallback(model, path: str, quantization: str):
-    """Save weights in a GGUF-like binary format (fallback without llama-cpp)."""
-    import struct
-    tech = model.technique if hasattr(model, "technique") else model
-    # Collect all weights
-    weights = {}
-    for name in vars(tech):
-        attr = getattr(tech, name)
-        if isinstance(attr, (torch.Tensor, torch.nn.Parameter)):
-            weights[name] = attr.data.cpu().numpy()
-        elif isinstance(attr, torch.nn.Module):
-            for pname, param in attr.named_parameters():
-                weights[f"{name}.{pname}"] = param.data.cpu().numpy()
-        elif isinstance(attr, (list, tuple)):
-            for i, item in enumerate(attr):
-                if isinstance(item, torch.nn.Module):
-                    for pname, param in item.named_parameters():
-                        weights[f"{name}_{i}.{pname}"] = param.data.cpu().numpy()
-    # Quantize if needed
-    quant_levels = {"f32": 32, "f16": 16, "q8_0": 8, "q4_k_m": 4,
-                     "q4_k_s": 4, "q5_k_m": 5, "q2_k": 2}
-    bits = quant_levels.get(quantization, 16)
-    # Write file
-    with open(path, "wb") as f:
-        # Header: magic, version, n_weights, quantization
-        f.write(b"GGUF")
-        f.write(struct.pack("I", 1))  # version
-        f.write(struct.pack("I", len(weights)))
-        f.write(struct.pack("I", bits))
-        # Write each weight tensor
-        for name, arr in weights.items():
-            name_bytes = name.encode("utf-8")
-            f.write(struct.pack("I", len(name_bytes)))
-            f.write(name_bytes)
-            f.write(struct.pack("I", arr.ndim))
-            for dim in arr.shape:
-                f.write(struct.pack("I", dim))
-            # Quantize to target bits (simple uniform quantization)
-            if bits < 32:
-                arr = arr.astype(np.float16) if bits == 16 else arr
-                if bits <= 8:
-                    # Scale to int range
-                    scale = max(abs(arr.max()), abs(arr.min()), 1e-8)
-                    quantized = np.round(arr / scale * (2**(bits-1) - 1)).astype(np.int8 if bits <= 8 else np.int16)
-                    f.write(struct.pack("f", scale))
-                    f.write(quantized.tobytes())
-                else:
-                    f.write(arr.astype(np.float16).tobytes())
-            else:
-                f.write(arr.astype(np.float32).tobytes())
-    return path
+    from .conversion import GGUFExporter
+    if not str(path).endswith(".gguf"):
+        path = str(path) + ".gguf"
+    return GGUFExporter().export(model, path, quantization=quantization)
 
 
 def load_gguf(path: str):
-    """Load a GGUF file and return a weight dict.
+    """Load a GGUF file, returning {tensor_name: numpy array}.
+
+    Delegates to the ONE GGUF reader (``qai.conversion.import_model``), so
+    it reads REAL GGUF files -- including ones written by other tools. The
+    old implementation parsed only the counterfeit layout that save_gguf
+    used to write; files produced by it are rejected by the real parser
+    ("file appears to be version N which we cannot handle") -- re-export
+    them with ``save_gguf()``.
 
     Args:
-        path: path to .gguf file
+        path: path to a .gguf file
 
     Returns:
-        Dict of weight_name → numpy array
+        Dict of tensor_name → numpy array
     """
-    import struct
-    with open(path, "rb") as f:
-        magic = f.read(4)
-        if magic != b"GGUF":
-            raise ValueError(f"Not a GGUF file: {path}")
-        version = struct.unpack("I", f.read(4))[0]
-        n_weights = struct.unpack("I", f.read(4))[0]
-        bits = struct.unpack("I", f.read(4))[0]
-        weights = {}
-        for _ in range(n_weights):
-            name_len = struct.unpack("I", f.read(4))[0]
-            name = f.read(name_len).decode("utf-8")
-            ndim = struct.unpack("I", f.read(4))[0]
-            shape = tuple(struct.unpack("I", f.read(4))[0] for _ in range(ndim))
-            if bits <= 8:
-                scale = struct.unpack("f", f.read(4))[0]
-                n_elements = 1
-                for d in shape:
-                    n_elements *= d
-                data = np.frombuffer(f.read(n_elements), dtype=np.int8 if bits <= 8 else np.int16)
-                weights[name] = data.reshape(shape).astype(np.float32) * scale / (2**(bits-1) - 1)
-            elif bits == 16:
-                n_elements = 1
-                for d in shape:
-                    n_elements *= d
-                data = np.frombuffer(f.read(n_elements * 2), dtype=np.float16)
-                weights[name] = data.reshape(shape).astype(np.float32)
-            else:
-                n_elements = 1
-                for d in shape:
-                    n_elements *= d
-                data = np.frombuffer(f.read(n_elements * 4), dtype=np.float32)
-                weights[name] = data.reshape(shape)
-        return weights
+    from .conversion import import_model
+    return import_model(path, format="gguf")
 
 
 def save_exl2(model, path: str, bits_per_weight: float = 4.0):
     """Save a model in EXL2 format (mixed-precision quantization).
 
-    EXL2 allows variable bits per weight — some layers use 4-bit, others
-    use 3 or 5 — to hit a target average while maximizing quality.
+    EXL2 allows variable bits per weight -- some layers use 4-bit, others
+    use 3 or 5 -- to hit a target average while maximizing quality.
 
-    Args:
-        model: a qai.Model
-        path: output file path
-        bits_per_weight: target average bits per weight (typical: 3.5-5.0)
-
-    Requires: exllamav2 (pip install exllamav2)
-
-    Note: Like GGUF, real EXL2 requires a HuggingFace model. This is a
-    fallback that saves in an EXL2-like format.
+    Honesty note: qai has NO native EXL2 writer. The old "fallback" wrote a
+    counterfeit binary file that carried GGUF magic bytes under an EXL2
+    name -- exllamav2 could not read it, and neither could anything else.
+    qai now refuses to fake it: without exllamav2 you get an ImportError
+    that points at the working GGUF alternative.
     """
-    # Fallback: use our GGUF saver with the closest quantization level
-    if bits_per_weight <= 3.0:
-        quant = "q2_k"
-    elif bits_per_weight <= 4.0:
-        quant = "q4_k_m"
-    elif bits_per_weight <= 5.0:
-        quant = "q5_k_m"
-    elif bits_per_weight <= 8.0:
-        quant = "q8_0"
-    else:
-        quant = "f16"
-    _save_gguf_fallback(model, path, quant)
-    return path
+    try:
+        import exllamav2  # noqa: F401
+    except ImportError:
+        raise ImportError(
+            "[qai.quantization] exllamav2 is not installed -- cannot write "
+            "real EXL2 files.\n"
+            "  WHAT: EXL2 export needs the exllamav2 library itself.\n"
+            "  WHY: the previous fallback wrote GGUF-magic bytes under an "
+            "EXL2 name, which no tool could read.\n"
+            "  FIX: pip install exllamav2 -- or use save_gguf() for a valid "
+            "GGUF container that llama.cpp tooling reads.")
+    raise NotImplementedError(
+        "qai does not wrap exllamav2's writer yet. Use save_gguf() for a "
+        "valid GGUF container, or drive exllamav2 directly.")
 
 
 __all__ = ["QuantizationConfig", "quantize_dynamic", "quantize_static",

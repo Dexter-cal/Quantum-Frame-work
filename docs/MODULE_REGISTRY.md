@@ -49,7 +49,7 @@ re-exported on the single `import qai` face; import it directly, e.g.
 | `qai.pipeline_builder` **NEW-DOC** | qai.pipeline_builder -- declarative DAG pipeline builder. Build multi-stage ML pipelines as a directed acyclic graph (DAG) with a declara... | top-level |
 | `qai.pipeline_templates` | qai.pipeline_templates — pre-built end-to-end ML workflows. Ready-to-use pipeline templates that combine preprocessing, training, evaluat... | top-level |
 | `qai.synthetic` | qai.synthetic -- synthetic data generators for testing + benchmarks. Beyond make_classification / make_regression (which are toy-grade), ... | top-level |
-| `qai.formats` | qai.formats — comprehensive ML file format registry + converters. Supports ALL known ML model/weight file formats: Model formats (store a... | top-level |
+| `qai.formats` | qai.formats — comprehensive ML file format registry + converters. Supports ALL known ML model/weight file formats: Model formats (store a... GGUF loads/saves delegate to the one canonical reader/writer in qai.conversion (v1.8.9) | top-level |
 | `qai.time_series/__init__` | qai.time_series -- Time-Series Forecasting & Analysis Utilities | `internal` |
 
 ## Model zoo & architectures (13)
@@ -101,12 +101,12 @@ re-exported on the single `import qai` face; import it directly, e.g.
 | Module | What it does | Import face |
 |---|---|---|
 | `qai.distillation_v2` | THE canonical distillation implementation (v1.8.5): real Hinton KL loss (torch path), honest fallback for numpy, strategies vanilla/hint/attention/self/multi, entry point `qai.distill(...)`. All other distiller classes are delegates. | top-level |
-| `qai.quantization` | qai.quantization — model quantization for deployment. Provides: - quantize_dynamic() — post-training int8 dynamic quantization (fast, no ... | top-level |
+| `qai.quantization` | qai.quantization — model quantization for deployment. Provides: - quantize_dynamic() — post-training int8 dynamic quantization (fast, no ... save_gguf/load_gguf delegate to the one canonical GGUF reader/writer in qai.conversion (v1.8.9) | top-level |
 | `qai.precision` | qai.precision — precision management and quantization-aware training. Provides: - PrecisionManager — auto-detect best precision for hardw... | top-level |
 | `qai.compression` | qai.compression -- model compression toolkit: quantize + prune + distill. CompressionPipeline — end-to-end compression in one call Quanti... | top-level |
 | `qai.compression_advisor` **NEW-DOC** | qai.compression_advisor — automatic compression strategy recommender. Analyzes a model and recommends the best combination of: * Pruning ... | top-level |
 | `qai.compress` | qai.compress -- a learned meta-compressor. Real-world files have different byte distributions, and no single compression algorithm is bes... | top-level |
-| `qai.conversion` | qai.conversion -- unified bidirectional model conversion API. Convert any qai.Model (or sklearn estimator, or torch.nn.Module) to any of ... | top-level |
+| `qai.conversion` | qai.conversion -- unified bidirectional model conversion API. Convert any qai.Model (or sklearn estimator, or torch.nn.Module) to any of ... GGUFExporter is THE metadata-aware GGUF writer; import_model its reader (v1.8.9) | top-level |
 | `qai.hf_converter` **NEW-DOC** | qai.hf_converter -- convert HuggingFace models to/from qai format. Download a model from HuggingFace Hub → convert to .qmodel → use with qai | top-level |
 | `qai.huggingface_hub` | qai.huggingface_hub — full HuggingFace Hub integration. Browse, search, download, load, and upload models from the HuggingFace Hub. This ... | top-level |
 | `qai.modelfile` **NEW-DOC** | qai.modelfile -- model files with proper extensions + a full file system. Solves the user's question: "when you train a model, it should ... | top-level |

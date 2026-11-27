@@ -16,7 +16,7 @@ quantum circuit simulation, qai.data, qai.runtime, vision, audio, nlp, graph, ti
 from __future__ import annotations
 
 # Formal version
-__version__ = "1.8.8"
+__version__ = "1.8.9"
 __version_info__ = (1, 8, 8)
 
 from .core import build, Model, logic, LogicError, CompatibilityError, InputValidationError
@@ -1210,4 +1210,4 @@ __all__ = [
     "BenchmarkSuite", "SuiteReport", "Leaderboard", "list_benchmarks",
     "benchmark_info",
 ]
-__version__ = "1.8.8"
+__version__ = "1.8.9"
