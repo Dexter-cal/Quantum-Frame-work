@@ -24,6 +24,10 @@ try:
     _TORCH = True
 except ImportError:
     _TORCH = False
+    from qai._torch_stub import _TorchStubNamespace, _NNStubNamespace
+    torch = _TorchStubNamespace()
+    nn = _NNStubNamespace()
+    F = nn
 
 from .base import Technique
 

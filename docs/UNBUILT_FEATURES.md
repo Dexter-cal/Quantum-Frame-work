@@ -21,6 +21,16 @@ stand-in, a fallback path returns a placeholder, or a loader defers to an
 external tool. Each item cites the file and line where the gap lives, so you
 can verify every claim yourself.
 
+> **v1.8.4 update (2026-11-27):** External review found four bugs in
+> already-"built" features that this focus list didn't track because they
+> weren't "unbuilt" — they were "built but wrong". All four are now fixed:
+> (1) `.qmodel` signature now covers `logic.py` (security: tampered logic
+> used to pass `verify_bundle` and execute at load time), (2) `TimeBudget`
+> now actually interrupts long-running functions via SIGALRM, (3) module
+> constants now travel with bundled logic, (4) `import qai` works without
+> PyTorch. See `CHANGELOG.md` v1.8.4 for full details. The 10 items below
+> are unaffected — they remain the genuine "not yet implemented" list.
+
 ---
 
 ## The focus list (priority order)

@@ -3,8 +3,8 @@
 > A unified, single-import machine learning and artificial intelligence framework.
 > Build, train, predict, explain, serve, and deploy — all from `import qai`.
 
-**Version:** 1.8.0 — *"Distributed ML & Versioning"*
-**Status:** Stable · 269 Python modules · ~143,000 LOC · 108 spec sections implemented (100%)
+**Version:** 1.8.4 — *"Hardened Bundles & Optional PyTorch"*
+**Status:** Stable · 269 Python modules · ~143,000 LOC · 108 spec sections implemented · 10-item focus list tracked in [`docs/UNBUILT_FEATURES.md`](docs/UNBUILT_FEATURES.md)
 
 ```python
 import qai

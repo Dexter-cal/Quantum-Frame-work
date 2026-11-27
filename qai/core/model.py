@@ -271,17 +271,19 @@ class Model:
         if not self.technique.is_trained():
             raise RuntimeError("predict() called before train() -- model has no learned weights yet")
 
-        # --- input validation (warn user with sample data if type mismatches) ---
-        self.validate_input(x)
-
+        # Convert dict → array using schema BEFORE validation, otherwise
+        # validate_input sees a 0-d object array and mis-classifies it as
+        # text input. Also let validate_input see the converted array.
         if isinstance(x, dict):
             if self.input_schema is not None:
-                x_arr = self.input_schema.dict_to_array(x)
+                x_val = self.input_schema.dict_to_array(x)
             else:
-                x_arr = np.array(list(x.values()), dtype=float)
-            x_val = x_arr
+                x_val = np.array(list(x.values()), dtype=float)
         else:
             x_val = x
+
+        # --- input validation (warn user with sample data if type mismatches) ---
+        self.validate_input(x_val)
 
         if self.input_schema is not None:
             self.input_schema.validate(x_val, context="prediction input")
@@ -333,7 +335,22 @@ class Model:
                 if arr.ndim == 2:
                     sig["n_features"] = arr.shape[1]
                 elif arr.ndim == 1:
-                    sig["n_features"] = len(arr)
+                    # 1-D numeric input. Could be either:
+                    #   (a) a single tabular row [f1, f2, f3, f4]
+                    #   (b) a 1-D sequence (time series, text tokens) where
+                    #       predict() will receive a *different-length* window
+                    #       (e.g., a `lags=3` window) than the training series.
+                    # Use the technique's own notion of expected input length
+                    # if it has one (lags, input_dim, n_features); otherwise
+                    # leave n_features=None so we don't enforce a wrong length.
+                    tech_n = None
+                    for attr in ("lags", "input_dim", "n_features",
+                                 "n_lags", "window_size", "seq_len"):
+                        v = getattr(self.technique, attr, None)
+                        if isinstance(v, int) and v > 0:
+                            tech_n = v
+                            break
+                    sig["n_features"] = tech_n  # may be None — that's OK
                 elif arr.ndim == 4:
                     sig["kind"] = "image"
                     sig["n_features"] = arr.shape[1:]  # (C, H, W)

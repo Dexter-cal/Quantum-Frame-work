@@ -386,6 +386,31 @@ def _hash_file_in_zip(zf: zipfile.ZipFile, name: str) -> str:
     return _hash_bytes(zf.read(name))
 
 
+def _is_jsonable_constant(v: Any) -> bool:
+    """True if `v` is a simple JSON-serialisable constant we can capture
+    into a bundle's logic_meta and re-inject at exec time.
+
+    Returns True for: int, float, str, bool, None, and homogeneous lists /
+    dicts / tuples of the same (recursive). Returns False for: modules,
+    classes, functions, numpy arrays, custom objects, etc. — these would
+    need a real closure-capture mechanism (e.g. marshal) and shouldn't be
+    silently serialised.
+    """
+    # Fast path for atomic types
+    if isinstance(v, bool) or v is None:
+        return True
+    if isinstance(v, (int, float, str)):
+        return True
+    # Recursive containers — try a round-trip through json to be sure
+    if isinstance(v, (list, tuple, dict)):
+        try:
+            json.dumps(v, default=str)
+            return True
+        except (TypeError, ValueError):
+            return False
+    return False
+
+
 # =====================================================================
 # Bundle saving
 # =====================================================================
@@ -475,12 +500,28 @@ def save_bundle(
             # would otherwise cause IndentationError on exec
             src = textwrap.dedent(src)
 
-            # Capture closure deps if possible
+            # Capture closure deps if possible. Also capture the *values* of
+            # any names that resolve to simple serialisable constants (numbers,
+            # strings, lists, dicts of the same) — these get re-injected into
+            # the exec namespace at load time so the bundled function can use
+            # module-level constants like `LIMIT = 100` defined in its origin
+            # module. Without this, exec() raises NameError in a fresh process
+            # because the origin module's globals aren't available.
             closure_deps = []
+            captured_constants: Dict[str, Any] = {}
             try:
                 target = fn.__wrapped__ if hasattr(fn, "__wrapped__") else fn
                 cv = inspect.getclosurevars(target)
                 closure_deps = sorted(set(cv.nonlocals.keys()) | set(cv.globals.keys()))
+                # Try to capture the current VALUE of each closure dep from
+                # the origin module's globals + the function's nonlocals.
+                candidate_values = {}
+                candidate_values.update(cv.globals)  # name → value (resolved)
+                candidate_values.update(cv.nonlocals)
+                for name in closure_deps:
+                    if name in candidate_values:
+                        if _is_jsonable_constant(candidate_values[name]):
+                            captured_constants[name] = candidate_values[name]
             except (TypeError, NameError):
                 pass
 
@@ -494,6 +535,9 @@ def save_bundle(
                 "closure_deps": closure_deps,
                 "requires": requires,
                 "max_seconds": getattr(fn, "logic_metadata", {}).get("max_seconds"),
+                # Captured simple constants (numbers/strings/lists/dicts) so
+                # they travel with the bundle and are re-injected at exec time.
+                "constants": captured_constants,
             }
             logic_meta.append(meta)
             combined_source_lines.append(src)
@@ -554,13 +598,36 @@ def save_bundle(
     manifest["model_json_hash"] = _hash_bytes(model_json_bytes)
     manifest["weights_file_hash"] = _hash_bytes(weights_bytes)
 
-    # 7. Sign the manifest (HMAC-SHA256 over manifest + content hashes)
+    # Compute logic file hashes (CRITICAL: logic.py is exec'd on load, so it
+    # MUST be covered by the signature. Earlier versions only hashed model.json
+    # + weights + per-weight, which meant tampered logic passed verify_bundle
+    # and ran attacker code at load time.)
+    if LOGIC_FILENAME in logic_files:
+        manifest["logic_hash"] = _hash_bytes(logic_files[LOGIC_FILENAME])
+    else:
+        manifest["logic_hash"] = None
+    if LOGIC_META_FILENAME in logic_files:
+        manifest["logic_meta_hash"] = _hash_bytes(logic_files[LOGIC_META_FILENAME])
+    else:
+        manifest["logic_meta_hash"] = None
+    if tokenizer_bytes is not None:
+        manifest["tokenizer_hash"] = _hash_bytes(tokenizer_bytes)
+    else:
+        manifest["tokenizer_hash"] = None
+
+    # 7. Sign the manifest (HMAC-SHA256 over manifest + content hashes).
+    # IMPORTANT: every file that gets read back at load time is in the signed
+    # payload — model.json, weights, every per-weight tensor, logic.py,
+    # logic_meta.json, and tokenizer.json. Adding a new bundled file?
+    # Add its hash here too, or it won't be integrity-protected.
     if sign_key is not None:
         sign_payload = (
             manifest["model_json_hash"]
             + manifest["weights_file_hash"]
             + "".join(manifest["weight_hashes"].get(k, "") for k in sorted(weights.keys()))
-            + (manifest.get("logic_meta_hash", "") or "")
+            + (manifest.get("logic_hash") or "")
+            + (manifest.get("logic_meta_hash") or "")
+            + (manifest.get("tokenizer_hash") or "")
         ).encode("utf-8")
         manifest["signed_hash"] = hmac.new(
             sign_key.encode("utf-8"), sign_payload, hashlib.sha256
@@ -720,10 +787,28 @@ def verify_bundle(path: str, sign_key: str) -> bool:
             # Corrupted weights file = tampering detected
             return False
 
+        # Recompute logic + tokenizer hashes if those files exist in the bundle.
+        # These MUST be in the signed payload — logic.py is exec'd at load time,
+        # so an unsigned logic file lets an attacker ship arbitrary code that
+        # passes verify_bundle. (Older versions omitted these from the payload.)
+        names = set(zf.namelist())
+        logic_hash = _hash_bytes(zf.read(LOGIC_FILENAME)) if LOGIC_FILENAME in names else ""
+        logic_meta_hash = (
+            _hash_bytes(zf.read(LOGIC_META_FILENAME))
+            if LOGIC_META_FILENAME in names else ""
+        )
+        tokenizer_hash = (
+            _hash_bytes(zf.read(TOKENIZER_FILENAME))
+            if TOKENIZER_FILENAME in names else ""
+        )
+
         sign_payload = (
             _hash_bytes(model_json_bytes)
             + _hash_bytes(weights_bytes)
             + "".join(weight_hashes.get(k, "") for k in sorted(weight_hashes.keys()))
+            + logic_hash
+            + logic_meta_hash
+            + tokenizer_hash
         ).encode("utf-8")
 
         expected = hmac.new(
@@ -907,8 +992,37 @@ def load_bundle(
         # Load logic functions if present
         logic_fns: Dict[str, Callable] = {}
         if LOGIC_FILENAME in manifest.get("contents", {}):
-            logic_source = zf.read(LOGIC_FILENAME).decode("utf-8")
-            logic_meta_list = json.loads(zf.read(LOGIC_META_FILENAME)) if LOGIC_META_FILENAME in zf.namelist() else []
+            logic_source_bytes = zf.read(LOGIC_FILENAME)
+            logic_source = logic_source_bytes.decode("utf-8")
+            logic_meta_bytes = zf.read(LOGIC_META_FILENAME) if LOGIC_META_FILENAME in zf.namelist() else None
+            logic_meta_list = json.loads(logic_meta_bytes) if logic_meta_bytes else []
+
+            # DEFENSE-IN-DEPTH: verify logic.py + logic_meta.json hashes
+            # against the manifest BEFORE exec'ing them. If the bundle was
+            # tampered after signing, this raises instead of running the
+            # attacker's code. (Even if the caller skipped verify_bundle.)
+            expected_logic_hash = manifest.get("logic_hash")
+            if expected_logic_hash is not None:
+                actual_logic_hash = _hash_bytes(logic_source_bytes)
+                if not hmac.compare_digest(expected_logic_hash, actual_logic_hash):
+                    raise ValueError(
+                        "[WHAT] Bundle logic.py hash mismatch — possible tampering\n"
+                        "[WHY] The manifest's logic_hash doesn't match the actual "
+                        "logic.py bytes in the bundle. Someone may have modified "
+                        "logic.py after the bundle was signed.\n"
+                        "[FIX] Re-sign the bundle from a trusted source, or reject it"
+                    )
+            if logic_meta_bytes is not None:
+                expected_meta_hash = manifest.get("logic_meta_hash")
+                if expected_meta_hash is not None:
+                    actual_meta_hash = _hash_bytes(logic_meta_bytes)
+                    if not hmac.compare_digest(expected_meta_hash, actual_meta_hash):
+                        raise ValueError(
+                            "[WHAT] Bundle logic_meta.json hash mismatch — possible tampering\n"
+                            "[WHY] The manifest's logic_meta_hash doesn't match the actual "
+                            "logic_meta.json bytes.\n"
+                            "[FIX] Re-sign the bundle from a trusted source, or reject it"
+                        )
 
             # Build the exec namespace
             import sys
@@ -920,6 +1034,17 @@ def load_bundle(
             exec_namespace["model"] = model
             if tokenizer is not None:
                 exec_namespace["tokenizer"] = tokenizer
+
+            # Re-inject captured constants from each logic_meta entry.
+            # These are the simple numeric/string/list/dict values that the
+            # logic function's origin module had at save time (e.g. `LIMIT = 100`
+            # at module top). Without this, exec raises NameError in a fresh
+            # process because the origin module's globals aren't loaded.
+            for meta in logic_meta_list:
+                constants = meta.get("constants") or {}
+                for name, value in constants.items():
+                    if name not in exec_namespace:
+                        exec_namespace[name] = value
 
             # Verify `requires` lists (from logic_meta) are satisfied
             for meta in logic_meta_list:
@@ -955,10 +1080,15 @@ def load_bundle(
 
             # Extract all callable, non-dunder, non-builtin names that look like logic fns
             builtin_keys = {"qai", "np", "model", "tokenizer", "__builtins__"}
-            # Add any extra injected names so we don't treat them as logic fns
+            # Add any extra injected names so we don't treat them as logic fns.
+            # This includes `requires` names AND captured `constants` (they're
+            # data, not callables — but be defensive in case a constant is a
+            # callable that got captured by mistake).
             for meta in logic_meta_list:
                 for r in meta.get("requires", []):
                     builtin_keys.add(r)
+                for cname in (meta.get("constants") or {}).keys():
+                    builtin_keys.add(cname)
             for name, obj in exec_namespace.items():
                 if name in builtin_keys or name.startswith("_"):
                     continue

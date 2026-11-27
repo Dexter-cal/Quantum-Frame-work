@@ -1,10 +1,22 @@
 from __future__ import annotations
 import math
 import numpy as np
-import torch
-import torch.nn as nn
-import torch.optim as optim
+from qai._torch_stub import try_import_torch
+torch, nn, F, _TORCH_AVAILABLE = try_import_torch()
+if _TORCH_AVAILABLE:
+    import torch.optim as optim
+else:
+    optim = None
 from .base import Technique
+
+
+def _require_torch():
+    if not _TORCH_AVAILABLE:
+        raise ImportError(
+            "[WHAT] qai.build(technique='neural_network') requires PyTorch\n"
+            "[WHY] The neural_network technique uses torch.nn for its internals\n"
+            "[FIX] Install torch: pip install torch   (or: pip install -r requirements.txt)"
+        )
 
 
 class PyTorchMLP(nn.Module):
@@ -143,6 +155,7 @@ class NeuralNetwork(Technique):
         self._last_y = None
 
     def fit(self, X, y):
+        _require_torch()
         X = np.asarray(X, dtype=np.float32)
         y = np.asarray(y)
 

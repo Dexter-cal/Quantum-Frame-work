@@ -5,6 +5,109 @@ Versions follow semantic versioning: MAJOR.MINOR.PATCH.
 
 See also: [README](README.md) · [Task Guides](docs/guides/README.md) · [Tutorial](docs/TUTORIAL.md) · [Roadmap](docs/ROADMAP.md) · [Module Registry](docs/MODULE_REGISTRY.md) · [Focus List](docs/UNBUILT_FEATURES.md)
 
+## v1.8.4 (2026-11-27) — "Hardened Bundles & Optional PyTorch"
+
+Patches the four serious problems flagged in the v1.8.3 external review,
+plus the two `InputValidationError` bugs that surfaced once the test suite
+could actually run without PyTorch installed.
+
+### Fixed — security
+- **`.qmodel` signature now covers `logic.py`.** Earlier versions only hashed
+  `model.json` + `weights.npy` + per-weight tensors, so an attacker could
+  replace `logic.py` with arbitrary code that passed `verify_bundle()` and
+  then ran at `load_bundle()` time. The manifest now also stores
+  `logic_hash`, `logic_meta_hash`, and `tokenizer_hash`, all included in
+  the HMAC-SHA256 signed payload. (`qai/bundle/__init__.py`)
+- **Defense-in-depth hash check at `load_bundle` time.** Even if a caller
+  skips `verify_bundle()` (or passes `verify_signature=False`), the loader
+  now compares the on-disk `logic.py`/`logic_meta.json` bytes against the
+  manifest hashes *before* `exec()` — tampered logic raises `ValueError`
+  instead of running. (`qai/bundle/__init__.py`)
+- **Module-level constants travel with bundled logic.** Logic functions
+  that referenced module constants (e.g. `LIMIT = 100` at module top)
+  used to raise `NameError` in a fresh process because the origin module's
+  globals weren't loaded. `save_bundle` now captures the values of any
+  JSON-serialisable closure deps via `inspect.getclosurevars` and writes
+  them into `logic_meta.json` under a new `constants` key; `load_bundle`
+  re-injects them into the exec namespace. (`qai/bundle/__init__.py`)
+
+### Fixed — `TimeBudget` actually interrupts
+- **`TimeBudget.run(fn, ...)` and `with TimeBudget(...)` now preempt the
+  running function.** Previously the budget was only checked *after* the
+  function returned, so `time.sleep(2.0)` with a 0.5 s budget ran for the
+  full 2.0 s, and infinite loops hung forever. The new implementation
+  arms `signal.SIGALRM` (POSIX main thread, sub-second resolution via
+  `setitimer`) and falls back to a watchdog thread that calls
+  `PyThreadState_SetAsyncExc` for non-main-thread / Windows use. Raises
+  `TimeoutError` when the budget is exceeded. (`qai/budget.py`)
+- The old cooperative API (`exceeded()`, `should_stop()`, `remaining()`,
+  `elapsed()`) is unchanged — existing polling loops still work.
+
+### Fixed — PyTorch is now optional for `import qai`
+- **`import qai` no longer crashes without PyTorch.** The neural-network,
+  transformer, CNN, RNN, and 20+ other technique files used to do
+  `class Foo(nn.Module)` at module scope with no fallback, so a missing
+  `torch` raised `ModuleNotFoundError` during `import qai` — even for users
+  who only wanted a numpy-only technique like `classifier` or `time_series`.
+- Added `qai/_torch_stub.py` with `StubModule` (a base class whose
+  `__init__` raises a clear `ImportError` with `[WHAT]/[WHY]/[FIX]`), an
+  `_NNStubNamespace` whose `__getattr__` returns `StubModule` (so
+  `class Foo(nn.Module)` style definitions succeed at import time), and a
+  `_TorchStubNamespace` that handles decorators like `@torch.no_grad()`
+  as identity passthroughs.
+- 27 technique modules updated to use the stub when torch is missing
+  (`scripts/patch_torch_stubs.py` is the idempotent re-patcher).
+- The user-facing technique classes still raise a clear `ImportError` if
+  you actually try to *train* a torch-based technique without torch
+  installed — the failure mode just moved from import time to use time.
+
+### Fixed — `InputValidationError` false positives
+- **Dict-input schema happy path.** `model.predict({"f1": 1.0, "f2": 2.0})`
+  on a model built with `input_schema={"f1": float, "f2": float}` used to
+  raise `InputValidationError` because `validate_input` saw the raw dict,
+  `np.asarray(dict)` produced a 0-d object array, and the kind check
+  classified it as text. Fixed by converting dict → array via the schema
+  *before* validation in `predict()`. (`qai/core/model.py`)
+- **Time-series happy path.** `model.predict([47.0, 48.0, 49.0])` on a
+  `time_series` model trained with `lags=3` used to raise
+  `InputValidationError` because `_capture_data_signature` stored
+  `n_features = len(arr)` (= 49, the length of the training series) and
+  the validator then demanded 49 features at predict time. Fixed by
+  asking the technique for its expected input length (`lags`,
+  `input_dim`, `n_features`, `n_lags`, `window_size`, `seq_len`) before
+  falling back to the array length; if none of those are set, leave
+  `n_features = None` so 1-D inputs aren't length-checked against the
+  training array. (`qai/core/model.py`)
+
+### Changed
+- **README headline** no longer claims "108 spec sections implemented
+  (100%)". It now reads "108 spec sections implemented · 10-item focus
+  list tracked in `docs/UNBUILT_FEATURES.md`" — honest about what's left.
+- Version bumped `1.8.0` → `1.8.4` in `qai/__init__.py` (both
+  `__version__` and `__version_info__`); the codebase had been reporting
+  `1.8.0` while the changelog was at `1.8.3`.
+
+### Tests
+- **`tests/test_bundle_security_regression.py`** (new, 5 tests) — verifies
+  tampered `logic.py` breaks the signature, is rejected at `load_bundle`,
+  and that captured constants travel with the bundle.
+- **`tests/test_time_budget_interruption.py`** (new, 8 tests) — verifies
+  `TimeBudget.run` interrupts `time.sleep`, infinite loops, and the
+  `with` context-manager form; also that short functions return normally
+  and the cooperative API still works.
+- `tests/test_output_and_dict_schema.py` and `tests/test_time_series.py`
+  happy paths now pass (previously raised `InputValidationError`).
+
+### Known pre-existing issues unblocked by this release
+- Several test files at `tests/test_new_features.py` use
+  `qai.DataAugmentor(mode="tabular")`, but `qai.DataAugmentor` resolves
+  to the `creative_tools` variant (no `mode=` kwarg) due to a namespace
+  collision — `data_augmentor.DataAugmentor` and
+  `data.pipeline.DataAugmentor` both exist but are shadowed. Pre-existing
+  test/code mismatch, surfaced now that `import qai` works without torch.
+- ~17 test failures require real PyTorch (transformer/CNN/RNN round-trips,
+  distillation, autodiff, etc.) — unchanged.
+
 ## v1.8.3 (2026-11-26) — "Every Module Documented + The Honest Focus List"
 
 ### Added — docs/MODULE_REGISTRY.md (the missing feature index)

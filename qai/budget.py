@@ -442,19 +442,46 @@ class ModelSwapper:
 class TimeBudget:
     """Run operations within a time budget.
 
-    Usage:
+    Two complementary usage patterns:
+
+    **Pattern A — manual polling** (cooperative). The function being limited
+    must call :meth:`exceeded` or :meth:`should_stop` itself::
+
         budget = TimeBudget(seconds=60)
         for epoch in range(100):
             if budget.exceeded():
-                print("time's up!")
                 break
             train_epoch()
-        print(budget.elapsed())
+
+    **Pattern B — automatic interruption** (preemptive, POSIX-only). Use
+    :meth:`run` or the context-manager interface to actually interrupt a
+    function that runs past the budget — including infinite loops::
+
+        budget = TimeBudget(seconds=0.5)
+        try:
+            budget.run(lambda: time.sleep(2.0))   # raises TimeoutError
+        except TimeoutError:
+            print("interrupted after ~0.5s, not 2.0s")
+
+        # Or as a context manager:
+        with TimeBudget(seconds=1.0) as tb:
+            tb.run(lambda: expensive_call())
+
+    On POSIX (Linux, macOS) interruption uses ``SIGALRM``. On Windows or when
+    called from a non-main thread (where signals can't be delivered) it falls
+    back to a watchdog thread that calls ``PyThreadState_SetAsyncExc`` to
+    raise ``TimeoutError`` in the worker — best effort, may not interrupt
+    C-extension calls like ``time.sleep`` on Windows.
     """
 
     def __init__(self, seconds: Optional[float] = None):
         self.limit = seconds
         self.start = time.time()
+        # For watchdog-thread fallback (Windows / non-main thread)
+        self._watchdog: Optional[threading.Thread] = None
+        self._stop_event: Optional[threading.Event] = None
+        self._target_thread_id: Optional[int] = None
+        self._armed: bool = False
 
     def elapsed(self) -> float:
         return time.time() - self.start
@@ -477,6 +504,146 @@ class TimeBudget:
 
     def reset(self) -> None:
         self.start = time.time()
+        self._disarm()
+
+    # ------------------------------------------------------------------
+    # Preemptive interruption — POSIX SIGALRM + watchdog-thread fallback
+    # ------------------------------------------------------------------
+    def _arm_signal(self) -> bool:
+        """Arm SIGALRM in the current (main) thread. Returns True if armed."""
+        if self.limit is None:
+            return False
+        try:
+            import signal
+            # signal.alarm only works in the main thread
+            signal.signal(signal.SIGALRM, self._on_alarm)
+            # setitimer supports sub-second resolution; alarm() is integer-only
+            signal.setitimer(signal.ITIMER_REAL, float(self.limit))
+            self._armed = True
+            return True
+        except (ValueError, OSError, ImportError):
+            # ValueError: not in main thread
+            # OSError: platform doesn't support SIGALRM (Windows)
+            return False
+
+    def _disarm_signal(self) -> None:
+        if not self._armed:
+            return
+        try:
+            import signal
+            signal.setitimer(signal.ITIMER_REAL, 0)
+        except (ValueError, OSError, ImportError):
+            pass
+        self._armed = False
+
+    @staticmethod
+    def _on_alarm(signum, frame):
+        raise TimeoutError(
+            "[WHAT] TimeBudget exceeded — function interrupted\n"
+            "[WHY] A TimeBudget limit was set and the running function "
+            "exceeded it. The SIGALRM handler raised to abort it.\n"
+            "[FIX] Either raise the TimeBudget(seconds=...) limit, or make "
+            "the function more efficient so it finishes within budget"
+        )
+
+    def _arm_watchdog(self) -> None:
+        """Best-effort watchdog thread for non-main-thread / Windows use."""
+        if self.limit is None:
+            return
+        self._stop_event = threading.Event()
+        # Capture the *current* thread id so the watchdog can raise in it
+        self._target_thread_id = threading.current_thread().ident
+        self._watchdog = threading.Thread(target=self._watchdog_loop, daemon=True)
+        self._watchdog.start()
+
+    def _watchdog_loop(self) -> None:
+        assert self._stop_event is not None and self.limit is not None
+        # Wait until the budget is exhausted, then raise TimeoutError in
+        # the target thread via PyThreadState_SetAsyncExc.
+        if self._stop_event.wait(self.limit):
+            return  # stop_event was set — disarm
+        self._async_raise(self._target_thread_id, TimeoutError(
+            "[WHAT] TimeBudget exceeded — function interrupted by watchdog\n"
+            "[WHY] A TimeBudget limit was set and the running function "
+            "exceeded it. The watchdog thread raised to abort it.\n"
+            "[FIX] Either raise the TimeBudget(seconds=...) limit, or make "
+            "the function more efficient so it finishes within budget"
+        ))
+
+    @staticmethod
+    def _async_raise(thread_id: Optional[int], exc: BaseException) -> None:
+        """Raise `exc` in the thread with id `thread_id` (best effort)."""
+        if thread_id is None:
+            return
+        import ctypes
+        # PyThreadState_SetAsyncExc is CPython-only and best-effort — it
+        # may not interrupt a thread that's in a C call (e.g. time.sleep
+        # on Windows). It's the only option when SIGALRM isn't available.
+        if not hasattr(ctypes, "pythonapi") or not hasattr(ctypes.pythonapi, "PyThreadState_SetAsyncExc"):
+            return
+        exc_addr = ctypes.cast(ctypes.py_object(exc), ctypes.c_void_p).value
+        if exc_addr is None:
+            return
+        # Signature: PyThreadState_SetAsyncExc(long thread_id, PyObject* exc)
+        ctypes.pythonapi.PyThreadState_SetAsyncExc.restype = ctypes.c_long
+        ctypes.pythonapi.PyThreadState_SetAsyncExc.argtypes = (
+            ctypes.c_ulong, ctypes.py_object)
+        try:
+            ctypes.pythonapi.PyThreadState_SetAsyncExc(int(thread_id), exc)
+        except Exception:
+            pass
+
+    def _disarm_watchdog(self) -> None:
+        if self._stop_event is not None:
+            self._stop_event.set()
+        self._watchdog = None
+        self._stop_event = None
+        self._target_thread_id = None
+
+    def _disarm(self) -> None:
+        self._disarm_signal()
+        self._disarm_watchdog()
+
+    def run(self, fn: Callable, *args, **kwargs):
+        """Run `fn(*args, **kwargs)` and interrupt it if it exceeds the budget.
+
+        On POSIX main thread, uses SIGALRM for accurate interruption (works
+        even inside `time.sleep`, NumPy calls, and most C extensions).
+        Otherwise falls back to a watchdog thread that raises TimeoutError
+        in the worker via PyThreadState_SetAsyncExc (best effort — may not
+        interrupt blocking C calls on Windows).
+
+        Raises
+        ------
+        TimeoutError
+            If `fn` runs past the budget.
+        """
+        if self.limit is None:
+            return fn(*args, **kwargs)
+
+        # Reset start time so the budget counts from this call
+        self.start = time.time()
+        armed_signal = self._arm_signal()
+        if not armed_signal:
+            self._arm_watchdog()
+        try:
+            return fn(*args, **kwargs)
+        finally:
+            self._disarm()
+
+    def __enter__(self) -> "TimeBudget":
+        if self.limit is not None:
+            self.start = time.time()
+            if not self._arm_signal():
+                self._arm_watchdog()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> bool:
+        self._disarm()
+        # Don't swallow TimeoutError — let it propagate so the caller knows
+        # the budget was hit. (Use try/except TimeBudget(...) as tb: ... if
+        # you want to handle it.)
+        return False
 
 
 # ============================================================================

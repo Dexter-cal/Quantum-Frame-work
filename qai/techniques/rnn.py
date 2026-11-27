@@ -71,6 +71,10 @@ try:
     _TORCH_AVAILABLE = True
 except ImportError:
     _TORCH_AVAILABLE = False
+    from qai._torch_stub import _TorchStubNamespace, _NNStubNamespace
+    torch = _TorchStubNamespace()
+    nn = _NNStubNamespace()
+    F = nn
 
 from .base import Technique
 
