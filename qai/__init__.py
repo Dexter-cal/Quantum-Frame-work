@@ -16,8 +16,8 @@ quantum circuit simulation, qai.data, qai.runtime, vision, audio, nlp, graph, ti
 from __future__ import annotations
 
 # Formal version
-__version__ = "1.8.4"
-__version_info__ = (1, 8, 4)
+__version__ = "1.8.5"
+__version_info__ = (1, 8, 5)
 
 from .core import build, Model, logic, LogicError, CompatibilityError, InputValidationError
 from .core.logic import save_logic_source, load_logic_source
@@ -319,11 +319,16 @@ from .federation import (
     Client as FedClient, FederatedServer, Aggregator, FedAvgAggregator,
     FedProxAggregator, WeightedAggregator, ClientUpdate, RoundStats, FederationConfig,
 )
-# Advanced knowledge distillation (teacher-student transfer)
+# Knowledge distillation — THE canonical home is qai.distillation_v2.
+# One feature, one entry point: qai.distill(teacher, student, X, y, **params).
+# The other classes that used to carry their own copies
+# (qai.advanced.KnowledgeDistiller, qai.compression.Distiller,
+# qai.KnowledgeDistiller2, qai.ModelDistiller) are thin delegates to it.
 from . import distillation_v2
 from .distillation_v2 import (
     Distiller, MultiTeacherDistiller, SelfDistiller,
     DistillationConfig, DistillationResult,
+    distill, multi_distill, self_distill,
 )
 # ML experiment versioning (git-for-models)
 from . import versioning
@@ -1142,9 +1147,10 @@ __all__ = [
     "federation", "FedClient", "FederatedServer", "Aggregator",
     "FedAvgAggregator", "FedProxAggregator", "WeightedAggregator",
     "ClientUpdate", "RoundStats", "FederationConfig",
-    # Distillation
+    # Distillation (canonical: qai.distillation_v2 — one entry point)
     "distillation_v2", "Distiller", "MultiTeacherDistiller", "SelfDistiller",
     "DistillationConfig", "DistillationResult",
+    "distill", "multi_distill", "self_distill",
     # Versioning
     "versioning", "VersionRepo", "Commit",
     # Active learning v2
@@ -1196,4 +1202,4 @@ __all__ = [
     "BenchmarkSuite", "SuiteReport", "Leaderboard", "list_benchmarks",
     "benchmark_info",
 ]
-__version__ = "1.8.4"
+__version__ = "1.8.5"

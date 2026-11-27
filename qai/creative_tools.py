@@ -439,18 +439,15 @@ class CompressionAdvisor:
 # 4. Knowledge Distillation
 # =====================================================================
 class ModelDistiller:
-    """Knowledge distillation: train a small student model from a large teacher.
+    """Teacher→student distillation via the Trainer API.
 
-    The student learns to mimic the teacher's soft predictions (logits),
-    not just the hard labels. This transfers the teacher's "dark knowledge"
-    (class similarities, confidence calibration) to the student.
-
-    Loss = α * hard_loss(student, labels) + (1-α) * soft_loss(student, teacher_logits)
-
-    Usage:
-        distiller = qai.ModelDistiller(teacher=big_model, student=small_model, alpha=0.5)
-        distiller.distill(X, y, epochs=10)
+    Backward-compatible delegate — the real implementation lives in
+    ``qai.distillation_v2`` (canonical since v1.8.5). This class forwards
+    to it, preserving the old ``(teacher, student, alpha, temperature, lr)``
+    constructor and ``distill(X, y, epochs, batch_size, verbose) -> student``
+    signature.
     """
+
     def __init__(self, teacher, student, alpha: float = 0.5,
                  temperature: float = 4.0, lr: float = 1e-3):
         self.teacher = teacher
@@ -458,44 +455,31 @@ class ModelDistiller:
         self.alpha = alpha  # weight for hard label loss
         self.temperature = temperature  # softmax temperature for soft labels
         self.lr = lr
+        from .distillation_v2 import Distiller as _Canonical, DistillationConfig as _Config
+        self._config = _Config(
+            temperature=temperature, alpha=alpha, lr=lr, strategy="vanilla",
+        )
+        self._core = _Canonical(teacher, student, self._config)
+        self.last_result = None
 
     def distill(self, X, y=None, epochs: int = 10, batch_size: int = 32,
                 verbose: bool = True):
-        """Run knowledge distillation.
+        """Run knowledge distillation (delegates to qai.distillation_v2).
 
         Args:
             X: training data
             y: optional hard labels
             epochs: number of distillation epochs
         """
-        import qai
-        # Step 1: Get teacher predictions (soft labels)
-        teacher_preds = []
-        for i in range(len(X)):
-            try:
-                pred = self.teacher.predict(X[i])
-                teacher_preds.append(pred)
-            except Exception:
-                teacher_preds.append(0)
-
-        # Step 2: Train student with combined loss
-        # Use the Trainer for the hard-label part
-        trainer = qai.Trainer(
-            model=self.student,
-            train_data=X,
-            train_targets=y,
-            optimizer="adamw",
-            lr=self.lr,
-            batch_size=batch_size,
-            output_dir="/tmp/qai_distill",
-            verbose=verbose,
-        )
-        trainer.train(epochs=epochs)
-
+        self._config.epochs = epochs
+        self._config.batch_size = batch_size
+        self._config.verbose = verbose
+        self.last_result = self._core.distill(X, y)
         if verbose:
-            print(f"[Distiller] student trained for {epochs} epochs")
-            print(f"  alpha={self.alpha} (hard label weight)")
-            print(f"  temperature={self.temperature} (soft label temperature)")
+            print(f"[Distiller] student distilled for {epochs} epochs "
+                  f"(mode: {self.last_result.distillation_mode})")
+            print(f"  alpha={self.alpha} (hard label weight)  "
+                  f"temperature={self.temperature}")
         return self.student
 
 

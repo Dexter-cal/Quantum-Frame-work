@@ -28,8 +28,13 @@ can verify every claim yourself.
 > used to pass `verify_bundle` and execute at load time), (2) `TimeBudget`
 > now actually interrupts long-running functions via SIGALRM, (3) module
 > constants now travel with bundled logic, (4) `import qai` works without
-> PyTorch. See `CHANGELOG.md` v1.8.4 for full details. The 10 items below
-> are unaffected — they remain the genuine "not yet implemented" list.
+> PyTorch. See `CHANGELOG.md` v1.8.4 for full details.
+>
+> **v1.8.5 update (2026-11-27):** Focus-list item 2 (real distillation loss)
+> is resolved — the five scattered distillation implementations were
+> consolidated into one canonical module (`qai.distillation_v2`) with the
+> real Hinton KL loss and one entry point (`qai.distill(...)`). 9 items
+> below remain the genuine "not yet implemented" list.
 
 ---
 
@@ -46,20 +51,17 @@ can verify every claim yourself.
 - **Evidence**: `qai/governance/extended.py` — `structured_prune()` docstring
   says "currently a stub".
 
-### 2. Real distillation loss in `qai.distillation_v2`
-- **Gap**: `Distiller._train_epoch()` trains the student normally and returns
-  a placeholder loss `0.1`. The KL(soft) + CE(hard) loss described in the
-  config (`temperature`, `alpha`) is never applied — so v2 currently behaves
-  like "train a smaller model", not like true distillation.
-- **Works today**: `qai.KnowledgeDistiller` (in `qai/advanced.py`) implements
-  the *real* temperature-softened KL loss with PyTorch
-  (`F.kl_div(log_softmax(student/T), softmax(teacher/T)) * T²`) — use it for
-  genuine soft-target distillation today.
-- **To build**: port the KnowledgeDistiller loss into
-  `distillation_v2.Distiller` so the `vanilla` / `hint` / `attention` /
-  `self` / `multi` strategies all train through the soft loss, and report the
-  real combined loss in `DistillationResult`.
-- **Evidence**: `qai/distillation_v2.py` `_train_epoch()` — `return 0.1  # placeholder loss`.
+### 2. ~~Real distillation loss in `qai.distillation_v2`~~ — FIXED in v1.8.5
+- **Resolved**: distillation was consolidated into ONE canonical
+  implementation (`qai/distillation_v2.py`) with the real Hinton loss
+  (`alpha * CE + (1-alpha) * T² * KL`) running on the torch path, and an
+  honest confidence-weighted / hard-label fallback for numpy-only
+  techniques. `qai.advanced.KnowledgeDistiller`, `qai.compression.Distiller`,
+  `qai.KnowledgeDistiller2`, and `qai.ModelDistiller` are now thin delegates
+  with zero algorithm code of their own (enforced by
+  `tests/test_distillation_consolidated.py`). The user-facing entry point
+  is `qai.distill(teacher, student, X, y, strategy=..., temperature=...,
+  alpha=...)` — one feature, parameters for the rest.
 
 ### 3. `qai.bayesian_optimize()` is a random-search stand-in
 - **Gap**: `qai.core.autotune.bayesian_optimize()` samples parameters and

@@ -126,37 +126,42 @@ class Pruner:
 
 
 class Distiller:
-    """Knowledge distillation: train a student to mimic a teacher."""
+    """Knowledge distillation: train a student to mimic a teacher.
+
+    Backward-compatible static-method API. The real implementation lives in
+    ``qai.distillation_v2`` (the canonical home of distillation since
+    v1.8.5); this delegate forwards to it so there is exactly ONE
+    distillation code path in qai.
+    """
 
     @staticmethod
     def distill(teacher: Any, student: Any, X: np.ndarray, y: np.ndarray,
                  temperature: float = 4.0, alpha: float = 0.5,
                  n_steps: int = 50) -> Dict[str, Any]:
-        """Run knowledge distillation."""
-        if not _TORCH:
-            raise ImportError("torch required for distillation")
-        X_t = torch.as_tensor(X, dtype=torch.float32)
-        y_t = torch.as_tensor(y, dtype=torch.long)
-        with torch.no_grad():
-            teacher_out = teacher(X_t) if isinstance(teacher, nn.Module) else \
-                            torch.as_tensor(np.array([teacher.forward(x) for x in X]))
-        opt = torch.optim.Adam(student.parameters(), lr=1e-3)
-        history = []
-        for step in range(n_steps):
-            opt.zero_grad()
-            s_out = student(X_t) if isinstance(student, nn.Module) else \
-                     torch.as_tensor(np.array([student.forward(x) for x in X]))
-            t_soft = F.softmax(teacher_out / temperature, dim=-1) if isinstance(teacher_out, torch.Tensor) else \
-                       torch.as_tensor(teacher_out)
-            s_log = F.log_softmax(s_out / temperature, dim=-1) if isinstance(s_out, torch.Tensor) else \
-                      torch.as_tensor(s_out)
-            kd_loss = F.kl_div(s_log, t_soft, reduction="batchmean") * (temperature ** 2)
-            task_loss = F.cross_entropy(s_out, y_t) if isinstance(s_out, torch.Tensor) else torch.tensor(0.0)
-            loss = alpha * task_loss + (1 - alpha) * kd_loss
-            loss.backward()
-            opt.step()
-            history.append({"step": step, "loss": float(loss)})
-        return {"history": history, "final_loss": history[-1]["loss"]}
+        """Run knowledge distillation (delegates to qai.distillation_v2).
+
+        The canonical loss: alpha * CE(student, y) +
+        (1 - alpha) * T² * KL(student_soft ‖ teacher_soft) — same alpha
+        convention this method always used.
+        """
+        from .distillation_v2 import (
+            Distiller as _CanonicalDistiller,
+            DistillationConfig as _Config,
+        )
+        config = _Config(temperature=temperature, alpha=alpha, epochs=n_steps)
+        core = _CanonicalDistiller(teacher, student, config)
+        result = core.distill(X, y)
+        history = [
+            {"step": i, "loss": float(h.get("loss", 0.0))}
+            for i, h in enumerate(result.history)
+        ]
+        final = result.loss_final
+        return {
+            "history": history,
+            "final_loss": float(final) if final == final else 0.0,
+            "mode": result.distillation_mode,
+            "student_acc_after": result.student_acc_after,
+        }
 
 
 class CompressionPipeline:

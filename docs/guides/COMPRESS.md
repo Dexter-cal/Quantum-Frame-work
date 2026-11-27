@@ -64,46 +64,52 @@ qai.compare_precision(m, X[0])    # side-by-side fp32 vs fp16 vs bf16
 
 ---
 
-## 2. Knowledge distillation v2 (`qai.distillation_v2`)
+## 2. Knowledge distillation — ONE feature, ONE entry point (`qai.distill`)
 
 **What:** make a small model (student) behave like a big one (teacher) by
 training it on the teacher's soft outputs.
 
+Since v1.8.5 there is exactly **one** distillation implementation, in
+`qai.distillation_v2`, and **one** preferred entry point: the top-level
+`qai.distill(...)` function. Every knob is a parameter on that call — no
+separate module to hunt for. Older names (`qai.KnowledgeDistiller`,
+`qai.compression.Distiller`, `qai.KnowledgeDistiller2`, `qai.ModelDistiller`)
+still work but are thin delegates to the same code; don't use them in new code.
+
 ### Single teacher
 
 ```python
-from qai.distillation_v2 import Distiller, distill
-
-teacher = qai.build(technique="transformer", d_model=512, n_layers=8); teacher.train(corpus)
-student = qai.build(technique="neural_network", n_layers=2)
-
-result = distill(teacher, student, X, y, temperature=4.0, alpha=0.7)
-# temperature: softens teacher logits (4.0 = classic Hinton setting)
-# alpha:       balance soft-target loss vs hard-label loss
-print(result.compression_ratio())   # e.g. 12.5x smaller
+result = qai.distill(teacher, student, X, y,
+                     strategy="vanilla",    # vanilla | hint | attention
+                     temperature=4.0,       # softens teacher logits (Hinton classic)
+                     alpha=0.7,             # hard-label weight (soft gets 1-alpha)
+                     epochs=30, lr=1e-3, batch_size=32)
+print(result.to_markdown())
+# report includes the REAL mode used:
+#   "soft-label KL (torch)"          — true gradient distillation ran
+#   "confidence-weighted fallback"   — numpy path, teacher-certainty sample weights
+#   "hard-label fallback"            — numpy path, honest fallback
+print(result.loss_final, result.kl_before, "→", result.kl_after)
 ```
 
 ### Multi-teacher
 
 ```python
-from qai.distillation_v2 import MultiTeacherDistiller, multi_distill
-
-result = multi_distill([teacher_a, teacher_b], student, X, y)
-# teachers are weighted by their validation performance
+result = qai.multi_distill([teacher_a, teacher_b], student, X, y,
+                           teacher_weights=[0.7, 0.3])
+# teachers are probability-averaged with your weights (default: equal)
 ```
 
 ### Self-distillation
 
 ```python
-from qai.distillation_v2 import self_distill
-
-result = self_distill(model, X, y)   # the model teaches a copy of itself
+result = qai.self_distill(model, X, y)   # the model teaches a copy of itself
 ```
 
 Works with any torch-backed qai technique (transformer, neural_network, cnn...)
-and falls back gracefully for sklearn-style models. Config via
-`DistillationConfig` — temperature, alpha, epochs, lr, intermediate-feature
-matching (feature-based distillation).
+via the real `alpha·CE + (1-alpha)·T²·KL` gradient loss; sklearn-style models
+use the documented numpy fallback. With torch you can also enable the
+weight-alignment term for `hint`/`attention` strategies via `align_weight=0.3`.
 
 ---
 

@@ -179,7 +179,12 @@ class SkillLibrary:
 class KnowledgeDistiller2:
     """Multi-level KD: outputs + attention maps + hidden activations.
 
-    Loss = alpha * task_loss + beta * attention_loss + gamma * hidden_loss
+    Backward-compatible delegate — the real implementation lives in
+    ``qai.distillation_v2`` (canonical since v1.8.5). The multi-level loss
+    maps to the canonical ``attention`` strategy with ``align_weight`` set
+    from the historical beta/gamma weights.
+
+    Loss (torch path): alpha * CE + (1-alpha) * T² * KL + align_weight * MSE
     """
     def __init__(self, teacher: Any, student: Any,
                  alpha: float = 0.5, beta: float = 0.3, gamma: float = 0.2,
@@ -188,53 +193,29 @@ class KnowledgeDistiller2:
         self.student = student
         self.alpha, self.beta, self.gamma = alpha, beta, gamma
         self.temperature = temperature
+        from ..distillation_v2 import Distiller as _Canonical, DistillationConfig as _Config
+        align_weight = max(beta, gamma) if (beta or gamma) else 0.0
+        self._config = _Config(
+            temperature=temperature, alpha=alpha,
+            strategy="attention", align_weight=align_weight,
+        )
+        self._core = _Canonical(teacher, student, self._config)
 
     def distill(self, X: np.ndarray, y: np.ndarray,
                  n_steps: int = 100) -> Dict[str, Any]:
-        if not _TORCH:
-            raise ImportError("KnowledgeDistiller2 requires torch")
-        import torch.nn.functional as F
-        X = torch.as_tensor(X, dtype=torch.float32)
-        y = torch.as_tensor(y, dtype=torch.long)
-        opt = torch.optim.Adam(self.student.parameters(), lr=1e-3)
-        history = []
-        for step in range(n_steps):
-            opt.zero_grad()
-            with torch.no_grad():
-                t_out = self.teacher(X)
-            s_out = self.student(X)
-            # output KL
-            t_soft = F.softmax(t_out / self.temperature, dim=-1)
-            s_log_soft = F.log_softmax(s_out / self.temperature, dim=-1)
-            kd_loss = F.kl_div(s_log_soft, t_soft, reduction="batchmean")
-            # task loss
-            task_loss = F.cross_entropy(s_out, y)
-            # attention alignment (approximation: align first-layer weights)
-            attn_loss = torch.tensor(0.0)
-            try:
-                t_first = list(self.teacher.parameters())[0]
-                s_first = list(self.student.parameters())[0]
-                if t_first.shape == s_first.shape:
-                    attn_loss = F.mse_loss(s_first, t_first)
-            except Exception:
-                pass
-            # hidden alignment
-            hidden_loss = torch.tensor(0.0)
-            try:
-                t_hidden = self.teacher(X)
-                s_hidden = self.student(X)
-                if t_hidden.shape == s_hidden.shape:
-                    hidden_loss = F.mse_loss(s_hidden, t_hidden.detach())
-            except Exception:
-                pass
-            loss = (self.alpha * task_loss + self.beta * attn_loss
-                    + self.gamma * hidden_loss + (1 - self.alpha) * kd_loss)
-            loss.backward()
-            opt.step()
-            history.append({"step": step, "loss": float(loss),
-                              "task": float(task_loss),
-                              "kd": float(kd_loss)})
-        return {"history": history, "final_loss": history[-1]["loss"]}
+        result = self._core.distill(X, y)
+        history = [
+            {"step": i, "loss": float(h.get("loss", 0.0))}
+            for i, h in enumerate(result.history)
+        ]
+        final = result.loss_final
+        return {
+            "history": history,
+            "final_loss": float(final) if final == final else 0.0,
+            "mode": result.distillation_mode,
+            "kl_before": result.kl_before,
+            "kl_after": result.kl_after,
+        }
 
 
 # ============================================================================

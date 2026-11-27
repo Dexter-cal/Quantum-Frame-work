@@ -5,6 +5,55 @@ Versions follow semantic versioning: MAJOR.MINOR.PATCH.
 
 See also: [README](README.md) · [Task Guides](docs/guides/README.md) · [Tutorial](docs/TUTORIAL.md) · [Roadmap](docs/ROADMAP.md) · [Module Registry](docs/MODULE_REGISTRY.md) · [Focus List](docs/UNBUILT_FEATURES.md)
 
+## v1.8.5 (2026-11-27) — "One Distillation, One Entry Point"
+
+Kills the redundancy flagged during review: knowledge distillation existed as
+**five separate implementations** scattered across modules — one of them real
+(`qai.advanced.KnowledgeDistiller`, torch KL), one a documented placeholder
+(`qai.distillation_v2` returning `0.1`), three more partial copies
+(`qai.compression.Distiller`, `qai.creative.experimental.KnowledgeDistiller2`,
+`qai.creative_tools.ModelDistiller`). They are now consolidated into ONE
+canonical implementation with ONE user-facing entry point.
+
+### Changed — one feature, parameters instead of parallel modules
+- **`qai.distill(teacher, student, X, y, ...)` is THE entry point** (also
+  `qai.multi_distill`, `qai.self_distill`). Every knob is a parameter on the
+  call: `strategy` (vanilla | hint | attention | self | multi),
+  `temperature`, `alpha`, `epochs`, `lr`, `batch_size`, `align_weight`.
+  No need to know which module owns which class any more.
+- **`qai/distillation_v2.py` rewritten as the canonical implementation**:
+  - real Hinton loss on the torch path:
+    `L = alpha·CE(student, y) + (1-alpha)·T²·KL(student_soft ‖ teacher_soft)`
+    with minibatching, AdamW, and gradient clipping (ported from the old
+    `KnowledgeDistiller`);
+  - hint/attention strategies add a weight-alignment MSE term
+    (`align_weight`) between teacher and student first parameters;
+  - numpy path (no torch) is honest: confidence-weighted hard-label fit
+    when the technique accepts `sample_weight`, plain hard-label otherwise,
+    with real `KL(teacher‖student)` before/after reported either way;
+  - `DistillationResult` gained `distillation_mode`, `loss_final`,
+    `kl_before`, `kl_after` — the report now says WHAT actually ran.
+- **The four other distillers are now thin delegates** with zero algorithm
+  code of their own (their old public signatures preserved):
+  `qai.advanced.KnowledgeDistiller` (keeps `.distill()/.losses()/
+  .compression_ratio()`), `qai.compression.Distiller` (static-method API),
+  `qai.creative.experimental.KnowledgeDistiller2` (multi-level loss maps to
+  the attention strategy), `qai.creative_tools.ModelDistiller`.
+- `tests/test_distillation_consolidated.py` (new, 15 tests) — verifies the
+  entry point, all four delegate APIs, a **source-level check that no
+  delegate file contains `F.kl_div` or its own loss loop any more**, the
+  multi/self strategies, and the KL/probability helpers.
+
+### Fixed (as part of the consolidation)
+- The old `distillation_v2` retrained the student **from scratch once per
+  epoch** (`_train_epoch` called `student.train()` inside the epoch loop) —
+  20 epochs meant 20 full retrains, and the "loss" was the constant 0.1.
+  The canonical loop trains continuously through minibatch epochs instead.
+- `qai.Distiller` top-level name is a pre-existing collision
+  (`qai.compression.Distiller` shadows `qai.distillation_v2.Distiller`
+  because of import order). Both now delegate to the same code, so the
+  collision is harmless; the docs point new code at `qai.distill(...)`.
+
 ## v1.8.4 (2026-11-27) — "Hardened Bundles & Optional PyTorch"
 
 Patches the four serious problems flagged in the v1.8.3 external review,

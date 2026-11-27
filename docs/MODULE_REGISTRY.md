@@ -100,7 +100,7 @@ re-exported on the single `import qai` face; import it directly, e.g.
 
 | Module | What it does | Import face |
 |---|---|---|
-| `qai.distillation_v2` | qai.distillation_v2 — advanced knowledge distillation toolkit. Transfer knowledge from a large teacher model to a smaller student. Suppor... | top-level |
+| `qai.distillation_v2` | THE canonical distillation implementation (v1.8.5): real Hinton KL loss (torch path), honest fallback for numpy, strategies vanilla/hint/attention/self/multi, entry point `qai.distill(...)`. All other distiller classes are delegates. | top-level |
 | `qai.quantization` | qai.quantization — model quantization for deployment. Provides: - quantize_dynamic() — post-training int8 dynamic quantization (fast, no ... | top-level |
 | `qai.precision` | qai.precision — precision management and quantization-aware training. Provides: - PrecisionManager — auto-detect best precision for hardw... | top-level |
 | `qai.compression` | qai.compression -- model compression toolkit: quantize + prune + distill. CompressionPipeline — end-to-end compression in one call Quanti... | top-level |

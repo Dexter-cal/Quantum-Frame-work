@@ -155,26 +155,23 @@ class RAGPipeline:
 
 
 # =====================================================================
-# 2. Knowledge Distillation (spec Section 23)
+# 2. Knowledge Distillation (spec Section 23) — BACKWARD-COMPAT DELEGATE
 # =====================================================================
+# The real implementation lives in qai.distillation_v2 (the canonical home of
+# distillation since v1.8.5). This class keeps the old API surface —
+# KnowledgeDistiller(teacher, student, temperature, alpha).distill(X, y,
+# epochs, lr, batch_size, verbose) -> student — but delegates every
+# computation so there is exactly ONE distillation code path in qai.
 class KnowledgeDistiller:
     """Teacher→Student model compression (spec Section 23).
 
-    Trains a smaller "student" model to mimic a larger "teacher" model by
-    matching the teacher's soft output probabilities (KL divergence) in
-    addition to the true labels (cross-entropy).
+    Delegates to ``qai.distillation_v2.Distiller`` — the canonical
+    implementation. Kept for backward compatibility; new code should use::
 
-    The classic loss: L = alpha * CE(student, true_labels) + (1-alpha) * T² * KL(student_soft, teacher_soft)
-    where T is the temperature for softening probabilities.
+        qai.distill(teacher, student, X, y, temperature=4.0, alpha=0.5, epochs=30)
 
-    Example:
-        import qai
-        teacher = qai.build(technique="neural_network", hidden_dim=128, epochs=50)
-        teacher.train(X, y)
-        student = qai.build(technique="neural_network", hidden_dim=16, epochs=1)
-        distiller = qai.KnowledgeDistiller(teacher=teacher, student=student, temperature=4.0, alpha=0.5)
-        distiller.distill(X, y, epochs=30)
-        # student is now trained — smaller but nearly as accurate
+    The classic loss (torch path): L = alpha * CE(student, y) +
+    (1-alpha) * T² * KL(student_soft ‖ teacher_soft).
     """
     def __init__(
         self,
@@ -198,146 +195,54 @@ class KnowledgeDistiller:
         self.student = student
         self.temperature = temperature
         self.alpha = alpha
+        from .distillation_v2 import Distiller as _CanonicalDistiller, DistillationConfig as _Config
+        self._config = _Config(
+            temperature=temperature, alpha=alpha,
+            strategy="vanilla", verbose=False,
+        )
+        self._core = _CanonicalDistiller(teacher, student, self._config)
         self._losses: List[float] = []
+        self.last_result = None
 
     def distill(self, X, y, epochs: int = 30, lr: float = 1e-3,
                 batch_size: int = 32, verbose: bool = False) -> Any:
-        """Train the student model using knowledge distillation.
+        """Train the student via distillation. Returns the trained student.
 
-        Args:
-            X: Training inputs.
-            y: True labels.
-            epochs: Training epochs.
-            lr: Learning rate.
-            batch_size: Mini-batch size.
-            verbose: Print progress.
-
-        Returns:
-            The trained student model (also modified in-place).
+        (Also modified in-place, as before.)
         """
-        if not _TORCH:
-            raise ImportError("KnowledgeDistiller requires PyTorch")
-
-        X_arr = np.asarray(X, dtype=np.float32)
-        if X_arr.ndim == 1: X_arr = X_arr.reshape(-1, 1)
-        y_arr = np.asarray(y, dtype=np.int64)
-        N = len(X_arr)
-
-        # Get teacher's soft labels (logits)
-        teacher_technique = self.teacher.technique
-        student_technique = self.student.technique
-
-        # Check if both are PyTorch-backed
-        if not hasattr(teacher_technique, "net") or not hasattr(student_technique, "net"):
-            # Fallback: use sklearn-style distillation (soft labels via predict_proba)
-            return self._distill_sklearn(X_arr, y_arr, epochs, lr, batch_size, verbose)
-
-        T = self.temperature
-        # Get device from student (try multiple attribute paths)
-        device = getattr(student_technique, "device", None)
-        if device is None and hasattr(teacher_technique, "device"):
-            device = teacher_technique.device
-        if device is None:
-            device = torch.device("cpu")
-
-        # Ensure student is built
-        if student_technique.net is None:
-            n_classes = int(y_arr.max()) + 1
-            if hasattr(student_technique, "_build_model"):
-                student_technique._build_model(n_classes=n_classes)
-            elif hasattr(student_technique, "task_type"):
-                # NeuralNetwork-style: build by calling a minimal fit
-                student_technique.n_classes = n_classes if student_technique.task_type == "classification" else None
-                # Build the PyTorchMLP manually
-                input_dim = X_arr.shape[1]
-                output_dim = n_classes if student_technique.task_type == "classification" else 1
-                from qai.techniques.neural_network import PyTorchMLP
-                student_technique.net = PyTorchMLP(
-                    input_dim, student_technique.hidden_dim, output_dim,
-                    student_technique.task_type,
-                ).to(device)
-                student_technique._last_X = X_arr
-                student_technique._last_y = y_arr
-
-        opt = torch.optim.AdamW(student_technique.net.parameters(), lr=lr)
-        self._losses = []
-        teacher_technique.net.eval()
-
-        for epoch in range(epochs):
-            rng = np.random.default_rng(epoch)
-            perm = rng.permutation(N)
-            ep_loss = 0.0; n_b = 0
-
-            for start in range(0, N, batch_size):
-                idx = perm[start:start + batch_size]
-                Xb = torch.tensor(X_arr[idx], device=device)
-                yb = torch.tensor(y_arr[idx], device=device, dtype=torch.long)
-
-                # Teacher soft labels
-                with torch.no_grad():
-                    teacher_logits = teacher_technique.net(Xb)
-                    teacher_soft = F.softmax(teacher_logits / T, dim=-1)
-
-                # Student logits
-                student_logits = student_technique.net(Xb)
-                student_soft = F.log_softmax(student_logits / T, dim=-1)
-
-                # Distillation loss: T² * KL(student || teacher) + alpha * CE(student, true)
-                kl_loss = F.kl_div(student_soft, teacher_soft, reduction="batchmean") * (T ** 2)
-                ce_loss = F.cross_entropy(student_logits, yb)
-                loss = self.alpha * ce_loss + (1 - self.alpha) * kl_loss
-
-                opt.zero_grad(); loss.backward()
-                torch.nn.utils.clip_grad_norm_(student_technique.net.parameters(), 1.0)
-                opt.step()
-
-                ep_loss += float(loss); n_b += 1
-
-            avg = ep_loss / max(1, n_b)
-            self._losses.append(avg)
-            if verbose and (epoch % 5 == 0 or epoch == epochs - 1):
-                print(f"  [distill] epoch {epoch}/{epochs} loss={avg:.4f}")
-
-        student_technique._trained = True
-        return self.student
-
-    def _distill_sklearn(self, X, y, epochs, lr, batch_size, verbose):
-        """Fallback distillation for sklearn-backed techniques."""
-        # Get teacher soft probabilities
-        if hasattr(self.teacher.technique, "model") and hasattr(self.teacher.technique.model, "predict_proba"):
-            soft_labels = self.teacher.technique.model.predict_proba(X)
-        else:
-            # Can't do distillation — just train student normally
-            if verbose: print("  [distill] Teacher has no predict_proba — training student normally")
-            self.student.train(X, y, verbose=False)
-            return self.student
-
-        # Train student on soft labels (as regression targets)
-        # This is a simplification — real distillation uses KL divergence
-        student_tech = self.student.technique
-        if hasattr(student_tech, "model") and hasattr(student_tech.model, "fit"):
-            # Use soft labels as targets for a regressor that predicts class probabilities
-            # Then train student classifier on hard labels with extra weight on uncertain classes
-            self.student.train(X, y, verbose=False)
-            if verbose: print("  [distill] Trained student with hard labels (sklearn fallback)")
-        else:
-            self.student.train(X, y, verbose=False)
+        self._config.epochs = epochs
+        self._config.lr = lr
+        self._config.batch_size = batch_size
+        self._config.verbose = verbose
+        self.last_result = self._core.distill(X, y)
+        self._losses = [
+            float(h.get("loss", 0.0))
+            for h in self.last_result.history
+            if h.get("loss") is not None
+        ]
         return self.student
 
     def losses(self) -> List[float]:
+        """Per-epoch distillation losses (from the canonical run)."""
         return list(self._losses)
 
     def compression_ratio(self) -> float:
         """Ratio of teacher params to student params (higher = more compression)."""
-        t_params = self.teacher.technique.parameter_count() if hasattr(self.teacher.technique, "parameter_count") else 0
-        s_params = self.student.technique.parameter_count() if hasattr(self.student.technique, "parameter_count") else 0
-        if s_params == 0: return float("inf")
+        from .distillation_v2 import _count_params as _cp
+        t_params = _cp(self.teacher)
+        s_params = _cp(self.student)
+        if s_params == 0:
+            return float("inf")
         return t_params / s_params
+
+    def result(self):
+        """Full DistillationResult from the last distill() call."""
+        return self.last_result
 
     def __repr__(self):
         return (f"<KnowledgeDistiller teacher={type(self.teacher).__name__} "
                 f"student={type(self.student).__name__} T={self.temperature} "
-                f"alpha={self.alpha}>")
+                f"alpha={self.alpha} → delegates to qai.distillation_v2>")
 
 
 # =====================================================================
