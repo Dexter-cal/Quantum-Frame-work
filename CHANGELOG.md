@@ -5,6 +5,71 @@ Versions follow semantic versioning: MAJOR.MINOR.PATCH.
 
 See also: [README](README.md) · [Task Guides](docs/guides/README.md) · [Tutorial](docs/TUTORIAL.md) · [Roadmap](docs/ROADMAP.md) · [Module Registry](docs/MODULE_REGISTRY.md) · [Focus List](docs/UNBUILT_FEATURES.md)
 
+## v1.8.6 (2026-11-27) — "Real Structured Pruning"
+
+Focus-list item 1 resolved. Structured pruning was scattered across three
+entry points, all of which were misleading:
+  * ``qai.governance.extended.PruningPipeline.structured_prune`` returned
+    ``{"status": "not_implemented"}``.
+  * ``qai.compression.Pruner.structured_prune`` delegated to surgery.
+  * ``qai.surgery.ChannelPruner.prune`` claimed to "remove entire channels"
+    but only zeroed them out (no shape change, no FLOP reduction).
+
+Now: ONE canonical implementation (``qai/pruning.py``), ONE entry point
+(``qai.structured_prune(...)``), and the other three are delegates.
+
+### Changed — one feature, one code path (same pattern as v1.8.5 distillation)
+- **``qai.structured_prune(model, layer_name=..., fraction=...)`` is THE
+  entry point.** Actually removes neurons/filters and rebuilds downstream
+  shapes — the network gets smaller, not just sparser.
+- **``qai/pruning.py`` is the canonical home:**
+  - ``nn.Linear``: ranks output rows by L2 (or L1) importance, drops the
+    bottom ``fraction``, slices the downstream layer's input columns to
+    match. Rebuilds both layers with new ``nn.Linear`` instances.
+  - ``nn.Conv2d``: same for output filters + downstream input channels.
+  - Handles the PyTorchMLP dual-reference pattern (each Linear is stored
+    both as ``self.fc1`` AND inside ``self.net = Sequential(...)``) —
+    ``_replace_by_identity`` walks the whole module tree and updates every
+    reference, so no zombie layers remain.
+  - Reports: shapes before/after per layer, params before/after,
+    compression ratio, actual sparsity, accuracy before/after/delta
+    (when ``X_val``/``y_val`` provided).
+  - ``structured_prune_with_finetune()`` convenience wrapper: prunes then
+    retrains briefly to recover accuracy.
+- **Delegates preserved (backward compatible):**
+  - ``qai.governance.PruningPipeline.structured_prune`` — no longer returns
+    ``not_implemented``, delegates to canonical.
+  - ``qai.compression.Pruner.structured_prune`` — delegates to canonical
+    (was delegating to surgery's zero-only version).
+  - ``qai.surgery.ChannelPruner.remove`` — NEW method, delegates to
+    canonical for real shape-changing pruning.
+  - ``qai.surgery.ChannelPruner.prune`` — KEPT as the zero-mask method
+    (backward compat), now honestly says "zeroed, not removed" in its
+    return value ``note`` field.
+
+### Tests
+- **``tests/test_structured_pruning.py``** (new, 17 tests, all pass):
+  - params count goes DOWN (catches the zombie-layer bug)
+  - layer shape actually shrinks
+  - downstream layer input dim is sliced to match
+  - cached ref and Sequential entry both updated (the PyTorchMLP bug)
+  - predict() still works after pruning
+  - accuracy delta reported when val data given
+  - layer_name=None prunes all layers except output head
+  - finetune wrapper recovers accuracy
+  - L1 criterion works
+  - clear errors for unknown layer / criterion
+  - all three delegates work
+  - source-level AST check: no delegate returns ``not_implemented``
+  - canonical module exists and exports the right names
+
+### Known pre-existing issue unblocked
+- ``qai.surgery.ChannelPruner.prune`` (the zero-mask method) uses
+  ``_extract_weights`` which returns parameter names like ``"fc1.weight"``,
+  not layer names like ``"fc1"``. Pre-existing API quirk; the new
+  ``ChannelPruner.remove`` doesn't have this issue because it delegates to
+  the canonical ``structured_prune`` which walks ``named_modules()``.
+
 ## v1.8.5 (2026-11-27) — "One Distillation, One Entry Point"
 
 Kills the redundancy flagged during review: knowledge distillation existed as

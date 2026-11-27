@@ -16,8 +16,8 @@ quantum circuit simulation, qai.data, qai.runtime, vision, audio, nlp, graph, ti
 from __future__ import annotations
 
 # Formal version
-__version__ = "1.8.5"
-__version_info__ = (1, 8, 5)
+__version__ = "1.8.6"
+__version_info__ = (1, 8, 6)
 
 from .core import build, Model, logic, LogicError, CompatibilityError, InputValidationError
 from .core.logic import save_logic_source, load_logic_source
@@ -513,6 +513,12 @@ from .automl import AutoML, ModelSelector, HyperOptimizer, AutoEnsemble, DataPre
 # Model compression toolkit
 from . import compression
 from .compression import Quantizer, Pruner, Distiller, CompressionPipeline, CompressionReport
+# Structured pruning — THE canonical home is qai.pruning (since v1.8.6).
+# One entry point: qai.structured_prune(model, layer_name=..., fraction=...).
+# The other entry points (qai.compression.Pruner.structured_prune,
+# qai.surgery.ChannelPruner.remove, qai.governance.PruningPipeline.structured_prune)
+# are thin delegates to it.
+from .pruning import structured_prune, structured_prune_with_finetune
 # CLI tool
 from . import cli_tool
 # HuggingFace converter
@@ -1174,6 +1180,8 @@ __all__ = [
     # Compression advisor
     "compression_advisor", "CompressionRecommendation", "CompressionReport",
     "CompressionAdvisor",
+    # Structured pruning — canonical: qai.pruning (one entry point)
+    "structured_prune", "structured_prune_with_finetune",
     # Model card generator
     "ModelCardData", "ModelCardExtractor", "ModelCardTemplate", "ModelCardRenderer",
     # API reference auto-generator
@@ -1202,4 +1210,4 @@ __all__ = [
     "BenchmarkSuite", "SuiteReport", "Leaderboard", "list_benchmarks",
     "benchmark_info",
 ]
-__version__ = "1.8.5"
+__version__ = "1.8.6"

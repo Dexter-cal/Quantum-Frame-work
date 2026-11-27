@@ -113,9 +113,14 @@ class Pruner:
     @staticmethod
     def structured_prune(model: Any, layer_name: str,
                           fraction: float = 0.3) -> Dict[str, Any]:
-        """Structured pruning: remove entire channels."""
-        from .surgery import ChannelPruner
-        return ChannelPruner.prune(model, layer_name, fraction)
+        """Structured pruning: remove entire channels and rebuild downstream.
+
+        Delegates to the canonical implementation in ``qai.pruning`` (since
+        v1.8.6). The earlier version called ``surgery.ChannelPruner.prune``,
+        which only zeroed out channels — the network shape never changed.
+        """
+        from .pruning import structured_prune as _canonical
+        return _canonical(model, layer_name=layer_name, fraction=fraction)
 
     @staticmethod
     def lottery_ticket(model: Any, X: np.ndarray, y: np.ndarray,

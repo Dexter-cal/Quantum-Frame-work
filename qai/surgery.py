@@ -259,16 +259,23 @@ class NeuronInspector:
 class ChannelPruner:
     """Structured pruning: remove entire channels/filters.
 
-    Unlike magnitude pruning (which zeros individual weights), channel
-    pruning removes entire neurons/filters and rewires the network.
+    Since v1.8.6 there are TWO methods here, with different costs:
+
+    * :meth:`prune` — zero out the least-important channels in place.
+      Cheap, reversible, doesn't change the network shape. Use this when
+      you want a quick importance probe or a soft mask.
+    * :meth:`remove` — actually remove the channels and rebuild downstream
+      layers. This is REAL structured pruning (smaller network, fewer
+      FLOPs). Delegates to :func:`qai.pruning.structured_prune`.
     """
 
     @staticmethod
     def prune(model: Any, layer: str, fraction: float = 0.1) -> Dict[str, Any]:
-        """Prune the least important channels in a layer.
+        """Zero out (mask) the least-important channels in `layer`.
 
-        Args:
-            fraction: fraction of channels to remove (0.1 = 10%)
+        Note: this is the historical "prune" method. It does NOT change the
+        network shape — the channels are still there, just zeroed. For real
+        shape-changing structured pruning, use :meth:`remove`.
         """
         from .weights import _extract_weights, _apply_weights
         weights = _extract_weights(model)
@@ -288,12 +295,25 @@ class ChannelPruner:
         weights[layer] = arr
         model = _apply_weights(model, weights)
         return {
+            "method": "zero_mask",
             "pruned": n_to_prune,
             "total_channels": n_channels,
             "prune_fraction": fraction,
             "pruned_indices": prune_indices.tolist(),
             "remaining_channels": n_channels - n_to_prune,
+            "note": "channels are zeroed, not removed — use ChannelPruner.remove() for real shape change",
         }
+
+    @staticmethod
+    def remove(model: Any, layer: str, fraction: float = 0.1, **kw) -> Dict[str, Any]:
+        """Actually remove channels from `layer` and rebuild downstream layers.
+
+        Delegates to :func:`qai.pruning.structured_prune`. The result is a
+        smaller network (fewer neurons/filters, fewer params, fewer FLOPs)
+        that still composes correctly.
+        """
+        from .pruning import structured_prune as _canonical
+        return _canonical(model, layer_name=layer, fraction=fraction, **kw)
 
     @staticmethod
     def find_prunable(model: Any, layer: str,

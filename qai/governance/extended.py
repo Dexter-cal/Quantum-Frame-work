@@ -329,9 +329,14 @@ class PruningPipeline:
             return {"error": str(e)}
 
     def structured_prune(self, layer_name: str, fraction: float = 0.5) -> Dict[str, Any]:
-        """Remove entire neurons/channels (currently a stub)."""
-        return {"method": "structured", "layer": layer_name,
-                "fraction": fraction, "status": "not_implemented"}
+        """Remove entire neurons/channels and rebuild downstream shapes.
+
+        Delegates to the canonical implementation in ``qai.pruning`` (since
+        v1.8.6). Earlier versions returned ``{"status": "not_implemented"}``;
+        real structured pruning now happens here.
+        """
+        from ..pruning import structured_prune as _canonical
+        return _canonical(self.model, layer_name=layer_name, fraction=fraction)
 
 
 # ============================================================================

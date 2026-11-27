@@ -33,23 +33,28 @@ can verify every claim yourself.
 > **v1.8.5 update (2026-11-27):** Focus-list item 2 (real distillation loss)
 > is resolved — the five scattered distillation implementations were
 > consolidated into one canonical module (`qai.distillation_v2`) with the
-> real Hinton KL loss and one entry point (`qai.distill(...)`). 9 items
+> real Hinton KL loss and one entry point (`qai.distill(...)`).
+>
+> **v1.8.6 update (2026-11-27):** Focus-list item 1 (structured pruning)
+> is resolved — `qai.structured_prune()` now actually removes neurons and
+> rebuilds downstream layers (was a `not_implemented` stub). 8 items
 > below remain the genuine "not yet implemented" list.
 
 ---
 
 ## The focus list (priority order)
 
-### 1. Structured pruning — `qai.governance.extended`
-- **Gap**: `structured_prune()` returns `{"status": "not_implemented"}` — it
-  removes nothing.
-- **Works today**: magnitude pruning (`magnitude_prune()`), activation
-  sparsity, weightHistogram reports.
-- **To build**: actually remove neurons/channels — propagate a boolean mask
-  through the layer and rebuild downstream shapes (row/col slicing of
-  `nn.Linear` weights + bias, channel slicing of `nn.Conv2d`).
-- **Evidence**: `qai/governance/extended.py` — `structured_prune()` docstring
-  says "currently a stub".
+### 1. ~~Structured pruning — `qai.governance.extended`~~ — FIXED in v1.8.6
+- **Resolved**: structured pruning was consolidated into ONE canonical
+  implementation (`qai/pruning.py`) that actually removes neurons/filters
+  and rebuilds downstream shapes — not just zeroing weights. The entry
+  point is `qai.structured_prune(model, layer_name=..., fraction=...)`.
+  `qai.governance.PruningPipeline.structured_prune`,
+  `qai.compression.Pruner.structured_prune`, and
+  `qai.surgery.ChannelPruner.remove` are all delegates. The old
+  `ChannelPruner.prune` (zero-mask) is kept for backward compat and now
+  honestly says "zeroed, not removed" in its return value. Enforced by
+  `tests/test_structured_pruning.py` (17 tests).
 
 ### 2. ~~Real distillation loss in `qai.distillation_v2`~~ — FIXED in v1.8.5
 - **Resolved**: distillation was consolidated into ONE canonical
