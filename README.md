@@ -3,8 +3,8 @@
 > A unified, single-import machine learning and artificial intelligence framework.
 > Build, train, predict, explain, serve, and deploy — all from `import qai`.
 
-**Version:** 1.8.7 — *"One Bayesian Optimizer"*
-**Status:** Stable · 269 Python modules · ~143,000 LOC · 108 spec sections implemented · 10-item focus list (3 fixed) tracked in [`docs/UNBUILT_FEATURES.md`](docs/UNBUILT_FEATURES.md)
+**Version:** 1.8.8 — *"Real conv2d, No Torch Needed"*
+**Status:** Stable · 269 Python modules · ~143,000 LOC · 108 spec sections implemented · 10-item focus list (4 fixed) tracked in [`docs/UNBUILT_FEATURES.md`](docs/UNBUILT_FEATURES.md)
 
 ```python
 import qai
@@ -217,7 +217,7 @@ that chapter. Like a real-life appliance manual, organized by task:
 | [docs/VISUAL_DESIGN.md](docs/VISUAL_DESIGN.md) | Visual Workspace UI design spec |
 | [docs/MODULE_REGISTRY.md](docs/MODULE_REGISTRY.md) | Every module A–Z with one-liners — generated from real docstrings |
 | [docs/UNBUILT_FEATURES.md](docs/UNBUILT_FEATURES.md) | The focus list: the only genuinely unbuilt/partial spots left |
-| [CHANGELOG.md](CHANGELOG.md) | Version history (latest: v1.8.7) |
+| [CHANGELOG.md](CHANGELOG.md) | Version history (latest: v1.8.8) |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute — code style, tests, PRs |
 
 ---

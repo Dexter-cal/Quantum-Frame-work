@@ -5,6 +5,42 @@ Versions follow semantic versioning: MAJOR.MINOR.PATCH.
 
 See also: [README](README.md) · [Task Guides](docs/guides/README.md) · [Tutorial](docs/TUTORIAL.md) · [Roadmap](docs/ROADMAP.md) · [Module Registry](docs/MODULE_REGISTRY.md) · [Focus List](docs/UNBUILT_FEATURES.md)
 
+## v1.8.8 (2026-11-27) — "Real conv2d, No Torch Needed"
+
+Focus-list item 4 resolved. Without PyTorch, ``qai.gpu.conv2d()`` returned
+its input tensor UNCHANGED — the numpy fallback was marked "simplified",
+carried an unused ``sliding_window_view`` import, and a comment admitting
+"this is just a placeholder". Every other ``qai.gpu`` kernel had a working
+fallback; ``conv2d`` was the one exception.
+
+### Fixed — GPU ops
+- **``qai.gpu.conv2d()`` numpy fallback is a real convolution now:**
+  vectorized cross-correlation via
+  ``numpy.lib.stride_tricks.sliding_window_view`` + ``einsum``, with torch
+  semantics (cross-correlation, no kernel flip). No new dependencies.
+- **Supported shapes**: input ``(C_in, H, W)`` (batch squeezed back out) or
+  ``(N, C_in, H, W)``; weight ``(C_out, C_in, kH, kW)``; bias ``(C_out,)``.
+  Two 3-dim weight tolerations, disambiguated against the input's channel
+  count: ``(C_in, kH, kW)`` → single-output kernel, ``(C_out, kH, kW)`` →
+  multi-output with ``C_in = 1``.
+- **stride / padding** accept an int or an ``(h, w)`` pair (torch parity).
+- **Honest errors** with [WHAT]/[WHY]/[FIX] messages: channel mismatch,
+  kernel larger than the (padded) input, malformed input/weight ndim —
+  instead of silent nonsense.
+- **Torch-branch bonus fix**: a numpy ``bias`` is now converted to a
+  backend tensor before ``F.conv2d`` — previously any call with a numpy
+  bias silently fell through to the (broken) numpy path even when torch
+  was available.
+
+### Tests
+- New ``tests/test_gpu_conv2d.py`` (13 passing, 1 conditional skip):
+  regression proof the output is a convolution (old bug returned ``x``),
+  parity with a naive nested-loop reference across strides/paddings and an
+  asymmetric kernel, 1x1-kernel linear-map check, identity-kernel
+  round-trip, shape formula checks, bias-per-channel, float32 dtype,
+  both 3-dim weight tolerations, honest-error checks, and a torch-parity
+  test that activates automatically wherever torch is installed.
+
 ## v1.8.7 (2026-11-27) — "One Bayesian Optimizer"
 
 Focus-list item 3 resolved. "Bayesian optimization" existed in FIVE places,

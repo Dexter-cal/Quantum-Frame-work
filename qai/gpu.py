@@ -414,35 +414,115 @@ def layernorm(x: np.ndarray, eps: float = 1e-5) -> np.ndarray:
 
 
 def conv2d(x: np.ndarray, weight: np.ndarray, bias: Optional[np.ndarray] = None,
-            stride: int = 1, padding: int = 0) -> np.ndarray:
-    """GPU-accelerated 2D convolution."""
+            stride: Union[int, Tuple[int, int]] = 1,
+            padding: Union[int, Tuple[int, int]] = 0) -> np.ndarray:
+    """GPU-accelerated 2D convolution (cross-correlation, torch semantics).
+
+    Shapes:
+        x: (N, C_in, H, W) batch or (C_in, H, W) single image (batch dim is
+           added and the output is squeezed back to (C_out, H', W')).
+        weight: (C_out, C_in, kH, kW). A 3-dim weight is tolerated: if its
+           first dimension matches C_in it is read as (C_in, kH, kW) — a
+           single-output-channel kernel — otherwise as (C_out, kH, kW)
+           with C_in = 1.
+        bias: (C_out,) or None.
+        stride / padding: int or (h, w) pair.
+
+    When PyTorch is available this dispatches to ``torch.nn.functional.conv2d``.
+    Without PyTorch the fallback is a REAL convolution: vectorized as
+    ``sliding_window_view`` + ``einsum`` (cross-correlation, i.e. no kernel
+    flip — the same convention torch uses). Before v1.8.8 this fallback
+    returned the input unchanged (it was marked "simplified").
+    """
     if _torch is not None:
         try:
             x_t, x_bk = _to_backend(x)
             w_t, _ = _to_backend(weight)
-            if x.ndim == 3:
+            b_t = None
+            if bias is not None:
+                b_t, _ = _to_backend(bias)
+            if x_t.ndim == 3:
                 x_t = x_t.unsqueeze(0)  # add batch dim
                 squeeze = True
             else:
                 squeeze = False
             if w_t.ndim == 3:
                 w_t = w_t.unsqueeze(0)
-            out = _torch.nn.functional.conv2d(x_t, w_t, bias=bias, stride=stride, padding=padding)
+            out = _torch.nn.functional.conv2d(x_t, w_t, bias=b_t, stride=stride, padding=padding)
             if squeeze:
                 out = out.squeeze(0)
             return _from_backend(out, x_bk)
-        except Exception as e:
+        except Exception:
             pass
-    # numpy fallback: very slow but correct
+    # numpy fallback: vectorized cross-correlation (matches torch conv2d)
+    return _conv2d_numpy(x, weight, bias=bias, stride=stride, padding=padding)
+
+
+def _conv2d_numpy(x: np.ndarray, weight: np.ndarray,
+                  bias: Optional[np.ndarray] = None,
+                  stride: Union[int, Tuple[int, int]] = 1,
+                  padding: Union[int, Tuple[int, int]] = 0) -> np.ndarray:
+    """Real numpy conv2d via sliding_window_view + einsum (no torch needed)."""
     from numpy.lib.stride_tricks import sliding_window_view
+
     x = np.asarray(x, dtype=np.float32)
     weight = np.asarray(weight, dtype=np.float32)
-    if x.ndim == 3:
+    if x.ndim not in (3, 4):
+        raise ValueError(
+            f"[WHAT] conv2d received input with shape {x.shape}\n"
+            "[WHY] Input must be (C_in, H, W) or (N, C_in, H, W)\n"
+            "[FIX] Squeeze or expand a batch/channel dim before calling"
+        )
+    if weight.ndim not in (3, 4):
+        raise ValueError(
+            f"[WHAT] conv2d received weight with shape {weight.shape}\n"
+            "[WHY] Weight must be (C_out, C_in, kH, kW) "
+            "(3-dim (C_in, kH, kW) is tolerated as a single-output kernel)\n"
+            "[FIX] Reshape the kernel to 4 dims"
+        )
+
+    squeeze_out = x.ndim == 3
+    if squeeze_out:
         x = x[None]
+    n, c_in, h, w = x.shape
+
     if weight.ndim == 3:
-        weight = weight[None]
-    # this is just a placeholder; production code would use scipy.signal.correlate2d
-    return x  # simplified
+        # disambiguate against the input's channel count
+        if weight.shape[0] == c_in:
+            weight = weight[None]      # (C_in, kH, kW) -> (1, C_in, kH, kW)
+        else:
+            weight = weight[:, None]   # (C_out, kH, kW) -> (C_out, 1, kH, kW)
+    c_out, w_cin, kh, kw = weight.shape
+    if w_cin != c_in:
+        raise ValueError(
+            f"[WHAT] conv2d channel mismatch: input has {c_in} channels but "
+            f"weight expects {w_cin}\n"
+            "[WHY] A convolution slides one kernel per input channel and "
+            "sums across channels\n"
+            f"[FIX] Make weight shape ({c_out}, {c_in}, {kh}, {kw})"
+        )
+
+    sh, sw = stride if isinstance(stride, tuple) else (stride, stride)
+    ph, pw = padding if isinstance(padding, tuple) else (padding, padding)
+    if ph or pw:
+        x = np.pad(x, ((0, 0), (0, 0), (ph, ph), (pw, pw)))
+    n, c_in, h, w = x.shape
+    if h < kh or w < kw:
+        raise ValueError(
+            f"[WHAT] conv2d kernel ({kh}x{kw}) is larger than the (padded) "
+            f"input ({h}x{w})\n"
+            "[WHY] There is no valid window to slide\n"
+            "[FIX] Reduce the kernel size or increase padding"
+        )
+
+    # windows: (N, C_in, H_out, W_out, kH, kW)
+    windows = sliding_window_view(x, (kh, kw), axis=(2, 3))[:, :, ::sh, ::sw]
+    # cross-correlate: sum over (C_in, kH, kW) for each output channel
+    out = np.einsum("nchwij,ocij->nohw", windows, weight, optimize=True)
+    if bias is not None:
+        bias = np.asarray(bias, dtype=np.float32).reshape(1, c_out, 1, 1)
+        out = out + bias
+    return out[0] if squeeze_out else out
 
 
 def gather(x: np.ndarray, indices: np.ndarray, axis: int = 0) -> np.ndarray:

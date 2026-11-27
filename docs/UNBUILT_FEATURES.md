@@ -46,8 +46,13 @@ can verify every claim yourself.
 > `HyperOptimizer(strategy="bayesian")` which was literally the random
 > branch) now delegate to ONE canonical GP + Expected-Improvement engine
 > in `qai.hyperparam_optimizer`, with every candidate scored by real
-> cross-validation. 7 items below remain the genuine "not yet
-> implemented" list.
+> cross-validation.
+>
+> **v1.8.8 update (2026-11-27):** Focus-list item 4 (GPU `conv2d` numpy
+> fallback) is resolved — without PyTorch, `qai.gpu.conv2d()` now computes
+> a real vectorized cross-correlation (`sliding_window_view` + `einsum`)
+> instead of returning the input unchanged. 6 items below remain the
+> genuine "not yet implemented" list.
 
 ---
 
@@ -90,17 +95,18 @@ can verify every claim yourself.
   (15 tests, including a spy proving every entry point calls the same
   `optimize`).
 
-### 4. GPU `conv2d` fallback without PyTorch
-- **Gap**: when PyTorch is absent, `qai.gpu.conv2d()` returns the input
-  tensor unchanged instead of computing the convolution (the numpy fallback
-  is marked "simplified").
-- **Works today**: every other `qai.gpu` kernel (`matmul`, `gather`, `softmax`
-  …) has a working numpy fallback; `conv2d` is the one exception.
-- **To build**: implement the correlation with
-  `numpy.lib.stride_tricks.sliding_window_view` + einsum (the import is
-  already there, unused).
-- **Evidence**: `qai/gpu.py` — `conv2d()` numpy branch, comment
-  "this is just a placeholder".
+### 4. ~~GPU `conv2d` fallback without PyTorch~~ — FIXED in v1.8.8
+- **Resolved**: the numpy fallback of `qai.gpu.conv2d()` now computes a
+  real cross-correlation — vectorized as
+  `numpy.lib.stride_tricks.sliding_window_view` + `einsum` (the import
+  that sat unused since the placeholder was written) — with torch
+  semantics (no kernel flip). Supports (C_in,H,W) and (N,C_in,H,W)
+  inputs, (C_out,C_in,kH,kW) kernels (plus two 3-dim tolerations),
+  int or (h,w) stride/padding, and per-channel bias. Enforced by
+  `tests/test_gpu_conv2d.py` (13 tests): parity against a naive loop
+  reference across strides/paddings, a torch-parity test that activates
+  automatically when torch is installed, and honest [WHAT]/[WHY]/[FIX]
+  errors for channel mismatch / oversized kernels / bad ndims.
 
 ### 5. GGUF model loading — `qai.formats`
 - **Gap**: `ModelIO.load(".gguf")` raises `NotImplementedError` and defers to
