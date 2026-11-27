@@ -143,22 +143,64 @@ class HyperOptimizer:
                  param_grid: Dict[str, List[Any]],
                  strategy: str = "grid",
                  n_trials: int = 20) -> Dict[str, Any]:
-        """Run hyperparameter optimization."""
+        """Run hyperparameter optimization.
+
+        Strategies: "grid" (full grid), "random" (sampled grid),
+        "bayesian" — since v1.8.7 a true GP surrogate + Expected
+        Improvement search delegating to
+        `qai.hyperparam_optimizer.HyperparameterOptimizer` (the one
+        canonical Bayesian optimizer); before that, the "bayesian"
+        branch was literally the same code as "random".
+        """
         import qai
         from itertools import product
         from sklearn.model_selection import cross_val_score
+
+        if strategy not in ("grid", "random", "bayesian"):
+            raise ValueError(
+                f"[WHAT] HyperOptimizer received unknown strategy {strategy!r}\n"
+                "[WHY] Strategy must be 'grid', 'random', or 'bayesian'\n"
+                "[FIX] Use one of the supported strategies"
+            )
+
+        if strategy == "bayesian":
+            # Delegate to the one canonical GP+EI engine (real surrogate,
+            # real acquisition, real CV scoring — not sampling).
+            from .hyperparam_optimizer import HyperparameterOptimizer
+            bo = HyperparameterOptimizer(
+                technique=self.technique,
+                param_space=dict(param_grid),
+                n_iterations=n_trials,
+                k=self.cv_folds,
+                n_initial_random=max(2, n_trials // 2),
+            )
+            bo_res = bo.optimize(X, y)
+            best_params = bo_res.best_params
+            best_score = float(bo_res.best_score)
+            best_model = None
+            for h in bo_res.history:
+                self.history.append({"params": h["params"], "score": float(h["score"])})
+            if best_params:
+                try:
+                    best_model = qai.build(technique=self.technique, **best_params)
+                    best_model.fit(X, y)
+                except Exception as e:
+                    self.history.append({"params": best_params, "score": -1, "error": str(e)})
+                    best_model = None
+            return {
+                "best_params": best_params,
+                "best_score": best_score,
+                "best_model": best_model,
+                "n_trials": n_trials,
+                "strategy": "bayesian",
+                "history": self.history,
+            }
 
         if strategy == "grid":
             # full grid search
             keys = list(param_grid.keys())
             combinations = list(product(*[param_grid[k] for k in keys]))
         elif strategy == "random":
-            keys = list(param_grid.keys())
-            combinations = []
-            for _ in range(n_trials):
-                combo = tuple(np.random.choice(param_grid[k]) for k in keys)
-                combinations.append(combo)
-        else:
             keys = list(param_grid.keys())
             combinations = []
             for _ in range(n_trials):

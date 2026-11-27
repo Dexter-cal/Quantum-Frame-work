@@ -37,8 +37,17 @@ can verify every claim yourself.
 >
 > **v1.8.6 update (2026-11-27):** Focus-list item 1 (structured pruning)
 > is resolved — `qai.structured_prune()` now actually removes neurons and
-> rebuilds downstream layers (was a `not_implemented` stub). 8 items
-> below remain the genuine "not yet implemented" list.
+> rebuilds downstream layers (was a `not_implemented` stub).
+>
+> **v1.8.7 update (2026-11-27):** Focus-list item 3 (`bayesian_optimize`
+> random stand-in) is resolved — all five scattered "Bayesian" code paths
+> (the fake `qai.bayesian_optimize()`, `AutoTuner(strategy="bayesian")`,
+> the two same-named `HyperparameterOptimizer` classes, and
+> `HyperOptimizer(strategy="bayesian")` which was literally the random
+> branch) now delegate to ONE canonical GP + Expected-Improvement engine
+> in `qai.hyperparam_optimizer`, with every candidate scored by real
+> cross-validation. 7 items below remain the genuine "not yet
+> implemented" list.
 
 ---
 
@@ -68,20 +77,18 @@ can verify every claim yourself.
   is `qai.distill(teacher, student, X, y, strategy=..., temperature=...,
   alpha=...)` — one feature, parameters for the rest.
 
-### 3. `qai.bayesian_optimize()` is a random-search stand-in
-- **Gap**: `qai.core.autotune.bayesian_optimize()` samples parameters and
-  scores candidates with `np.random.uniform(0.01, 0.5)` — the "loss" is not
-  computed from a model at all. Its own docstring admits it: "simplified
-  random-search stand-in, not real Bayesian optimization".
-- **Works today**: `qai.hyperparam_optimizer.HyperparameterOptimizer`
-  implements true GP-surrogate Bayesian optimization with an acquisition
-  function, and `qai.AutoTuner` does real k-fold cross-validated grid search.
-  Real BO exists in the package — it is just not wired into this convenience
-  function.
-- **To build**: delegate `bayesian_optimize()` to
-  `hyperparam_optimizer.HyperparameterOptimizer` (or evaluate each candidate
-  with a real CV fit) and deprecate the random loss.
-- **Evidence**: `qai/core/autotune.py` — `bayesian_optimize()`.
+### 3. ~~`qai.bayesian_optimize()` is a random-search stand-in~~ — FIXED in v1.8.7
+- **Resolved**: all five scattered "Bayesian" implementations were
+  consolidated into ONE canonical engine (`qai.hyperparam_optimizer`
+  — RBF-kernel GP posterior + Expected Improvement). The public entry
+  `qai.bayesian_optimize()` now scores every candidate with real k-fold
+  cross-validation of a real qai model (its `best_loss` used to be
+  `np.random.uniform(0.01, 0.5)`, never touching the model).
+  `AutoTuner(strategy="bayesian")`, `HyperOptimizer(strategy="bayesian")`
+  and `qai.hparam_optimizer` (which carried a second class with the same
+  name) are all delegates. Enforced by `tests/test_bayesian_consolidated.py`
+  (15 tests, including a spy proving every entry point calls the same
+  `optimize`).
 
 ### 4. GPU `conv2d` fallback without PyTorch
 - **Gap**: when PyTorch is absent, `qai.gpu.conv2d()` returns the input

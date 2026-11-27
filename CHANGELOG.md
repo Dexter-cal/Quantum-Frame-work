@@ -5,6 +5,86 @@ Versions follow semantic versioning: MAJOR.MINOR.PATCH.
 
 See also: [README](README.md) · [Task Guides](docs/guides/README.md) · [Tutorial](docs/TUTORIAL.md) · [Roadmap](docs/ROADMAP.md) · [Module Registry](docs/MODULE_REGISTRY.md) · [Focus List](docs/UNBUILT_FEATURES.md)
 
+## v1.8.7 (2026-11-27) — "One Bayesian Optimizer"
+
+Focus-list item 3 resolved. "Bayesian optimization" existed in FIVE places,
+and the public convenience entry was wired to the fake one:
+  * ``qai.bayesian_optimize()`` (``qai/core/autotune.py``) sampled random
+    params and scored them with ``np.random.uniform(0.01, 0.5)`` — the
+    "loss" never touched a model. Its own docstring admitted it was a
+    "simplified random-search stand-in".
+  * ``AutoTuner(strategy="bayesian")`` was an explore/exploit grid
+    heuristic, not a surrogate model.
+  * ``qai.hyperparam_optimizer.HyperparameterOptimizer`` (exported) —
+    real distance-weighted surrogate + EI, technique mode only.
+  * ``qai.hparam_optimizer.HyperparameterOptimizer`` — a SECOND class with
+    the SAME NAME in a different module (objective mode only, not
+    exported). Same feature, two implementations, different files.
+  * ``HyperOptimizer(strategy="bayesian")`` (``qai/automl.py``) — the
+    "bayesian" branch was literally the same code as the "random" branch.
+
+Now: ONE canonical engine (``qai/hyperparam_optimizer.py``) — RBF-kernel
+Gaussian-process posterior + Expected Improvement acquisition — and every
+road leads to it. Same consolidation pattern as v1.8.5 (distillation)
+and v1.8.6 (structured pruning): one feature, one implementation, one
+entry point, everything else a delegate.
+
+### Changed — one feature, one code path
+- **``qai.bayesian_optimize(model_type, X, y, param_bounds, n_trials=5,
+  k=3, random_state=None)`` is real now.** Every candidate is scored by
+  true k-fold cross-validation of a real qai model; the next candidate is
+  chosen by Expected Improvement on a GP surrogate fitted to the observed
+  scores. Return dict keeps the backward-compatible ``best_params`` /
+  ``best_loss`` keys — but ``best_loss`` is now the measured CV error
+  (``1 - accuracy``), not a random number. New keys: ``best_score``,
+  ``n_trials``, ``history``, ``method="bayesian"``.
+- **``qai.HyperparameterOptimizer`` is the one canonical class, with two
+  modes selected by constructor argument:**
+  - *Technique mode* — ``HyperparameterOptimizer(technique="rf",
+    param_space={...}, k=3).optimize(X, y)``: candidates scored by
+    ``qai.cross_validate`` (as before, contract unchanged).
+  - *Objective mode* — ``HyperparameterOptimizer(param_space={...},
+    objective=my_fn, minimize=False, seed=42).optimize()``: the absorbed
+    ``qai.hparam_optimizer`` use case, constructor shape preserved.
+  - Both modes accept continuous ``(min, max)`` ranges (int endpoints
+    round back to int) AND discrete ``[v1, v2, ...]`` choice lists.
+  - Engine upgraded: Cholesky-solved GP posterior with an RBF kernel
+    (was a distance-weighted average heuristic in the exported class).
+  - ``OptimizationResult`` gained ``n_evaluations`` and
+    ``elapsed_seconds`` (compat fields from the absorbed class); history
+    entries carry ``iteration`` plus the ``iter`` alias and, in technique
+    mode, the CV ``std``.
+- **Delegates preserved (backward compatible):**
+  - ``qai.hparam_optimizer`` — the duplicate module now re-exports the
+    canonical class (``is``-identical); old imports keep working.
+  - ``AutoTuner(strategy="bayesian")`` — delegates to the canonical
+    engine, treating grid values as discrete choices; ``results_`` shape
+    unchanged (``mean_accuracy`` / ``std_accuracy`` now real CV values).
+  - ``HyperOptimizer(strategy="bayesian")`` — delegates to the canonical
+    engine and still returns a fitted ``best_model``.
+- **Honest errors:** ``HyperOptimizer.optimize`` now rejects unknown
+  strategies (it silently ran random search before), and
+  ``HyperparameterOptimizer`` validates that exactly one of
+  ``technique`` / ``objective`` is given, that ``param_space`` is
+  well-formed, and that ``seed`` / ``random_state`` are not both set —
+  all with [WHAT]/[WHY]/[FIX] messages.
+
+### Tests
+- New ``tests/test_bayesian_consolidated.py`` (15 tests): measured score,
+  seed determinism, discrete choices, objective-mode convergence
+  (finds the max of ``-(x-3)²`` to ±0.003), minimize mode, old
+  objective-mode constructor preserved, technique-mode contract pinned by
+  ``tests/test_new_features.py`` still green, duplicate module is-delegate
+  check, AutoTuner / HyperOptimizer delegation, unknown-strategy
+  rejection, and a monkeypatched spy proving all three entry points call
+  the same ``optimize``.
+
+### Known pre-existing issues (unchanged, now visible)
+- ``tests/test_autotune.py::test_security_misuse_scenario`` and two
+  ``test_data_augmentor_*`` tests fail identically before and after this
+  release (they fail on the clean v1.8.6 tree too) — tracked separately,
+  not caused by this consolidation.
+
 ## v1.8.6 (2026-11-27) — "Real Structured Pruning"
 
 Focus-list item 1 resolved. Structured pruning was scattered across three

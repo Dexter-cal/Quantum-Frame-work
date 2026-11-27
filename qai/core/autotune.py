@@ -39,6 +39,11 @@ class AutoTuner:
       best-performing one. Convenient when you don't know which algorithm
       suits your data.
 
+    Strategies: "grid" (full grid), "random" (sampled grid), "bayesian"
+    (true GP surrogate + Expected Improvement — since v1.8.7 this delegates
+    to `qai.hyperparam_optimizer.HyperparameterOptimizer`, the one canonical
+    Bayesian optimizer; grid values are treated as discrete choices).
+
     Args:
         technique_name: Single technique to grid-search (hyperparameter mode).
         param_grid: Dict of {param_name: [values]} for grid search.
@@ -103,10 +108,13 @@ class AutoTuner:
         self.best_params_ = None
         self.best_technique_ = None
 
-        from .model import build
-
         # --- Hyperparameter mode ---
         if self.technique_name and self.param_grid:
+            # Bayesian strategy: delegate to the one canonical GP+EI engine
+            if self.strategy == "bayesian":
+                return self._fit_bayesian(X, y)
+
+            from .model import build
             keys = list(self.param_grid.keys())
 
             # Strategy dispatch: generate the list of param combinations to try
@@ -119,25 +127,6 @@ class AutoTuner:
                 n = min(self.n_trials, len(value_combinations))
                 chosen = rng.choice(len(value_combinations), size=n, replace=False)
                 param_list = [dict(zip(keys, value_combinations[i])) for i in chosen]
-            elif self.strategy == "bayesian":
-                # Simple bayesian-like approach: start with random, then focus
-                # on the neighborhood of the best result so far.
-                rng = np.random.default_rng(self.random_state)
-                value_combinations = list(itertools.product(*self.param_grid.values()))
-                all_indices = list(range(len(value_combinations)))
-                # Phase 1: random exploration (half the trials)
-                n_explore = max(3, self.n_trials // 2)
-                n_exploit = self.n_trials - n_explore
-                explored = set()
-                param_list = []
-                # Random exploration
-                explore_pool = list(rng.choice(all_indices, size=min(n_explore, len(all_indices)), replace=False))
-                for idx in explore_pool:
-                    param_list.append(dict(zip(keys, value_combinations[idx])))
-                    explored.add(idx)
-                # Phase 2: we'll fill these in during the loop (exploitation)
-                # by picking neighbors of the best-so-far
-                exploit_pool_remaining = n_exploit
             else:
                 raise ValueError(
                     f"[WHAT] Unknown AutoTuner strategy {self.strategy!r}\n"
@@ -165,22 +154,6 @@ class AutoTuner:
                     self.best_score_ = mean_acc
                     self.best_params_ = params
                     self.best_technique_ = self.technique_name
-
-                # Bayesian exploitation: after each trial, if we have budget left,
-                # pick a neighbor of the current best
-                if self.strategy == "bayesian" and exploit_pool_remaining > 0:
-                    best_idx = value_combinations.index(
-                        tuple(self.best_params_[k] for k in keys)
-                    )
-                    # Find unexplored neighbors (same values for all but one key)
-                    for offset in [-1, 1, -2, 2]:
-                        neighbor_idx = best_idx + offset
-                        if 0 <= neighbor_idx < len(value_combinations) and neighbor_idx not in explored:
-                            neighbor_params = dict(zip(keys, value_combinations[neighbor_idx]))
-                            param_list.append(neighbor_params)
-                            explored.add(neighbor_idx)
-                            exploit_pool_remaining -= 1
-                            break
 
         # --- Technique-selection mode ---
         elif self.techniques:
@@ -224,6 +197,38 @@ class AutoTuner:
         For hyperparameter mode: same as best_technique_ (i.e. the input technique_name)."""
         return self.best_technique_
 
+    def _fit_bayesian(self, X, y):
+        """strategy="bayesian": delegate to the canonical GP+EI engine.
+
+        The param grid is treated as a discrete search space; every
+        candidate is scored by real k-fold cross-validation, and the next
+        candidate is picked by Expected Improvement on a GP surrogate
+        (see qai.hyperparam_optimizer.HyperparameterOptimizer).
+        """
+        from ..hyperparam_optimizer import HyperparameterOptimizer
+        opt = HyperparameterOptimizer(
+            technique=self.technique_name,
+            param_space=dict(self.param_grid),
+            n_iterations=self.n_trials,
+            k=self.k,
+            n_initial_random=max(2, self.n_trials // 2),
+            seed=self.random_state,
+        )
+        res = opt.optimize(X, y)
+        for h in res.history:
+            score = float(h["score"])
+            self.results_.append({
+                "technique": self.technique_name,
+                "params": h["params"],
+                "mean_accuracy": round(score, 4),
+                "std_accuracy": round(float(h.get("std", 0.0) or 0.0), 4),
+            })
+            if score > self.best_score_:
+                self.best_score_ = score
+                self.best_params_ = h["params"]
+                self.best_technique_ = self.technique_name
+        return self
+
     def best_model(self, X, y):
         """Train a fresh model with the best params/technique on full X, y."""
         if self.best_technique_ is None:
@@ -260,28 +265,53 @@ def autotune(technique_name: str, param_grid: Dict[str, List[Any]], X, y, k: int
     return tuner
 
 
-def bayesian_optimize(model_type: str, X: Any, y: Any, param_bounds: Dict[str, Any], n_trials: int = 5) -> Dict[str, Any]:
-    """Bayesian Optimization surrogate search for optimal hyperparameters.
+def bayesian_optimize(model_type: str, X: Any, y: Any, param_bounds: Dict[str, Any],
+                      n_trials: int = 5, k: int = 3,
+                      random_state: Optional[int] = None) -> Dict[str, Any]:
+    """Real Bayesian optimization (GP surrogate + Expected Improvement).
 
-    NOTE: This is a simplified random-search stand-in, not real Bayesian
-    optimization. Real BO would require a Gaussian-process surrogate and
-    an acquisition function (EI / UCB). Kept for API compatibility.
+    Since v1.8.7 this is no longer a random-search stand-in with a fake
+    loss. It delegates to `qai.hyperparam_optimizer.HyperparameterOptimizer`
+    — the one canonical Bayesian optimizer: every candidate is scored by
+    real k-fold cross-validation of a real qai model, and the next
+    candidate is chosen by Expected Improvement on a GP surrogate.
+
+    Args:
+        model_type: qai technique name (e.g. "random_forest").
+        X, y: training data.
+        param_bounds: {param: (min, max)} for a continuous range or
+            {param: [v1, v2, ...]} for discrete choices.
+        n_trials: number of candidate evaluations.
+        k: cross-validation folds.
+        random_state: optional seed for reproducibility.
+
+    Returns:
+        Dict with backward-compatible keys `best_params` and `best_loss`
+        (loss = 1 - cross-validated accuracy, actually measured now), plus
+        `best_score`, `n_trials`, `history` and `method`.
     """
-    best_loss = float("inf")
-    best_params = {}
-
-    for trial in range(n_trials):
-        sampled = {}
-        for param, bounds in param_bounds.items():
-            if isinstance(bounds, list):
-                sampled[param] = bounds[trial % len(bounds)]
-            elif isinstance(bounds, tuple):
-                sampled[param] = float(np.random.uniform(bounds[0], bounds[1]))
-
-        # Candidate score evaluation — placeholder random loss
-        loss = float(np.random.uniform(0.01, 0.5))
-        if loss < best_loss:
-            best_loss = loss
-            best_params = sampled
-
-    return {"best_params": best_params, "best_loss": best_loss}
+    if not param_bounds:
+        raise ValueError(
+            "[WHAT] bayesian_optimize() received an empty param_bounds\n"
+            "[WHY] There is nothing to search over\n"
+            "[FIX] Pass e.g. {'n_estimators': (10, 200), 'max_depth': [3, 5, 10]}"
+        )
+    from ..hyperparam_optimizer import HyperparameterOptimizer
+    opt = HyperparameterOptimizer(
+        technique=model_type,
+        param_space=dict(param_bounds),
+        n_iterations=n_trials,
+        k=k,
+        n_initial_random=max(2, n_trials // 2),
+        seed=random_state,
+    )
+    result = opt.optimize(X, y)
+    best_score = float(result.best_score)
+    return {
+        "best_params": result.best_params,
+        "best_loss": float(1.0 - best_score),
+        "best_score": best_score,
+        "n_trials": result.n_iterations,
+        "history": result.history,
+        "method": result.method,
+    }
